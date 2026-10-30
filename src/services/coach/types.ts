@@ -16,7 +16,78 @@ export type BugCategory =
   | 'unconverted-input'
   | 'comparison-assignment'
   | 'syntax-indentation'
+  | 'syntax-error'
+  | 'indentation-error'
+  | 'attribute-error'
+  | 'import-error'
+  | 'recursion-error'
+  | 'timeout-infinite-loop'
+  | 'test-failure'
   | 'general-runtime-error'
+
+export interface ProgressiveLevel1 {
+  title: string
+  hint: string
+  concept: string
+  line: number
+}
+
+export interface ProgressiveLevel2 {
+  title: string
+  explanation: string
+  problematicSnippet: string
+  whyPythonErrors: string
+  conceptTeaching: string
+  correctExample: string
+  evidence?: {
+    line?: number
+    observedValue?: string
+    expectedBehavior?: string
+    traceSnippet?: string
+  }
+}
+
+export interface ProgressiveLevel3 {
+  title: string
+  solution: string
+  whyItWorks: string
+  expectedOutput?: string
+  preventionTip: string
+  suggestedFix?: {
+    originalText: string
+    replacementText: string
+    startLine: number
+    endLine?: number
+    startColumn?: number
+    endColumn?: number
+    explanation: string
+  }
+}
+
+export interface TryItYourselfQuestion {
+  question: string
+  options: string[]
+  correctIndex: number
+  explanation: string
+}
+
+export interface DiagnosedIssue {
+  id: string
+  line: number
+  endLine?: number
+  startColumn?: number
+  endColumn?: number
+  title: string
+  category: BugCategory
+  summary: string
+  levels: {
+    level1: ProgressiveLevel1
+    level2: ProgressiveLevel2
+    level3: ProgressiveLevel3
+  }
+  tryItYourself?: TryItYourselfQuestion
+  isApplied?: boolean
+}
 
 export interface ProgressiveHint {
   level: 1 | 2 | 3
@@ -31,6 +102,10 @@ export interface ProgressiveHint {
   suggestedFix?: {
     originalText: string
     replacementText: string
+    startLine?: number
+    endLine?: number
+    startColumn?: number
+    endColumn?: number
     explanation: string
   }
 }
@@ -41,7 +116,8 @@ export interface BugDiagnosis {
   title: string
   line: number
   summary: string
-  hints: [ProgressiveHint, ProgressiveHint, ProgressiveHint] // Level 1, 2, 3
+  hints: [ProgressiveHint, ProgressiveHint, ProgressiveHint] // Preserved for backwards compatibility
+  issues: DiagnosedIssue[] // 1 or more specific line-level issues
   isStale: boolean
   codeHash: string
 }

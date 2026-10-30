@@ -2,6 +2,8 @@
 // CodeCraft Backend — Express Application & API Routes
 // ============================================================================
 
+import path from 'node:path'
+import fs from 'node:fs'
 import express, { type Express } from 'express'
 import cors from 'cors'
 import { config, hasGroqKey } from './config.ts'
@@ -20,15 +22,24 @@ export function createApp(groqClientInstance?: GroqClient): Express {
   const app = express()
   const client = groqClientInstance || new GroqClient()
 
-  // CORS restricted to frontend dev/preview servers
+  // Default allowed origins for local dev / preview
+  const defaultOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+  ]
+  const allowedOrigins = [...defaultOrigins, ...config.allowedOrigins]
+
+  // CORS configured with local defaults and optional environment origins
   app.use(
     cors({
-      origin: [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://localhost:4173',
-        'http://127.0.0.1:4173',
-      ],
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+          return callback(null, true)
+        }
+        return callback(null, false)
+      },
       methods: ['GET', 'POST'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     })
@@ -121,6 +132,18 @@ export function createApp(groqClientInstance?: GroqClient): Express {
       }
     }
   )
+
+  // Production static asset serving & SPA fallback (active when dist/ exists)
+  const distPath = path.resolve(process.cwd(), 'dist')
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath))
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next()
+      }
+      res.sendFile(path.join(distPath, 'index.html'))
+    })
+  }
 
   // Central error handling
   app.use(errorHandler)

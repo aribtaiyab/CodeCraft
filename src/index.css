@@ -12,14 +12,19 @@
 
   --color-border:      #3A3730;   /* warm gray border */
   --color-border-subtle: #2E2C27; /* subtle dividers */
+  --color-border-strong: #454037; /* prominent warm border */
+
+  --color-surface-secondary: #302C26; /* secondary dark warm surface */
+  --color-editor-surface:    #F3EFE7; /* optional light editor surface */
 
   --color-bronze:      #B8895B;   /* muted bronze — primary accent */
   --color-bronze-light:#D4A876;   /* lighter bronze — hover */
+  --color-bronze-soft: #D8B58B;   /* soft bronze accent */
   --color-bronze-dark: #9A6E42;   /* darker bronze — active */
   --color-bronze-muted:#B8895B26; /* bronze with 15% opacity — tints */
 
   --color-ivory:       #F4F0E8;   /* primary text */
-  --color-ivory-muted: #C8C2B4;   /* secondary text */
+  --color-ivory-muted: #B9B2A7;   /* secondary text — refined warm gray */
   --color-ivory-faint: #857E71;   /* placeholder, disabled */
 
   --color-success:     #5E9E6E;   /* warm green */
@@ -325,4 +330,17 @@ ul, ol {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ==============================================
+   Accessibility: Reduced Motion
+   ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

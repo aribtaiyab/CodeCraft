@@ -93,7 +93,8 @@
 
 .nav__link--active {
   color: var(--color-bronze) !important;
-  background: var(--color-bronze-muted) !important;
+  background: rgba(184, 137, 91, 0.12) !important;
+  border: 1px solid rgba(184, 137, 91, 0.25);
 }
 
 /* ---- Right side ---- */
@@ -203,6 +204,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+  min-height: 44px;
   border-radius: var(--radius-md);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
@@ -218,7 +220,8 @@
 
 .nav__mobileLink--active {
   color: var(--color-bronze) !important;
-  background: var(--color-bronze-muted) !important;
+  background: rgba(184, 137, 91, 0.12) !important;
+  border: 1px solid rgba(184, 137, 91, 0.25);
 }
 
 .nav__mobileMeta {

@@ -14,6 +14,7 @@ export interface ServerConfig {
   groqApiUrl: string
   maxPayloadBytes: number
   requestTimeoutMs: number
+  allowedOrigins: string[]
 }
 
 export const config: ServerConfig = {
@@ -24,6 +25,10 @@ export const config: ServerConfig = {
   groqApiUrl: 'https://api.groq.com/openai/v1/chat/completions',
   maxPayloadBytes: 100 * 1024, // 100 KB max request body
   requestTimeoutMs: 25 * 1000,  // 25 second timeout for Groq API calls
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 }
 
 export function hasGroqKey(): boolean {

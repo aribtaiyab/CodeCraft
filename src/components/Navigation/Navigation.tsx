@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   Code2,
@@ -20,6 +20,24 @@ export function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const closeMobile = () => setMobileOpen(false)
+
+  useEffect(() => {
+    if (!mobileOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
 
   return (
     <>
@@ -55,7 +73,7 @@ export function Navigation() {
           {/* Right slot */}
           <div className={styles.nav__right}>
             <span className={styles.nav__phase}>
-              Phase 1 · Foundation
+              Python 3.12 Engine
             </span>
 
             {/* Mobile toggle */}
@@ -78,6 +96,7 @@ export function Navigation() {
           id="mobile-nav"
           className={styles.nav__mobile}
           role="dialog"
+          aria-modal="true"
           aria-label="Mobile navigation"
         >
           <div className={styles.nav__mobileBackdrop} onClick={closeMobile} />
@@ -121,7 +140,7 @@ export function Navigation() {
             </nav>
 
             <div className={styles.nav__mobileMeta}>
-              <span className={styles.nav__phase}>Phase 1 · Foundation</span>
+              <span className={styles.nav__phase}>Python 3.12 Engine</span>
             </div>
           </div>
         </div>

@@ -320,4 +320,23 @@ describe('PyodideService Protocol and State Management', () => {
     vi.useRealTimers()
     service.dispose()
   })
+
+  it('safely disposes worker and cancels active timeout timers idempotently', () => {
+    vi.useFakeTimers()
+    const service = new PyodideService()
+    simulateReady()
+
+    service.runCode('import time; time.sleep(10)', { timeoutMs: 10000 })
+    expect(service.getState()).toBe('running')
+
+    // Disposing should terminate worker and clear timers
+    service.dispose()
+    expect(mockWorker.terminate).toHaveBeenCalled()
+
+    // Advancing timers should not cause any errors or state transitions
+    vi.advanceTimersByTime(12000)
+    expect(() => service.dispose()).not.toThrow()
+
+    vi.useRealTimers()
+  })
 })

@@ -53,8 +53,14 @@ export function usePyodide(options: UsePyodideOptions = {}) {
       onConsoleEntry: (entry) => {
         if (entry.type === 'stdout') {
           stdoutBufferRef.current.push(entry.text)
+          if (stdoutBufferRef.current.length > 2000) {
+            stdoutBufferRef.current = stdoutBufferRef.current.slice(-1000)
+          }
         }
-        setOutput((prev) => [...prev, entry])
+        setOutput((prev) => {
+          const next = [...prev, entry]
+          return next.length > 2000 ? next.slice(-1000) : next
+        })
       },
       onReady: (info) => {
         setPyodideInfo(info)

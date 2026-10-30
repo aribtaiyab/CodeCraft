@@ -1,0 +1,133 @@
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ivory);
+  letter-spacing: 0.02em;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 11px;
+  color: var(--color-ivory-faint);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+}
+
+.legendDot--answered {
+  background: var(--color-success);
+}
+
+.legendDot--flagged {
+  background: var(--color-bronze);
+}
+
+.legendDot--unanswered {
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-1);
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-ivory-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.item:hover {
+  background: var(--color-raised);
+  border-color: var(--color-bronze-soft);
+  color: var(--color-ivory);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 2px;
+}
+
+.item--current {
+  border-color: var(--color-bronze) !important;
+  box-shadow: 0 0 0 1px var(--color-bronze);
+  background: var(--color-raised) !important;
+}
+
+.item--answered {
+  background: rgba(46, 160, 67, 0.12);
+  border-color: rgba(46, 160, 67, 0.4);
+  color: var(--color-ivory);
+}
+
+.item--flagged {
+  border-color: var(--color-bronze);
+  background: rgba(184, 137, 91, 0.15);
+}
+
+.itemNumber {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.itemIcons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.typeIcon {
+  color: var(--color-ivory-faint);
+}
+
+.flagIcon {
+  color: var(--color-bronze);
+}
+
+.checkIcon {
+  color: var(--color-success);
+}

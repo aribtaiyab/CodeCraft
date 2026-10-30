@@ -23,6 +23,11 @@
   transform: translateY(1px);
 }
 
+.btn:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 2px;
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;

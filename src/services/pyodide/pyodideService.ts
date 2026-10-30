@@ -194,6 +194,14 @@ export class PyodideService {
         break
 
       case 'EXECUTION_ERROR':
+        if (msg.runId === 'init') {
+          this.setState('error')
+          this.addConsoleEntry({
+            type: 'error',
+            text: msg.message,
+          })
+          return
+        }
         if (msg.runId !== this.activeRunId) return
         this.clearTimeoutTimer()
         this.activeRunId = null

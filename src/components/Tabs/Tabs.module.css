@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  height: 100%;
+  min-height: 0;
 }
 
 .tabs__list {
@@ -53,6 +55,11 @@
   color: var(--color-ivory-muted);
 }
 
+.tabs__tab:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: -2px;
+}
+
 .tabs__tab--active {
   color: var(--color-bronze) !important;
   border-bottom-color: var(--color-bronze);
@@ -71,4 +78,6 @@
 .tabs__panel {
   flex: 1;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }

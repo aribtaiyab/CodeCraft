@@ -144,16 +144,19 @@ async function initPyodide(
     }
 
     const pyodideIndex = indexURL || (typeof location !== 'undefined' ? `${location.origin}/pyodide/` : '/pyodide/')
+    console.log('[CodeCraft PyodideWorker] Initializing Pyodide with indexURL:', pyodideIndex)
 
     try {
       pyodide = await loadPyodide({
         indexURL: pyodideIndex,
       })
+      console.log('[CodeCraft PyodideWorker] Successfully loaded local Pyodide runtime.')
     } catch (loadErr) {
-      console.warn('CodeCraft: Local Pyodide load failed, falling back to CDN...', loadErr)
+      console.warn('[CodeCraft PyodideWorker] Local Pyodide load failed, falling back to CDN...', loadErr)
       pyodide = await loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.2/full/',
+        indexURL: 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/',
       })
+      console.log('[CodeCraft PyodideWorker] Successfully loaded CDN Pyodide runtime.')
     }
 
     if (interruptArray) {

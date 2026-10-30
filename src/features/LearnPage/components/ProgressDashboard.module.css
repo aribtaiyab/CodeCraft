@@ -1,0 +1,269 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-6) 0 var(--space-12);
+}
+
+/* Header summary metrics grid */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.metricCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.metricLabel {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--weight-medium);
+}
+
+.metricValue {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-ivory);
+}
+
+.metricSubtext {
+  font-size: var(--text-xs);
+  color: var(--color-subtle);
+}
+
+/* Recommendations Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ivory);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.recsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.recCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-bronze);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.recCard:hover {
+  border-color: var(--color-bronze);
+  transform: translateY(-2px);
+}
+
+.recHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.recTitle {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ivory);
+}
+
+.recReason {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: var(--leading-relaxed);
+}
+
+.recFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.recEvidence {
+  font-size: 11px;
+  color: var(--color-subtle);
+}
+
+/* Concept Mastery Matrix */
+.matrixGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.conceptCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.conceptTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.conceptName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ivory);
+}
+
+.conceptTopic {
+  font-size: 11px;
+  color: var(--color-bronze-light);
+}
+
+.conceptDesc {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: var(--leading-normal);
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.progressFill--consistent {
+  background: var(--color-success);
+}
+
+.progressFill--developing {
+  background: var(--color-bronze);
+}
+
+.progressFill--needs_practice {
+  background: var(--color-error);
+}
+
+.progressFill--no_evidence {
+  background: var(--color-border);
+}
+
+.conceptFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-subtle);
+}
+
+/* Attempt History Table & Cards */
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.historyItem {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.historyLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.historyTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ivory);
+}
+
+.historyMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.historyRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.historyScore {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-ivory);
+  text-align: right;
+}
+
+.historyScorePoints {
+  font-size: 11px;
+  color: var(--color-subtle);
+  font-family: var(--font-sans);
+}
+
+/* Clear history row */
+.clearRow {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+}

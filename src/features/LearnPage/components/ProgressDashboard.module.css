@@ -267,25 +267,3 @@
   justify-content: flex-end;
   padding-top: var(--space-4);
 }
-
-
-/* ============================================================================
-   Progress Dashboard — Daylight Theme Overrides
-   ============================================================================ */
-
-:global([data-theme="light"]) .metricCard,
-:global([data-theme="light"]) .recCard,
-:global([data-theme="light"]) .conceptCard,
-:global([data-theme="light"]) .historyItem {
-  background: #FFFFFF !important;
-  border-color: #E2DBD0 !important;
-  box-shadow: 0 2px 8px rgba(41, 39, 32, 0.04) !important;
-}
-
-:global([data-theme="light"]) .recCard {
-  border-left-color: #C87532 !important;
-}
-
-:global([data-theme="light"]) .progressBar {
-  background: #EEE9DF !important;
-}

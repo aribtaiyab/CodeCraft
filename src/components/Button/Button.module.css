@@ -148,33 +148,3 @@
   border-radius: var(--radius-full);
   animation: spin 0.75s linear infinite;
 }
-
-
-/* ============================================================================
-   Button — Daylight Theme Overrides
-   ============================================================================ */
-
-:global([data-theme="light"]) .btn--primary {
-  color: #FFFFFF !important;
-  background: #C87532 !important;
-}
-
-:global([data-theme="light"]) .btn--primary:hover:not(:disabled) {
-  background: #A95D27 !important;
-}
-
-:global([data-theme="light"]) .btn--secondary {
-  background: #FFFFFF !important;
-  border-color: #E2DBD0 !important;
-  color: #292720 !important;
-}
-
-:global([data-theme="light"]) .btn--secondary:hover:not(:disabled) {
-  background: #FAF8F3 !important;
-  border-color: #C87532 !important;
-}
-
-:global([data-theme="light"]) .btn--ghost:hover:not(:disabled) {
-  background: #FAF8F3 !important;
-  color: #292720 !important;
-}

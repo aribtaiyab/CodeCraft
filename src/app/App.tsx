@@ -5,7 +5,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Navigation, Spinner } from '../components'
-import { ThemeProvider } from '../context/ThemeContext'
 import { LandingPage } from '../features/LandingPage/LandingPage'
 import { NotFoundPage } from '../features/NotFoundPage/NotFoundPage'
 
@@ -43,25 +42,23 @@ function PageLoader() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <div className="app-shell">
-          <Navigation />
-          <main className="app-shell__main">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/studio" element={<CodeStudioPage />} />
-                <Route path="/testlab" element={<AITestLabPage />} />
-                <Route path="/test-lab" element={<AITestLabPage />} />
-                <Route path="/learn" element={<LearnPage />} />
-                <Route path="/progress" element={<LearnPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </Suspense>
-          </main>
-        </div>
-      </BrowserRouter>
-    </ThemeProvider>
+    <BrowserRouter>
+      <div className="app-shell">
+        <Navigation />
+        <main className="app-shell__main">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/studio" element={<CodeStudioPage />} />
+              <Route path="/testlab" element={<AITestLabPage />} />
+              <Route path="/test-lab" element={<AITestLabPage />} />
+              <Route path="/learn" element={<LearnPage />} />
+              <Route path="/progress" element={<LearnPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </main>
+      </div>
+    </BrowserRouter>
   )
 }

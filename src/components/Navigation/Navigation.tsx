@@ -46,7 +46,7 @@ export function Navigation() {
           {/* Logo */}
           <NavLink to="/" className={styles.nav__logo} onClick={closeMobile} aria-label="CodeCraft home">
             <div className={styles.nav__logoMark}>
-              <Cpu size={18} strokeWidth={1.75} />
+              <Cpu size={16} strokeWidth={1.75} />
             </div>
             <span className={styles.nav__logoText}>
               Code<span className={styles.nav__logoAccent}>Craft</span>
@@ -64,18 +64,18 @@ export function Navigation() {
                   [styles.nav__link, isActive ? styles['nav__link--active'] : ''].join(' ')
                 }
               >
-                <Icon size={15} strokeWidth={1.75} />
-                {label}
+                <Icon size={14} strokeWidth={1.75} className={styles.nav__linkIcon} />
+                <span>{label}</span>
               </NavLink>
             ))}
           </div>
 
           {/* Right slot */}
           <div className={styles.nav__right}>
-            <span className={styles.nav__phase}>
+            <div className={styles.nav__statusInstrument} title="Pyodide 0.26 WebAssembly Runtime">
               <span className={styles.nav__engineDot} aria-hidden="true" />
-              Python 3.12 Engine
-            </span>
+              <span className={styles.nav__engineLabel}>Python 3.12 Engine</span>
+            </div>
 
             {/* Mobile toggle */}
             <button
@@ -85,7 +85,7 @@ export function Navigation() {
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
             >
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>

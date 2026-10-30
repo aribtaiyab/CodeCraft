@@ -73,6 +73,7 @@ export function Navigation() {
           {/* Right slot */}
           <div className={styles.nav__right}>
             <span className={styles.nav__phase}>
+              <span className={styles.nav__engineDot} aria-hidden="true" />
               Python 3.12 Engine
             </span>
 

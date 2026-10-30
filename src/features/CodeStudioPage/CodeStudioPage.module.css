@@ -989,3 +989,321 @@
     --studio-nav-offset: 68px;
   }
 }
+
+
+/* ============================================================================
+   Code Studio — Daylight Theme Overrides
+   ============================================================================ */
+
+:global([data-theme="light"]) .page {
+  background: #F6F2EA !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .topBar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .topBar__fileInfo {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .topBar__fileIcon {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .topBar__fileName {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .langSelector__btn {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .langSelector__btn:hover {
+  background: #FFFFFF !important;
+  border-color: #C87532 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .langSelector__menu {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+  box-shadow: 0 12px 28px -6px rgba(41, 39, 32, 0.15) !important;
+}
+
+:global([data-theme="light"]) .langSelector__option {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .langSelector__option:hover {
+  background: #FAF8F3 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .langSelector__option--active {
+  background: #F5E7D8 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .fontStepper {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .fontStepper__btn {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .fontStepper__btn:hover:not(:disabled) {
+  background: #EEE9DF !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .fontStepper__val {
+  color: #C87532 !important;
+  border-left-color: #E2DBD0 !important;
+  border-right-color: #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .toolBtn {
+  background: transparent !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .toolBtn:hover {
+  background: #FAF8F3 !important;
+  border-color: #C87532 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .commandPaletteTrigger {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .commandPaletteTrigger:hover {
+  background: #FFFFFF !important;
+  border-color: #C87532 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .commandPaletteKbd {
+  background: #EEE9DF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .iconBtn {
+  background: transparent !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .iconBtn:hover,
+:global([data-theme="light"]) .iconBtnActive {
+  background: #FAF8F3 !important;
+  border-color: #C87532 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .btnRun {
+  background: #C87532 !important;
+  border-color: #A95D27 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(200, 117, 50, 0.25) !important;
+}
+
+:global([data-theme="light"]) .btnRun:hover:not(:disabled) {
+  background: #A95D27 !important;
+  border-color: #8F4C1B !important;
+}
+
+:global([data-theme="light"]) .runKbdHint {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .settingsPanel {
+  background: #FAF8F3 !important;
+  border-bottom: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .settingLabel {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .settingControl {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .split {
+  background: #F6F2EA !important;
+}
+
+:global([data-theme="light"]) .editorPane {
+  background: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .dividerHandle {
+  background: #EEE9DF !important;
+  border-left: 1px solid #E2DBD0 !important;
+  border-right: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .dividerHandle:hover,
+:global([data-theme="light"]) .dividerHandle:active {
+  background: #C87532 !important;
+  border-color: #A95D27 !important;
+}
+
+:global([data-theme="light"]) .dividerGrip {
+  background: #D5CCC0 !important;
+}
+
+:global([data-theme="light"]) .outputPane {
+  background: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .outputContent {
+  background: #FAF8F3 !important;
+}
+
+:global([data-theme="light"]) .outputToolbar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .outputToolbar__title {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .outputToolbar__icon {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .outputCountBadge {
+  background: #EEE9DF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .outputClearBtn {
+  background: transparent !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .outputClearBtn:hover:not(:disabled) {
+  background: #FAF8F3 !important;
+  border-color: #C87532 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .outputLog {
+  background: #FAF8F3 !important;
+}
+
+:global([data-theme="light"]) .outputLog::-webkit-scrollbar-thumb {
+  background: #D5CCC0 !important;
+}
+
+:global([data-theme="light"]) .outputEmpty__iconBox {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .outputEmpty__message {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .kbdBadge {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #C87532 !important;
+  box-shadow: 0 1px 3px rgba(41, 39, 32, 0.08) !important;
+}
+
+:global([data-theme="light"]) .outputLine {
+  border-bottom: 1px solid #ECE6DC !important;
+}
+
+:global([data-theme="light"]) .outputLine__ts {
+  color: #91897D !important;
+}
+
+:global([data-theme="light"]) .outputLine__text {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .outputLine--stdout .outputLine__text {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .outputLine--system .outputLine__text {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .outputLine--prompt .outputLine__text {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .stdinBar {
+  background: #FFFFFF !important;
+  border-top: 1px solid #C87532 !important;
+}
+
+:global([data-theme="light"]) .stdinIcon {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .stdinPromptLabel {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .stdinInput {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .stdinSubmitBtn {
+  background: #C87532 !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .statusBar {
+  background: #EEE9DF !important;
+  border-top: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .statusBar__item {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .statusBar__selection {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .statusBar__sep {
+  color: #D5CCC0 !important;
+}
+
+:global([data-theme="light"]) .statusBar__btn {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .statusBar__btn:hover {
+  background: #FAF8F3 !important;
+  border-color: #E2DBD0 !important;
+  color: #292720 !important;
+}

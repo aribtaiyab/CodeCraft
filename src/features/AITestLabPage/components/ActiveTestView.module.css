@@ -464,3 +464,115 @@
     padding: var(--space-4);
   }
 }
+
+
+/* ===== Light Theme Overrides ===== */
+:global([data-theme="light"]) .testHeader {
+  background: #FFFFFF;
+  border-bottom-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .timerBadge {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .questionCard {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  box-shadow: 0 4px 14px rgba(41, 39, 32, 0.05);
+}
+
+:global([data-theme="light"]) .flagBtn {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #716B61;
+}
+
+:global([data-theme="light"]) .flagBtn:hover {
+  background: #EEE9DF;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .flagBtn--active {
+  background: #F5E7D8;
+  border-color: #C87532;
+  color: #C87532;
+}
+
+:global([data-theme="light"]) .codeSnippet {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .optionCard {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .optionCard:hover {
+  background: #EEE9DF;
+  border-color: #C87532;
+}
+
+:global([data-theme="light"]) .optionCard--selected {
+  background: #F5E7D8 !important;
+  border-color: #C87532 !important;
+  box-shadow: 0 0 0 1px #C87532;
+}
+
+:global([data-theme="light"]) .optionLetter {
+  background: #EEE9DF;
+  border-color: #E2DBD0;
+  color: #716B61;
+}
+
+:global([data-theme="light"]) .optionCard--selected .optionLetter {
+  background: #C87532;
+  border-color: #C87532;
+  color: #FFFFFF;
+}
+
+:global([data-theme="light"]) .sandboxBtn {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #716B61;
+}
+
+:global([data-theme="light"]) .sandboxBtn:hover:not(:disabled) {
+  background: #EEE9DF;
+  border-color: #C87532;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .codeTextarea {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .testCasesList {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .sandboxConsole {
+  background: #FAF8F3 !important;
+  border-color: #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .consoleTitle {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .consoleText {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .quickSummaryCard {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  box-shadow: 0 2px 8px rgba(41, 39, 32, 0.04);
+}

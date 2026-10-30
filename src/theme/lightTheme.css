@@ -1,0 +1,110 @@
+/* ============================================================================
+   CodeCraft — Daylight Theme (Editorial Light Theme)
+   Identity Palette:
+     Main background:       #F6F2EA (warm editorial cream)
+     Main cards:            #FFFFFF (crisp white canvas)
+     Secondary surfaces:    #EEE9DF (warm secondary stone)
+     Elevated surfaces:     #FAF8F3 (subtle off-white)
+     Primary text:          #292720 (deep charcoal)
+     Secondary text:        #716B61 (warm slate)
+     Muted text:            #91897D (stone gray)
+     Main accent:           #C87532 (terracotta bronze)
+     Accent hover:          #A95D27 (darker bronze)
+     Soft accent bg:        #F5E7D8 (creamy bronze tint)
+     Borders:               #E2DBD0 (refined warm border)
+     Success / Warning / Err: #397653 / #A76A24 / #B64B40
+   ============================================================================ */
+
+[data-theme="light"] {
+  /* ---- Daylight System Color Tokens ---- */
+  --color-base:              #F6F2EA;
+  --color-surface:           #EEE9DF;
+  --color-elevated:          #FFFFFF;
+  --color-raised:            #FAF8F3;
+  --color-overlay:           #FFFFFF;
+
+  --color-border:            #E2DBD0;
+  --color-border-subtle:     #ECE6DC;
+  --color-border-strong:     #D5CCC0;
+
+  --color-surface-secondary: #EEE9DF;
+  --color-editor-surface:    #FFFFFF;
+
+  --color-bronze:            #C87532;
+  --color-bronze-light:      #DB8642;
+  --color-bronze-soft:       #C87532;
+  --color-bronze-dark:       #A95D27;
+  --color-bronze-muted:      #F5E7D8;
+
+  --color-ivory:             #292720;
+  --color-ivory-muted:       #716B61;
+  --color-ivory-faint:       #91897D;
+
+  --color-success:           #397653;
+  --color-success-bg:        rgba(57, 118, 83, 0.12);
+  --color-warning:           #A76A24;
+  --color-warning-bg:        rgba(167, 106, 36, 0.12);
+  --color-error:             #B64B40;
+  --color-error-bg:          rgba(182, 75, 64, 0.12);
+  --color-info:              #3A7596;
+  --color-info-bg:           rgba(58, 117, 150, 0.12);
+
+  /* Surface, Text & Typography Aliases for Light Theme */
+  --bg-surface:              #EEE9DF;
+  --bg-surface-elevated:     #FFFFFF;
+  --border-subtle:           #ECE6DC;
+  --color-border-hover:      #D5CCC0;
+  --text-primary:            #292720;
+  --text-secondary:          #716B61;
+  --text-muted:              #91897D;
+  --color-muted:             #716B61;
+  --color-subtle:            #91897D;
+  --font-sans:               var(--font-body);
+
+  /* Shadows tuned for Light Theme */
+  --shadow-sm:  0 1px 3px rgba(41, 39, 32, 0.06), 0 1px 2px rgba(41, 39, 32, 0.04);
+  --shadow-md:  0 4px 14px rgba(41, 39, 32, 0.08), 0 2px 6px rgba(41, 39, 32, 0.04);
+  --shadow-lg:  0 8px 24px rgba(41, 39, 32, 0.1), 0 4px 12px rgba(41, 39, 32, 0.06);
+  --shadow-xl:  0 16px 40px rgba(41, 39, 32, 0.12), 0 8px 20px rgba(41, 39, 32, 0.06);
+  --shadow-bronze: 0 0 0 1px #C87532, 0 4px 16px rgba(200, 117, 50, 0.2);
+  --shadow-inner: inset 0 1px 3px rgba(41, 39, 32, 0.06);
+}
+
+/* Base Body and Browser Overrides */
+[data-theme="light"] body {
+  background-color: #F6F2EA;
+  color: #292720;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #EEE9DF;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #D5CCC0;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #B3AAA0;
+}
+
+[data-theme="light"] ::selection {
+  background: #F5E7D8;
+  color: #292720;
+}
+
+/* Utility Text Classes in Daylight */
+[data-theme="light"] .text-bronze { color: #C87532; }
+[data-theme="light"] .text-ivory  { color: #292720; }
+[data-theme="light"] .text-muted  { color: #716B61; }
+[data-theme="light"] .text-faint  { color: #91897D; }
+
+/* Monaco Active Trace Line in Daylight */
+[data-theme="light"] .monaco-active-trace-line {
+  background: rgba(200, 117, 50, 0.16) !important;
+  border-left: 3px solid #C87532 !important;
+}
+
+[data-theme="light"] .monaco-active-trace-glyph {
+  color: #C87532 !important;
+}

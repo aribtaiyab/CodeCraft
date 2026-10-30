@@ -749,3 +749,101 @@
     opacity: 1;
   }
 }
+
+
+/* ============================================================================
+   Test Your Fix Panel — Daylight Theme Overrides
+   ============================================================================ */
+
+:global([data-theme="light"]) .testPanel {
+  background: #FAF8F3 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .panelHeader {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .panelTitle {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .codeCraftPill {
+  background: #F5E7D8 !important;
+  border-color: rgba(200, 117, 50, 0.3) !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .backToEditorBtn {
+  background: #FAF8F3 !important;
+  border-color: #E2DBD0 !important;
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .backToEditorBtn:hover {
+  background: #EEE9DF !important;
+  border-color: #C87532 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .instructionBanner {
+  background: #F5E7D8 !important;
+  border-color: rgba(200, 117, 50, 0.3) !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .staleBanner {
+  background: #F5E7D8 !important;
+  border-bottom-color: #C87532 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .metricsCard {
+  background: #FFFFFF !important;
+  border-color: #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .metricValue {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .runAllBtn {
+  background: #C87532 !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .runAllBtn:hover:not(:disabled) {
+  background: #A95D27 !important;
+}
+
+:global([data-theme="light"]) .addCustomBtn {
+  background: #FFFFFF !important;
+  border-color: #E2DBD0 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .addCustomBtn:hover {
+  background: #FAF8F3 !important;
+  border-color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .customForm {
+  background: #FFFFFF !important;
+  border-color: #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .formInput {
+  background: #FAF8F3 !important;
+  border-color: #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .formSubmitBtn {
+  background: #C87532 !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .formSubmitBtn:hover {
+  background: #A95D27 !important;
+}

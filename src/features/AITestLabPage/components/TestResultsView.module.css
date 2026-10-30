@@ -551,3 +551,82 @@
     padding: var(--space-4);
   }
 }
+
+
+/* ===== Light Theme Overrides ===== */
+:global([data-theme="light"]) .scoreBanner {
+  background: #FFFFFF;
+  border-bottom-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .scoreDial {
+  background: #FAF8F3;
+  border-color: #C87532;
+  box-shadow: 0 4px 14px rgba(200, 117, 50, 0.15);
+}
+
+:global([data-theme="light"]) .summaryCard,
+:global([data-theme="light"]) .topicCard,
+:global([data-theme="light"]) .recsCard {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  box-shadow: 0 2px 8px rgba(41, 39, 32, 0.04);
+}
+
+:global([data-theme="light"]) .progressBar {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .reviewCard {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  box-shadow: 0 2px 8px rgba(41, 39, 32, 0.04);
+}
+
+:global([data-theme="light"]) .reviewHeader {
+  background: #FAF8F3;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .reviewHeader:hover {
+  background: #EEE9DF;
+}
+
+:global([data-theme="light"]) .codeSnippet,
+:global([data-theme="light"]) .codeBoxContent {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .reviewOption {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #716B61;
+}
+
+:global([data-theme="light"]) .reviewOption--correct {
+  background: rgba(57, 118, 83, 0.1);
+  border-color: rgba(57, 118, 83, 0.3);
+  color: #397653;
+}
+
+:global([data-theme="light"]) .reviewOption--wrong {
+  background: rgba(182, 75, 64, 0.1);
+  border-color: rgba(182, 75, 64, 0.3);
+  color: #B64B40;
+}
+
+:global([data-theme="light"]) .explanationBox {
+  background: #F5E7D8;
+  border-color: rgba(200, 117, 50, 0.25);
+}
+
+:global([data-theme="light"]) .explanationTitle {
+  color: #C87532;
+}
+
+:global([data-theme="light"]) .explanationText {
+  color: #292720;
+}

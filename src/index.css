@@ -2,6 +2,8 @@
    CodeCraft Design System — Theme Tokens
    ============================================== */
 
+@import './theme/lightTheme.css';
+
 :root {
   /* ---- Color Palette ---- */
   --color-base:        #191815;   /* warm charcoal — primary background */
@@ -35,6 +37,18 @@
   --color-error-bg:    #C45E5E18;
   --color-info:        #7A9EBA;   /* slate blue — only for informational use */
   --color-info-bg:     #7A9EBA18;
+
+  /* ---- Surface, Text & Typography Aliases ---- */
+  --bg-surface:          var(--color-surface);
+  --bg-surface-elevated: var(--color-elevated);
+  --border-subtle:       var(--color-border-subtle);
+  --color-border-hover:  var(--color-border-strong);
+  --text-primary:        var(--color-ivory);
+  --text-secondary:      var(--color-ivory-muted);
+  --text-muted:          var(--color-ivory-faint);
+  --color-muted:         var(--color-ivory-muted);
+  --color-subtle:        var(--color-ivory-faint);
+  --font-sans:           var(--font-body);
 
   /* ---- Typography ---- */
   --font-display:    'Outfit', 'Inter', system-ui, sans-serif;

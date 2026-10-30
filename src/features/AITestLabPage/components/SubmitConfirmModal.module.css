@@ -187,3 +187,22 @@
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+
+/* ============================================================================
+   Submit Confirm Modal — Daylight Theme Overrides
+   ============================================================================ */
+
+:global([data-theme="light"]) .backdrop {
+  background: rgba(41, 39, 32, 0.45) !important;
+}
+
+:global([data-theme="light"]) .modal {
+  background: #FFFFFF !important;
+  border-color: #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .header {
+  background: #FAF8F3 !important;
+  border-bottom-color: #E2DBD0 !important;
+}

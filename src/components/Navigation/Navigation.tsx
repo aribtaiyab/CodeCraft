@@ -7,7 +7,10 @@ import {
   Menu,
   X,
   Cpu,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useTheme } from '../../context/ThemeContext'
 import styles from './Navigation.module.css'
 
 const navItems = [
@@ -18,6 +21,7 @@ const navItems = [
 
 export function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { isLight, toggleTheme } = useTheme()
 
   const closeMobile = () => setMobileOpen(false)
 
@@ -72,6 +76,24 @@ export function Navigation() {
 
           {/* Right slot */}
           <div className={styles.nav__right}>
+            {/* Daylight / Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={styles.nav__themeToggle}
+              aria-label={isLight ? 'Switch to Night mode' : 'Switch to Daylight theme'}
+              title={isLight ? 'Return to Night mode' : 'Activate Daylight theme'}
+            >
+              {isLight ? (
+                <Moon size={14} strokeWidth={1.8} className={styles.nav__themeIcon} />
+              ) : (
+                <Sun size={14} strokeWidth={1.8} className={styles.nav__themeIcon} />
+              )}
+              <span className={styles.nav__themeLabel}>
+                {isLight ? 'Night mode' : 'Daylight'}
+              </span>
+            </button>
+
             <div className={styles.nav__statusInstrument} title="Pyodide 0.26 WebAssembly Runtime">
               <span className={styles.nav__engineDot} aria-hidden="true" />
               <span className={styles.nav__engineLabel}>Python 3.12 Engine</span>
@@ -141,6 +163,20 @@ export function Navigation() {
             </nav>
 
             <div className={styles.nav__mobileMeta}>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={styles.nav__mobileThemeToggle}
+                aria-label={isLight ? 'Switch to Night mode' : 'Switch to Daylight theme'}
+              >
+                {isLight ? (
+                  <Moon size={16} strokeWidth={1.8} className={styles.nav__themeIcon} />
+                ) : (
+                  <Sun size={16} strokeWidth={1.8} className={styles.nav__themeIcon} />
+                )}
+                <span>{isLight ? 'Night mode' : 'Daylight theme'}</span>
+              </button>
+
               <div className={styles.nav__statusInstrument}>
                 <span className={styles.nav__engineDot} aria-hidden="true" />
                 <span className={styles.nav__engineLabel}>Python 3.12 Engine</span>

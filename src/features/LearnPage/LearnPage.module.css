@@ -487,3 +487,76 @@
     gap: var(--space-2);
   }
 }
+
+
+/* ===== Light Theme Overrides ===== */
+:global([data-theme="light"]) .header {
+  background: #FFFFFF;
+  border-bottom-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .header__icon {
+  background: #F5E7D8;
+  border-color: rgba(200, 117, 50, 0.3);
+  color: #C87532;
+}
+
+:global([data-theme="light"]) .filterPill {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+  color: #716B61;
+}
+
+:global([data-theme="light"]) .filterPill:hover {
+  background: #EEE9DF;
+  color: #292720;
+}
+
+:global([data-theme="light"]) .filterPill--active {
+  background: #F5E7D8 !important;
+  border-color: rgba(200, 117, 50, 0.3) !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .pathCard {
+  background: #FFFFFF;
+  border-color: #E2DBD0;
+  box-shadow: 0 2px 8px rgba(41, 39, 32, 0.04);
+}
+
+:global([data-theme="light"]) .pathCard:hover {
+  border-color: #C87532;
+}
+
+:global([data-theme="light"]) .pathCard__header:hover {
+  background: #FAF8F3;
+}
+
+:global([data-theme="light"]) .pathCard__enrollBanner {
+  background: #FAF8F3;
+  border-top-color: #E2DBD0;
+  border-bottom-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .moduleCard {
+  background: #FAF8F3;
+  border-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .moduleCard__header:not(:disabled):hover {
+  background: #EEE9DF;
+}
+
+:global([data-theme="light"]) .moduleCard__index {
+  background: #F5E7D8;
+  border-color: rgba(200, 117, 50, 0.2);
+  color: #C87532;
+}
+
+:global([data-theme="light"]) .lessonItem {
+  border-bottom-color: #E2DBD0;
+}
+
+:global([data-theme="light"]) .lessonItem:hover {
+  background: #FFFFFF;
+}

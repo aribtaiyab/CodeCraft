@@ -28,6 +28,7 @@ import {
   Save,
 } from 'lucide-react'
 import { Badge, Tabs } from '../../components'
+import { useTheme } from '../../context/ThemeContext'
 import { usePyodide } from '../../services/pyodide'
 import {
   TraceVisualizer,
@@ -116,7 +117,26 @@ const EDITOR_THEME_RULES = [
   { token: 'identifier', foreground: 'F4F0E8' },
 ]
 
+// Warm syntax token rules tailored for CodeCraft Daylight editorial light palette
+const LIGHT_EDITOR_THEME_RULES = [
+  { token: 'comment', foreground: '91897D', fontStyle: 'italic' },
+  { token: 'keyword', foreground: 'C87532', fontStyle: 'bold' },
+  { token: 'keyword.control', foreground: 'C87532', fontStyle: 'bold' },
+  { token: 'keyword.operator', foreground: 'A95D27' },
+  { token: 'string', foreground: '397653' },
+  { token: 'string.escape', foreground: 'A76A24' },
+  { token: 'number', foreground: 'A76A24' },
+  { token: 'type', foreground: 'B64B40', fontStyle: 'bold' },
+  { token: 'function', foreground: '292720' },
+  { token: 'variable', foreground: '3A362D' },
+  { token: 'variable.parameter', foreground: '575043' },
+  { token: 'delimiter', foreground: '716B61' },
+  { token: 'operator', foreground: 'C87532' },
+  { token: 'identifier', foreground: '292720' },
+]
+
 export function CodeStudioPage() {
+  const { isLight } = useTheme()
   // URL exercise parameter loading or workspace auto-restore
   const [searchParams] = useSearchParams()
   const exerciseParam = searchParams.get('exerciseId')
@@ -214,6 +234,13 @@ export function CodeStudioPage() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Sync Monaco editor theme with Daylight / Night mode
+  useEffect(() => {
+    if (monacoRef.current) {
+      monacoRef.current.editor.setTheme(isLight ? 'codecraft-light' : 'codecraft')
+    }
+  }, [isLight])
 
   // Draggable divider mouse listener
   useEffect(() => {
@@ -580,7 +607,51 @@ export function CodeStudioPage() {
         'list.hoverBackground':               '#2A2722',
       },
     })
-    m.editor.setTheme('codecraft')
+
+    m.editor.defineTheme('codecraft-light', {
+      base: 'vs',
+      inherit: true,
+      rules: LIGHT_EDITOR_THEME_RULES,
+      colors: {
+        'editor.background':                  '#FFFFFF',
+        'editor.foreground':                  '#292720',
+        'editor.lineHighlightBackground':     '#FAF8F3',
+        'editor.lineHighlightBorder':         '#ECE6DC',
+        'editor.selectionBackground':         '#F5E7D8',
+        'editor.selectionHighlightBackground':'#F5E7D888',
+        'editor.inactiveSelectionBackground': '#F0EBE1',
+        'editorLineNumber.foreground':        '#B3AAA0',
+        'editorLineNumber.activeForeground':  '#C87532',
+        'editorCursor.foreground':            '#C87532',
+        'editor.findMatchBackground':         '#F5E7D8',
+        'editor.findMatchHighlightBackground':'#F5E7D888',
+        'editorIndentGuide.background1':      '#ECE6DC',
+        'editorIndentGuide.activeBackground1':'#D5CCC0',
+        'editorBracketMatch.background':      '#F5E7D888',
+        'editorBracketMatch.border':          '#C87532',
+        'scrollbarSlider.background':         '#E2DBD088',
+        'scrollbarSlider.hoverBackground':    '#D5CCC0CC',
+        'scrollbarSlider.activeBackground':   '#C8753266',
+        'editorWidget.background':            '#FFFFFF',
+        'editorWidget.border':                '#E2DBD0',
+        'editorSuggestWidget.background':     '#FFFFFF',
+        'editorSuggestWidget.border':         '#E2DBD0',
+        'editorSuggestWidget.foreground':     '#292720',
+        'editorSuggestWidget.selectedBackground': '#FAF8F3',
+        'editorSuggestWidget.highlightForeground': '#C87532',
+        'editorHoverWidget.background':       '#FFFFFF',
+        'editorHoverWidget.border':           '#E2DBD0',
+        'input.background':                   '#FAF8F3',
+        'input.foreground':                   '#292720',
+        'input.border':                       '#E2DBD0',
+        'focusBorder':                        '#C87532',
+        'list.activeSelectionBackground':     '#FAF8F3',
+        'list.activeSelectionForeground':     '#292720',
+        'list.hoverBackground':               '#F6F2EA',
+      },
+    })
+
+    m.editor.setTheme(isLight ? 'codecraft-light' : 'codecraft')
 
     // Track live cursor position
     cursorPosSubRef.current?.dispose()

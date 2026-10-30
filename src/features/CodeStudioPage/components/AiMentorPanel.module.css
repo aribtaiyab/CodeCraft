@@ -686,3 +686,173 @@
   margin-bottom: 10px;
 }
 
+
+
+/* ============================================================================
+   AI Mentor Panel — Daylight Theme Overrides
+   ============================================================================ */
+
+:global([data-theme="light"]) .mentorPanel {
+  background: #FAF8F3 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .subNavBar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .subNavBtn {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .subNavBtn:hover {
+  color: #292720 !important;
+  background: rgba(200, 117, 50, 0.08) !important;
+}
+
+:global([data-theme="light"]) .subNavBtn--active {
+  color: #C87532 !important;
+  background: #F5E7D8 !important;
+  border-color: rgba(200, 117, 50, 0.3) !important;
+}
+
+:global([data-theme="light"]) .contextPill {
+  background: rgba(200, 117, 50, 0.1) !important;
+  border: 1px solid rgba(200, 117, 50, 0.3) !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .emptyCard {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .emptyIconBox {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .emptyTitle {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .emptyText {
+  color: #716B61 !important;
+}
+
+:global([data-theme="light"]) .btnExplain {
+  background: #C87532 !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .btnExplain:hover:not(:disabled) {
+  background: #A95D27 !important;
+}
+
+:global([data-theme="light"]) .explainCard {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .explainTitle {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .explainSection {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .explainSectionTitle {
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .explainSectionContent {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .chatContainer {
+  background: #FAF8F3 !important;
+}
+
+:global([data-theme="light"]) .chatMessage--user {
+  background: #F5E7D8 !important;
+  border: 1px solid rgba(200, 117, 50, 0.25) !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .chatMessage--mentor {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .chatInputBar {
+  background: #FFFFFF !important;
+  border-top: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .chatInput {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .chatInput:focus {
+  border-color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .btnSend {
+  background: #C87532 !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .btnSend:hover:not(:disabled) {
+  background: #A95D27 !important;
+}
+
+:global([data-theme="light"]) .quizCard {
+  background: #FFFFFF !important;
+  border: 1px solid #E2DBD0 !important;
+}
+
+:global([data-theme="light"]) .quizQuestion {
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .quizOption {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}
+
+:global([data-theme="light"]) .quizOption:hover {
+  background: #EEE9DF !important;
+  border-color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .quizOption--selected {
+  background: #F5E7D8 !important;
+  border-color: #C87532 !important;
+  color: #C87532 !important;
+}
+
+:global([data-theme="light"]) .quizOption--correct {
+  background: rgba(57, 118, 83, 0.12) !important;
+  border-color: #397653 !important;
+  color: #397653 !important;
+}
+
+:global([data-theme="light"]) .quizOption--incorrect {
+  background: rgba(182, 75, 64, 0.12) !important;
+  border-color: #B64B40 !important;
+  color: #B64B40 !important;
+}
+
+:global([data-theme="light"]) .quizFeedback {
+  background: #FAF8F3 !important;
+  border: 1px solid #E2DBD0 !important;
+  color: #292720 !important;
+}

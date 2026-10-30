@@ -382,126 +382,87 @@
   color: #4ade80;
 }
 
-/* Compact Before/After Line-Level Diff */
-.diffContainer {
-  background: var(--color-base);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+/* Clean Level 3 Comparison Box */
+.lineComparisonBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.diffHeader {
+.lineBoxIncorrect {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.lineBoxCorrect {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.lineBoxLabel {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 4px;
+}
+
+.lineTagError {
   font-size: 10px;
-  font-weight: 600;
-  color: var(--color-muted);
-  font-family: var(--font-sans);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #f87171;
 }
 
-.diffScopeLabel {
-  color: var(--color-bronze-light);
+.lineTagCorrect {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4ade80;
 }
 
-.diffLine {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: 6px 10px;
+.codeSnippet {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   line-height: 1.4;
   word-break: break-all;
+  white-space: pre-wrap;
 }
 
-.diffLine--original {
-  background: rgba(239, 68, 68, 0.12);
+.lineBoxIncorrect .codeSnippet code {
   color: #fca5a5;
-  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-.diffLine--replacement {
-  background: rgba(74, 222, 128, 0.12);
+.lineBoxCorrect .codeSnippet code {
   color: #86efac;
 }
 
-.diffPrefix {
-  user-select: none;
-  font-weight: 700;
-  width: 12px;
-}
-
-.whyItWorksBox,
-.preventionBox {
+.solutionText {
   font-size: var(--text-xs);
-  color: var(--color-ivory-muted);
+  color: var(--color-ivory);
   line-height: 1.5;
   background: var(--color-base);
   border-left: 2px solid var(--color-bronze);
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
-/* Action Toolbar */
-.actionRow {
+.studentActionPrompt {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-wrap: wrap;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.applyBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--color-bronze);
-  color: var(--color-base);
-  border: none;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  padding: 7px 12px;
+  background: rgba(184, 137, 91, 0.12);
+  border: 1px solid rgba(184, 137, 91, 0.3);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.applyBtn:hover {
-  background: var(--color-bronze-light);
-}
-
-.applyBtn--applied {
-  background: #15803d;
-  color: #f0fdf4;
-}
-
-.undoBtn,
-.copyBtn,
-.runAgainBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--color-base);
-  border: 1px solid var(--color-border);
-  color: var(--color-ivory);
+  padding: 8px 12px;
   font-size: var(--text-xs);
-  font-weight: 500;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.undoBtn:hover,
-.copyBtn:hover,
-.runAgainBtn:hover {
-  background: var(--color-elevated);
-  border-color: var(--color-bronze);
+  color: var(--color-bronze-light);
+  line-height: 1.4;
 }
 
 /* Try It Yourself Mini-Quiz Box */

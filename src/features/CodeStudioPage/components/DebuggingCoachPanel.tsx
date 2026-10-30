@@ -1,6 +1,6 @@
 // ============================================================================
 // CodeCraft — Smart Debugging Coach Panel Component
-// Line-Level Issue Cards, 3 Progressive Levels, Targeted Monaco Edits
+// Beginner-Friendly Line-Level Error Diagnosis & 3 Simple Progressive Levels
 // ============================================================================
 
 import React, { useState } from 'react'
@@ -10,55 +10,99 @@ import {
   AlertTriangle,
   Lightbulb,
   FileSearch,
-  Wrench,
-  Check,
-  Undo2,
-  Copy,
-  Play,
+  CheckCircle,
   ArrowRight,
   HelpCircle,
   CheckCircle2,
   XCircle,
 } from 'lucide-react'
 import type { BugDiagnosis, DiagnosedIssue } from '../../../services/coach'
-import { classifyBugCategory, CONCEPT_REGISTRY } from '../../../services/learning'
+import { classifyBugCategory } from '../../../services/learning'
 import styles from './DebuggingCoachPanel.module.css'
 
-export interface LineFixTarget {
-  originalText: string
-  replacementText: string
-  startLine: number
-  endLine?: number
-  startColumn?: number
-  endColumn?: number
-  issueId?: string
+function getDisplayCategoryName(category: string): string {
+  switch (category) {
+    case 'name-error-typo':
+      return 'Name Error'
+    case 'syntax-error':
+    case 'comparison-assignment':
+      return 'Syntax Error'
+    case 'indentation-error':
+      return 'Indentation Error'
+    case 'zero-division':
+      return 'Zero Division Error'
+    case 'type-mismatch':
+      return 'Type Error'
+    case 'value-error':
+      return 'Value Error'
+    case 'index-out-of-bounds':
+      return 'Index Error'
+    case 'key-error':
+      return 'Key Error'
+    case 'attribute-error':
+      return 'Attribute Error'
+    case 'import-error':
+      return 'Import Error'
+    case 'recursion-error':
+      return 'Recursion Error'
+    case 'timeout-infinite-loop':
+      return 'Timeout Error'
+    case 'early-return-loop':
+      return 'Logic Error'
+    case 'missing-return':
+      return 'Missing Return'
+    default:
+      return 'Syntax Error'
+  }
+}
+
+function getDisplayConceptName(category: string): string {
+  switch (category) {
+    case 'name-error-typo':
+      return 'Variables & Functions'
+    case 'syntax-error':
+    case 'comparison-assignment':
+      return 'Parentheses, Brackets & Colons'
+    case 'indentation-error':
+      return 'Indentation & Code Blocks'
+    case 'zero-division':
+      return 'Division Safety'
+    case 'type-mismatch':
+      return 'Data Types & Operations'
+    case 'value-error':
+      return 'Values & Type Conversion'
+    case 'index-out-of-bounds':
+      return 'List Indexing'
+    case 'key-error':
+      return 'Dictionary Keys'
+    case 'attribute-error':
+      return 'Object Attributes'
+    case 'recursion-error':
+      return 'Recursion Depth'
+    case 'timeout-infinite-loop':
+      return 'Loop Termination'
+    case 'early-return-loop':
+      return 'Loop Logic'
+    case 'missing-return':
+      return 'Return Values'
+    default:
+      return 'Syntax Rules'
+  }
 }
 
 interface DebuggingCoachPanelProps {
   diagnosis: BugDiagnosis | null
   isStale: boolean
-  onApplyLineFix: (fix: LineFixTarget) => void
-  onUndoFix: () => void
-  onRunAgain: () => void
-  canUndo: boolean
 }
 
 export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
   diagnosis,
   isStale,
-  onApplyLineFix,
-  onUndoFix,
-  onRunAgain,
-  canUndo,
 }) => {
   const navigate = useNavigate()
 
   // Track active level tab per issue: Record<issueId, 1 | 2 | 3>
   const [activeLevels, setActiveLevels] = useState<Record<string, 1 | 2 | 3>>({})
-  // Track applied status per issue: Record<issueId, boolean>
-  const [appliedIssues, setAppliedIssues] = useState<Record<string, boolean>>({})
-  // Track copied state for replacement snippet: Record<issueId, boolean>
-  const [copiedIssues, setCopiedIssues] = useState<Record<string, boolean>>({})
   // Track quiz selection per issue: Record<issueId, number>
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({})
 
@@ -69,7 +113,7 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
           <LifeBuoy size={36} strokeWidth={1.5} className={styles.emptyStateIcon} />
           <div className={styles.emptyStateTitle}>Smart Debugging Coach Ready</div>
           <div className={styles.emptyStateSubtitle}>
-            Run your Python program in Code Studio. When a syntax error, exception, or logic mismatch occurs, the Coach provides line-targeted explanations and progressive hints to guide your solution.
+            Run your Python program in Code Studio. When a mistake occurs, the Coach shows the exact incorrect line, explains why it happened in simple English, and helps you fix it.
           </div>
         </div>
       </div>
@@ -88,13 +132,13 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
             summary: diagnosis.summary,
             levels: {
               level1: {
-                title: diagnosis.hints[0]?.title || 'Helpful Hint',
+                title: 'Hint',
                 hint: diagnosis.hints[0]?.content || '',
                 concept: 'Python Logic',
                 line: diagnosis.line,
               },
               level2: {
-                title: diagnosis.hints[1]?.title || 'Explain the Error',
+                title: 'Explanation',
                 explanation: diagnosis.hints[1]?.content || '',
                 problematicSnippet: diagnosis.hints[1]?.evidence?.observedValue || '',
                 whyPythonErrors: 'An unexpected exception or invalid syntax was encountered during execution.',
@@ -103,7 +147,7 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
                 evidence: diagnosis.hints[1]?.evidence,
               },
               level3: {
-                title: diagnosis.hints[2]?.title || 'Complete Solution',
+                title: 'Correct Answer',
                 solution: diagnosis.hints[2]?.content || '',
                 whyItWorks: 'Fixing the statement resolves the runtime error.',
                 preventionTip: 'Double check variable values and boundary conditions.',
@@ -122,7 +166,8 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
         ]
 
   const primaryClassification = classifyBugCategory(diagnosis.category)
-  const primaryConceptDef = CONCEPT_REGISTRY[primaryClassification.conceptId]
+  const displayCategory = getDisplayCategoryName(diagnosis.category)
+  const displayConcept = getDisplayConceptName(diagnosis.category)
 
   const getActiveLevel = (issueId: string): 1 | 2 | 3 => {
     return activeLevels[issueId] ?? 1
@@ -130,39 +175,6 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
 
   const handleSetLevel = (issueId: string, level: 1 | 2 | 3) => {
     setActiveLevels((prev) => ({ ...prev, [issueId]: level }))
-  }
-
-  const handleApply = (issue: DiagnosedIssue) => {
-    const fix = issue.levels.level3.suggestedFix
-    if (fix) {
-      onApplyLineFix({
-        originalText: fix.originalText,
-        replacementText: fix.replacementText,
-        startLine: fix.startLine,
-        endLine: fix.endLine,
-        startColumn: fix.startColumn,
-        endColumn: fix.endColumn,
-        issueId: issue.id,
-      })
-      setAppliedIssues((prev) => ({ ...prev, [issue.id]: true }))
-    }
-  }
-
-  const handleUndo = (issueId: string) => {
-    onUndoFix()
-    setAppliedIssues((prev) => ({ ...prev, [issueId]: false }))
-  }
-
-  const handleCopy = async (issueId: string, text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedIssues((prev) => ({ ...prev, [issueId]: true }))
-      setTimeout(() => {
-        setCopiedIssues((prev) => ({ ...prev, [issueId]: false }))
-      }, 2000)
-    } catch {
-      // Ignore clipboard write failures
-    }
   }
 
   const handleQuizSelect = (issueId: string, optionIndex: number) => {
@@ -175,7 +187,7 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
       {isStale && (
         <div className={styles.staleBanner} role="alert">
           <AlertTriangle size={14} className={styles.staleIcon} />
-          <span>Code modified since diagnosis. Press <strong>Ctrl+Enter</strong> or click <strong>Run</strong> to re-analyze.</span>
+          <span>Code modified. Click <strong>Run</strong> (or press <strong>Ctrl+Enter</strong>) to test your changes.</span>
         </div>
       )}
 
@@ -188,13 +200,13 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
               <span>Smart Debugging Coach</span>
             </div>
             <span className={styles.issueCountBadge}>
-              {issues.length} {issues.length === 1 ? 'Issue Detected' : 'Issues Detected'}
+              {issues.length} {issues.length === 1 ? 'Issue Found' : 'Issues Found'}
             </span>
           </div>
 
           <div className={styles.overviewConceptRow}>
             <div className={styles.conceptTag}>
-              Concept: {primaryConceptDef?.name || primaryClassification.conceptId}
+              {displayCategory}: {displayConcept}
             </div>
             <button
               className={styles.targetedRetestBtn}
@@ -214,10 +226,9 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
         {/* Individual Line-Level Issue Cards */}
         {issues.map((issue, idx) => {
           const currentLevel = getActiveLevel(issue.id)
-          const isApplied = appliedIssues[issue.id]
-          const isCopied = copiedIssues[issue.id]
           const fix = issue.levels.level3.suggestedFix
           const quizAnswer = quizAnswers[issue.id]
+          const issueCategoryName = getDisplayCategoryName(issue.category)
 
           return (
             <div key={issue.id} className={styles.issueCard}>
@@ -230,19 +241,14 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
                   {issue.line > 0 && (
                     <span className={styles.lineBadge}>Line {issue.line}</span>
                   )}
-                  <span className={styles.categoryBadge}>{issue.category}</span>
+                  <span className={styles.categoryBadge}>{issueCategoryName}</span>
                 </div>
-                {isApplied && (
-                  <span className={styles.appliedBadge}>
-                    <Check size={11} /> Fix Applied
-                  </span>
-                )}
               </div>
 
               <div className={styles.issueTitle}>{issue.title}</div>
               <div className={styles.issueSummary}>{issue.summary}</div>
 
-              {/* 3 Progressive Levels Selector */}
+              {/* 3 Simple Progressive Levels Selector */}
               <div className={styles.levelTabs} role="tablist" aria-label="Progressive Hint Levels">
                 <button
                   role="tab"
@@ -266,7 +272,7 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
                   onClick={() => handleSetLevel(issue.id, 2)}
                 >
                   <FileSearch size={12} />
-                  <span>Level 2: Explain</span>
+                  <span>Level 2: Explanation</span>
                 </button>
                 <button
                   role="tab"
@@ -277,12 +283,12 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
                   ].join(' ')}
                   onClick={() => handleSetLevel(issue.id, 3)}
                 >
-                  <Wrench size={12} />
-                  <span>Level 3: Solution</span>
+                  <CheckCircle size={12} />
+                  <span>Level 3: Correct Answer</span>
                 </button>
               </div>
 
-              {/* Level 1: Helpful Hint */}
+              {/* Level 1: Hint */}
               {currentLevel === 1 && (
                 <div className={styles.levelContent}>
                   <div className={styles.levelHeading}>
@@ -291,18 +297,18 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
                   </div>
                   <div className={styles.hintBody}>{issue.levels.level1.hint}</div>
                   <div className={styles.hintMeta}>
-                    <span>Relevant Concept: <strong>{issue.levels.level1.concept}</strong></span>
                     <span>Target: <strong>Line {issue.levels.level1.line}</strong></span>
+                    <span>Concept: <strong>{issue.levels.level1.concept}</strong></span>
                   </div>
                 </div>
               )}
 
-              {/* Level 2: Explain the Error */}
+              {/* Level 2: Explanation */}
               {currentLevel === 2 && (
                 <div className={styles.levelContent}>
                   <div className={styles.levelHeading}>
                     <FileSearch size={14} className={styles.levelIcon} />
-                    <span>Why Python Produced this Error</span>
+                    <span>What Happened and Why</span>
                   </div>
                   <div className={styles.explanationText}>
                     {issue.levels.level2.explanation}
@@ -310,118 +316,67 @@ export const DebuggingCoachPanel: React.FC<DebuggingCoachPanelProps> = ({
 
                   {issue.levels.level2.problematicSnippet && (
                     <div className={styles.codeSnippetBlock}>
-                      <span className={styles.codeSnippetLabel}>Problematic Code on Line {issue.line}:</span>
+                      <span className={styles.codeSnippetLabel}>Mistake on Line {issue.line}:</span>
                       <code>{issue.levels.level2.problematicSnippet}</code>
                     </div>
                   )}
 
-                  <div className={styles.conceptTeachingBox}>
-                    <div className={styles.conceptTeachingTitle}>How this Concept Works:</div>
-                    <div>{issue.levels.level2.conceptTeaching}</div>
-                  </div>
-
                   {issue.levels.level2.correctExample && (
                     <div className={styles.correctExampleBox}>
-                      <span className={styles.codeSnippetLabel}>Correct Pattern Example:</span>
+                      <span className={styles.codeSnippetLabel}>Correct Python Example:</span>
                       <pre><code>{issue.levels.level2.correctExample}</code></pre>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Level 3: Complete Solution & Targeted Fix */}
+              {/* Level 3: Correct Answer (Line-level only, no entire program) */}
               {currentLevel === 3 && (
                 <div className={styles.levelContent}>
                   <div className={styles.levelHeading}>
-                    <Wrench size={14} className={styles.levelIcon} />
-                    <span>Exact Targeted Correction</span>
+                    <CheckCircle size={14} className={styles.levelIcon} />
+                    <span>Correct Answer</span>
                   </div>
 
+                  {/* Compact Line-Level Comparison */}
+                  {fix && fix.originalText.trim() !== fix.replacementText.trim() ? (
+                    <div className={styles.lineComparisonBox}>
+                      <div className={styles.lineBoxIncorrect}>
+                        <div className={styles.lineBoxLabel}>
+                          <span className={styles.lineTagError}>Incorrect Line {issue.line}</span>
+                        </div>
+                        <pre className={styles.codeSnippet}><code>{fix.originalText.trim()}</code></pre>
+                      </div>
+
+                      <div className={styles.lineBoxCorrect}>
+                        <div className={styles.lineBoxLabel}>
+                          <span className={styles.lineTagCorrect}>Correct Line</span>
+                        </div>
+                        <pre className={styles.codeSnippet}><code>{fix.replacementText.trim()}</code></pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.lineBoxIncorrect}>
+                      <div className={styles.lineBoxLabel}>
+                        <span className={styles.lineTagError}>Problematic Line {issue.line}</span>
+                      </div>
+                      <pre className={styles.codeSnippet}><code>{issue.levels.level2.problematicSnippet || fix?.originalText.trim() || `Line ${issue.line}`}</code></pre>
+                    </div>
+                  )}
+
+                  {/* Short Explanation */}
                   <div className={styles.solutionText}>
                     {issue.levels.level3.solution}
                   </div>
 
-                  {/* Compact Line-Level Diff */}
-                  {fix && (
-                    <div className={styles.diffContainer}>
-                      <div className={styles.diffHeader}>
-                        <span>Target Line {fix.startLine}</span>
-                        <span className={styles.diffScopeLabel}>Only this line will be modified</span>
-                      </div>
-                      <div className={`${styles.diffLine} ${styles['diffLine--original']}`}>
-                        <span className={styles.diffPrefix}>-</span>
-                        <code>{fix.originalText}</code>
-                      </div>
-                      <div className={`${styles.diffLine} ${styles['diffLine--replacement']}`}>
-                        <span className={styles.diffPrefix}>+</span>
-                        <code>{fix.replacementText}</code>
-                      </div>
-                    </div>
-                  )}
-
-                  {issue.levels.level3.whyItWorks && (
-                    <div className={styles.whyItWorksBox}>
-                      <strong>Why this fix works:</strong> {issue.levels.level3.whyItWorks}
-                    </div>
-                  )}
-
-                  {issue.levels.level3.preventionTip && (
-                    <div className={styles.preventionBox}>
-                      <strong>How to avoid this next time:</strong> {issue.levels.level3.preventionTip}
-                    </div>
-                  )}
-
-                  {/* Action Toolbar */}
-                  <div className={styles.actionRow}>
-                    {fix && (
-                      <button
-                        className={[
-                          styles.applyBtn,
-                          isApplied ? styles['applyBtn--applied'] : '',
-                        ].join(' ')}
-                        onClick={() => handleApply(issue)}
-                        title="Apply targeted fix to Monaco editor"
-                      >
-                        <Check size={14} />
-                        <span>{isApplied ? 'Fix Applied' : 'Apply Fix to Editor'}</span>
-                      </button>
-                    )}
-
-                    {(isApplied || canUndo) && (
-                      <button
-                        className={styles.undoBtn}
-                        onClick={() => handleUndo(issue.id)}
-                        title="Undo fix and restore previous code"
-                      >
-                        <Undo2 size={13} />
-                        <span>Undo Fix</span>
-                      </button>
-                    )}
-
-                    {fix && (
-                      <button
-                        className={styles.copyBtn}
-                        onClick={() => handleCopy(issue.id, fix.replacementText)}
-                        title="Copy corrected code to clipboard"
-                      >
-                        {isCopied ? <Check size={13} /> : <Copy size={13} />}
-                        <span>{isCopied ? 'Copied!' : 'Copy Fix'}</span>
-                      </button>
-                    )}
-
-                    <button
-                      className={styles.runAgainBtn}
-                      onClick={onRunAgain}
-                      title="Run code with this fix applied"
-                    >
-                      <Play size={13} />
-                      <span>Run Again</span>
-                    </button>
+                  {/* Clear Student Action Prompt: Manually edit in Monaco and press Run */}
+                  <div className={styles.studentActionPrompt}>
+                    💡 <span>Update <strong>Line {issue.line}</strong> in the code editor on the left, then click <strong>Run</strong> (or press <strong>Ctrl+Enter</strong>).</span>
                   </div>
                 </div>
               )}
 
-              {/* Optional: Try It Yourself Mini-Quiz */}
+              {/* Optional: Try It Yourself Quick Check */}
               {issue.tryItYourself && (
                 <div className={styles.quizBox}>
                   <div className={styles.quizHeader}>

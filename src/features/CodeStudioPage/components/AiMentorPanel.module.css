@@ -177,21 +177,184 @@
 }
 
 /* Explanation Cards */
-.explainCard {
-  background: var(--bg-surface-elevated, #24221E);
-  border: 1px solid var(--border-subtle, #3A3730);
-  border-radius: 8px;
-  padding: 16px;
+/* Explanation Results Container */
+.explainContainer {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.explainCard__summary {
-  font-size: 14px;
-  font-weight: 500;
+.explainHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-surface-elevated, #24221E);
+  border: 1px solid rgba(184, 137, 91, 0.25);
+  border-radius: 8px;
+}
+
+.explainHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.explainHeaderIcon {
+  color: var(--color-bronze, #B8895B);
+}
+
+.explainHeaderTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #F4F0E8);
+}
+
+.modelPill {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(184, 137, 91, 0.12);
+  color: var(--color-bronze, #B8895B);
+  border: 1px solid rgba(184, 137, 91, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Sections A-E */
+.explainSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--bg-surface-elevated, #24221E);
+  border: 1px solid var(--border-subtle, #3A3730);
+  border-radius: 8px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionIndexBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(184, 137, 91, 0.18);
+  color: var(--color-bronze, #B8895B);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(184, 137, 91, 0.35);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #F4F0E8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryBox {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary, #F4F0E8);
+}
+
+/* Section B: Numbered Steps */
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #191815;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+}
+
+.stepNumberBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: rgba(184, 137, 91, 0.15);
+  color: var(--color-bronze, #B8895B);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(184, 137, 91, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stepContent {
+  font-size: 13px;
   line-height: 1.5;
   color: var(--text-primary, #F4F0E8);
+}
+
+/* Section C: Concept Cards */
+.conceptCardsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conceptCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #191815;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+}
+
+.conceptCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.conceptCardName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-bronze, #B8895B);
+}
+
+.conceptExamplePill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(184, 137, 91, 0.12);
+  color: #D4A876;
+  border: 1px solid rgba(184, 137, 91, 0.25);
+}
+
+.conceptMeaning {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #B8B2A7);
+}
+
+.conceptUsage {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted, #857E71);
 }
 
 .conceptTags {
@@ -216,48 +379,106 @@
   white-space: pre-wrap;
 }
 
-/* Line-by-line table */
-.lineBreakdown {
+/* Section D: Line-by-Line Breakdown */
+.lineBreakdownList {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 6px;
 }
 
-.lineBreakdown__title {
+.lineBreakdownCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #191815;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+}
+
+.lineBreakdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lineNoBadge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-bronze, #B8895B);
+  background: rgba(184, 137, 91, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(184, 137, 91, 0.25);
+}
+
+.lineCodeSnippet {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  font-weight: 600;
+  color: var(--text-primary, #F4F0E8);
+}
+
+.lineExplanationText {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #B8B2A7);
+  padding-left: 2px;
+}
+
+/* Section E: Final Output */
+.outputBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outputConsole {
+  background: #141311;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.outputConsoleHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #1E1C18;
+  border-bottom: 1px solid var(--border-subtle, #2C2A25);
+}
+
+.consoleDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3A3730;
+}
+
+.consoleTitle {
+  font-size: 10px;
   color: var(--text-muted, #857E71);
+  font-weight: 600;
   text-transform: uppercase;
+  margin-left: 4px;
   letter-spacing: 0.5px;
 }
 
-.lineRow {
-  display: flex;
-  gap: 10px;
-  padding: 6px 10px;
-  background: #191815;
-  border: 1px solid var(--border-subtle, #2C2A25);
-  border-radius: 4px;
+.outputContent {
+  padding: 8px 12px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
+  color: #79C587;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-.lineNo {
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--color-bronze, #B8895B);
-  font-weight: 600;
-  min-width: 28px;
-}
-
-.lineCode {
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text-primary, #F4F0E8);
-  flex: 1;
-}
-
-.lineExp {
+.outputWhyText {
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--text-secondary, #B8B2A7);
-  flex: 2;
 }
 
 /* Q&A Conversation Section */

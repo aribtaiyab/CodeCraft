@@ -137,7 +137,6 @@ export function CodeStudioPage() {
 
   // Phase 4: Debugging Coach & Test Results State
   const [diagnosis, setDiagnosis] = useState<BugDiagnosis | null>(null)
-  const [undoBackupCode, setUndoBackupCode] = useState<string | null>(null)
   const [testResults, setTestResults] = useState<TestAssertionResult[] | null>(null)
   const [isRunningTests, setIsRunningTests] = useState(false)
 
@@ -344,10 +343,15 @@ export function CodeStudioPage() {
         const errKey = `${errEntry.text}:${code.length}`
         if (analyzedErrorKeyRef.current !== errKey) {
           analyzedErrorKeyRef.current = errKey
+          // Extract exact Python error type (e.g. SyntaxError, NameError)
+          const typeMatch = errEntry.text.match(
+            /\b(SyntaxError|IndentationError|NameError|TypeError|ValueError|IndexError|KeyError|ZeroDivisionError|AttributeError|ImportError|ModuleNotFoundError|RecursionError|TimeoutError)\b/
+          )
+          const errorType = typeMatch ? typeMatch[1] : 'SyntaxError'
           const diag = diagnoseBug({
             code,
             lastError: {
-              errorType: errEntry.text.split(':')[0]?.trim() || 'RuntimeError',
+              errorType,
               message: errEntry.text,
               traceback: errEntry.text,
             },
@@ -427,7 +431,6 @@ export function CodeStudioPage() {
     decorationsCollectionRef.current?.clear()
     setDiagnosis(null)
     setTestResults(null)
-    setUndoBackupCode(null)
     if (language === 'python') {
       resetEngine()
     }
@@ -440,85 +443,10 @@ export function CodeStudioPage() {
     setInputVal('')
   }
 
-  // Apply Targeted Line-Level Fix to Monaco Editor
-  const handleApplyLineFix = (fix: {
-    originalText: string
-    replacementText: string
-    startLine: number
-    endLine?: number
-    startColumn?: number
-    endColumn?: number
-    issueId?: string
-  }) => {
-    const editor = editorRef.current
-    const monaco = monacoRef.current
-
-    if (!editor || !monaco) {
-      if (code.includes(fix.originalText)) {
-        setUndoBackupCode(code)
-        const updated = code.replace(fix.originalText, fix.replacementText)
-        setCode(updated)
-        markCodeChanged()
-      }
-      return
-    }
-
-    const model = editor.getModel()
-    if (!model) return
-
-    setUndoBackupCode(model.getValue())
-
-    const maxLine = model.getLineCount()
-    const startLine = Math.max(1, Math.min(fix.startLine, maxLine))
-    const endLine = fix.endLine ? Math.max(startLine, Math.min(fix.endLine, maxLine)) : startLine
-
-    const lineContent = model.getLineContent(startLine)
-    let range: import('monaco-editor').IRange
-
-    if (fix.originalText && lineContent.includes(fix.originalText.trim())) {
-      const colStart = lineContent.indexOf(fix.originalText.trim()) + 1
-      const colEnd = colStart + fix.originalText.trim().length
-      range = new monaco.Range(startLine, colStart, startLine, colEnd)
-    } else {
-      range = new monaco.Range(startLine, 1, endLine, model.getLineMaxColumn(endLine))
-    }
-
-    editor.executeEdits('coach-apply-fix', [
-      {
-        range,
-        text: fix.replacementText,
-        forceMoveMarkers: true,
-      },
-    ])
-    editor.pushUndoStop()
-
-    const updatedCode = editor.getValue()
-    setCode(updatedCode)
-    markCodeChanged()
-
-    editor.revealLineInCenter(startLine)
-    editor.focus()
-  }
-
-  const handleUndoFix = () => {
-    const editor = editorRef.current
-    if (editor) {
-      editor.trigger('coach', 'undo', null)
-      const current = editor.getValue()
-      setCode(current)
-      markCodeChanged()
-    } else if (undoBackupCode !== null) {
-      setCode(undoBackupCode)
-      setUndoBackupCode(null)
-      markCodeChanged()
-    }
-  }
-
   // Phase 4: Load Exercise Code
   const handleLoadExerciseCode = (buggyCode: string) => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
-    setUndoBackupCode(code)
     setCode(buggyCode)
     setTestResults(null)
     setDiagnosis(null)
@@ -941,10 +869,6 @@ export function CodeStudioPage() {
                   <DebuggingCoachPanel
                     diagnosis={diagnosis}
                     isStale={isStale}
-                    onApplyLineFix={handleApplyLineFix}
-                    onUndoFix={handleUndoFix}
-                    onRunAgain={handleRun}
-                    canUndo={undoBackupCode !== null}
                   />
                 )}
 

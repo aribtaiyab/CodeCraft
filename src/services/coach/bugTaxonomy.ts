@@ -28,27 +28,61 @@ export function extractLineFromTraceback(traceback?: string): number {
   return 1
 }
 
-function findSimilarIdentifier(target: string, code: string): string | null {
-  const tokens = code.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
-  const uniqueTokens = Array.from(new Set(tokens)).filter(
-    (t) =>
-      t !== target &&
-      t.length >= 2 &&
-      !['def', 'for', 'if', 'else', 'elif', 'in', 'return', 'print', 'range', 'len', 'True', 'False', 'None'].includes(t)
-  )
+const COMMON_PYTHON_BUILTINS_AND_KEYWORDS = [
+  'print', 'range', 'len', 'input', 'str', 'int', 'float', 'list', 'dict', 'set',
+  'tuple', 'bool', 'sum', 'min', 'max', 'sorted', 'type', 'open', 'round', 'abs',
+  'enumerate', 'zip', 'map', 'filter', 'all', 'any', 'True', 'False', 'None',
+  'def', 'return', 'if', 'elif', 'else', 'for', 'while', 'in', 'import', 'from',
+  'class', 'try', 'except', 'finally', 'with', 'as', 'pass', 'break', 'continue',
+]
 
-  let bestMatch: string | null = null
-  let bestDist = 3 // max allowed edit distance
+export function findSimilarIdentifier(target: string, code: string): { name: string; isBuiltin: boolean } | null {
+  const targetLower = target.toLowerCase()
 
-  for (const token of uniqueTokens) {
-    const dist = levenshtein(target.toLowerCase(), token.toLowerCase())
-    if (dist < bestDist) {
-      bestDist = dist
-      bestMatch = token
+  // 1. Check Python built-ins & keywords first (e.g. prnt -> print, rang -> range)
+  let bestBuiltin: string | null = null
+  let bestBuiltinDist = 3
+
+  for (const item of COMMON_PYTHON_BUILTINS_AND_KEYWORDS) {
+    if (item.toLowerCase() === targetLower) {
+      return { name: item, isBuiltin: true } // case fix e.g. Print -> print, true -> True
+    }
+    const dist = levenshtein(targetLower, item.toLowerCase())
+    const maxAllowed = target.length <= 4 ? 1 : 2
+    if (dist <= maxAllowed && dist < bestBuiltinDist) {
+      bestBuiltinDist = dist
+      bestBuiltin = item
     }
   }
 
-  return bestMatch
+  if (bestBuiltin) {
+    return { name: bestBuiltin, isBuiltin: true }
+  }
+
+  // 2. Check tokens in user code (user-defined variables, functions)
+  const tokens = code.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || []
+  const uniqueTokens = Array.from(new Set(tokens)).filter((t) => t !== target && t.length >= 2)
+
+  let bestUserMatch: string | null = null
+  let bestUserDist = 3
+
+  for (const token of uniqueTokens) {
+    if (token.toLowerCase() === targetLower) {
+      return { name: token, isBuiltin: false }
+    }
+    const dist = levenshtein(targetLower, token.toLowerCase())
+    const maxAllowed = target.length <= 4 ? 1 : 2
+    if (dist <= maxAllowed && dist < bestUserDist) {
+      bestUserDist = dist
+      bestUserMatch = token
+    }
+  }
+
+  if (bestUserMatch) {
+    return { name: bestUserMatch, isBuiltin: false }
+  }
+
+  return null
 }
 
 function levenshtein(a: string, b: string): number {
@@ -102,11 +136,23 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
 
   const codeHash = computeSimpleHash(code)
   const lines = code.split('\n')
-  const errorType = lastError?.errorType || ''
+  const rawErrorType = lastError?.errorType || ''
   const errorMessage = lastError?.message || ''
   const traceback = lastError?.traceback || ''
+  const fullErrorText = `${rawErrorType}\n${errorMessage}\n${traceback}`
+
+  // Normalize true Python error type
+  const typeMatch = fullErrorText.match(
+    /\b(SyntaxError|IndentationError|NameError|TypeError|ValueError|IndexError|KeyError|ZeroDivisionError|AttributeError|ImportError|ModuleNotFoundError|RecursionError|TimeoutError)\b/
+  )
+  const errorType = typeMatch
+    ? typeMatch[1]
+    : fullErrorText.includes('was never closed') || fullErrorText.includes('invalid syntax')
+      ? 'SyntaxError'
+      : rawErrorType || 'SyntaxError'
+
   const errorLine = Math.max(1, Math.min(extractLineFromTraceback(traceback), lines.length))
-  const lineContent = lines[errorLine - 1] || ''
+  let lineContent = lines[errorLine - 1] || ''
 
   const issues: DiagnosedIssue[] = []
 
@@ -316,6 +362,150 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
         ],
         correctIndex: 2,
         explanation: 'A string must begin and end with the exact same quotation delimiter on the same line.',
+      },
+    })
+  }
+
+  // ==========================================================================
+  // 2B. Unclosed Parenthesis, Bracket, or Brace
+  // ==========================================================================
+  let targetParenLine = errorLine
+  let hasUnclosedParen =
+    (errorType === 'SyntaxError' || fullErrorText.includes('SyntaxError')) &&
+    (fullErrorText.includes("'(' was never closed") ||
+      (lineContent.split('(').length > lineContent.split(')').length))
+  let hasUnclosedBracket =
+    (errorType === 'SyntaxError' || fullErrorText.includes('SyntaxError')) &&
+    (fullErrorText.includes("'[' was never closed") ||
+      (lineContent.split('[').length > lineContent.split(']').length))
+  let hasUnclosedBrace =
+    (errorType === 'SyntaxError' || fullErrorText.includes('SyntaxError')) &&
+    !lineContent.includes('f"') &&
+    !lineContent.includes("f'") &&
+    (fullErrorText.includes("'{' was never closed") ||
+      (lineContent.split('{').length > lineContent.split('}').length))
+
+  // If errorLine doesn't have the unclosed symbol, scan backwards to find the exact line
+  if (hasUnclosedParen && (lines[targetParenLine - 1]?.split('(').length || 0) <= (lines[targetParenLine - 1]?.split(')').length || 0)) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].split('(').length > lines[i].split(')').length) {
+        targetParenLine = i + 1
+        lineContent = lines[i]
+        break
+      }
+    }
+  } else if (!hasUnclosedParen && (errorType === 'SyntaxError' || fullErrorText.includes('SyntaxError'))) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].split('(').length > lines[i].split(')').length) {
+        hasUnclosedParen = true
+        targetParenLine = i + 1
+        lineContent = lines[i]
+        break
+      }
+    }
+  }
+
+  if (hasUnclosedBracket && (lines[targetParenLine - 1]?.split('[').length || 0) <= (lines[targetParenLine - 1]?.split(']').length || 0)) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].split('[').length > lines[i].split(']').length) {
+        targetParenLine = i + 1
+        lineContent = lines[i]
+        break
+      }
+    }
+  }
+
+  if (hasUnclosedBrace && (lines[targetParenLine - 1]?.split('{').length || 0) <= (lines[targetParenLine - 1]?.split('}').length || 0)) {
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (!lines[i].includes('f"') && !lines[i].includes("f'") && lines[i].split('{').length > lines[i].split('}').length) {
+        targetParenLine = i + 1
+        lineContent = lines[i]
+        break
+      }
+    }
+  }
+
+  if (issues.length === 0 && (hasUnclosedParen || hasUnclosedBracket || hasUnclosedBrace)) {
+    const symbol = hasUnclosedParen ? 'parenthesis' : hasUnclosedBracket ? 'square bracket' : 'curly brace'
+    const closingChar = hasUnclosedParen ? ')' : hasUnclosedBracket ? ']' : '}'
+    const openingChar = hasUnclosedParen ? '(' : hasUnclosedBracket ? '[' : '{'
+    let quotePrefix = ''
+    const doubleQuoteCount = (lineContent.match(/"/g) || []).length
+    const singleQuoteCount = (lineContent.match(/'/g) || []).length
+    if (doubleQuoteCount % 2 === 1) {
+      quotePrefix = '"'
+    } else if (singleQuoteCount % 2 === 1) {
+      quotePrefix = "'"
+    }
+
+    const fixedLine = lineContent.trimEnd() + quotePrefix + closingChar
+
+    const isPrintStmt = lineContent.includes('print(') || lineContent.startsWith('print(')
+    const explanationText = hasUnclosedParen
+      ? (isPrintStmt
+          ? 'Your print statement starts with ( but does not end with ). Python needs both.'
+          : `Your statement on line ${targetParenLine} starts with ( but does not end with ). Python needs both.`)
+      : `Your statement on line ${targetParenLine} starts with ${openingChar} but does not end with ${closingChar}. Python needs both.`
+
+    issues.push({
+      id: `issue_${Date.now()}_missing_closing_${hasUnclosedParen ? 'paren' : hasUnclosedBracket ? 'bracket' : 'brace'}`,
+      line: targetParenLine,
+      title: `Missing Closing ${hasUnclosedParen ? 'Parenthesis ")"' : hasUnclosedBracket ? 'Bracket "]"' : 'Brace "}"'}`,
+      category: 'syntax-error',
+      summary: `Line ${targetParenLine}: Missing closing ${symbol}. The opening '${openingChar}' has no matching closing '${closingChar}'.`,
+      levels: {
+        level1: {
+          title: 'Hint',
+          hint: hasUnclosedParen
+            ? 'Check whether you closed the parenthesis.'
+            : `Check whether you closed the ${symbol} on line ${targetParenLine}.`,
+          concept: 'parenthesis & bracket matching',
+          line: targetParenLine,
+        },
+        level2: {
+          title: 'Explanation',
+          explanation: explanationText,
+          problematicSnippet: lineContent.trim(),
+          whyPythonErrors: `Python reached the end of the line (or file) while still waiting for '${closingChar}' to close the statement.`,
+          conceptTeaching: `In Python, every opening '${openingChar}' must have a matching closing '${closingChar}'.`,
+          correctExample: hasUnclosedParen
+            ? `print("hello")`
+            : hasUnclosedBracket
+              ? `items = [1, 2, 3]`
+              : `data = {"a": 1}`,
+          evidence: {
+            line: targetParenLine,
+            observedValue: `Missing '${closingChar}'`,
+            expectedBehavior: `Add '${closingChar}' at line end`,
+          },
+        },
+        level3: {
+          title: 'Correct Answer',
+          solution: hasUnclosedParen
+            ? `Add a closing parenthesis ')' at the end of line ${targetParenLine}.`
+            : `Add a closing ${symbol} '${closingChar}' at the end of line ${targetParenLine}.`,
+          whyItWorks: `Matching '${openingChar}' with '${closingChar}' cleanly closes the expression so Python can parse it.`,
+          expectedOutput: `Line ${targetParenLine} compiles and executes without SyntaxError.`,
+          preventionTip: `Check whether you closed all opened parentheses before running your code.`,
+          suggestedFix: {
+            originalText: lineContent,
+            replacementText: fixedLine,
+            startLine: targetParenLine,
+            endLine: targetParenLine,
+            explanation: `Add closing '${closingChar}' at end of line ${targetParenLine}.`,
+          },
+        },
+      },
+      tryItYourself: {
+        question: `Which statement correctly closes all brackets?`,
+        options: [
+          hasUnclosedParen ? 'print("hello"' : 'nums = [1, 2',
+          hasUnclosedParen ? 'print("hello")' : 'nums = [1, 2]',
+          hasUnclosedParen ? 'print("hello"]' : 'nums = (1, 2]',
+          hasUnclosedParen ? 'print "hello"' : 'nums = [1, 2}',
+        ],
+        correctIndex: 1,
+        explanation: `Every opening symbol must be paired with its matching closing partner.`,
       },
     })
   }
@@ -663,7 +853,7 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
   }
 
   // ==========================================================================
-  // 8. NameError (Typo / Undefined Variable)
+  // 8. NameError (Misspelled Function/Variable / Undefined Variable)
   // ==========================================================================
   if (
     issues.length === 0 &&
@@ -671,70 +861,134 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
   ) {
     const match = errorMessage.match(/name ['"]([^'"]+)['"] is not defined/)
     const varName = match ? match[1] : 'variable'
-    const similar = findSimilarIdentifier(varName, code)
-    const fixedLine = similar
-      ? lineContent.replace(new RegExp(`\\b${varName}\\b`, 'g'), similar)
-      : lineContent
+    const similarMatch = findSimilarIdentifier(varName, code)
+    const similar = similarMatch?.name || null
+    const isBuiltin = similarMatch?.isBuiltin || false
 
-    issues.push({
-      id: `issue_${Date.now()}_nameerror`,
-      line: errorLine,
-      title: `Undefined Variable '${varName}'`,
-      category: 'name-error-typo',
-      summary: `Line ${errorLine} referenced '${varName}' which has not been defined in scope.`,
-      levels: {
-        level1: {
-          title: 'Helpful Hint',
-          hint: `Check the exact spelling of '${varName}' on line ${errorLine}.${
-            similar ? ` Did you define '${similar}' earlier?` : ' Was it defined before this line?'
-          }`,
-          concept: 'variable declaration and scope',
-          line: errorLine,
-        },
-        level2: {
-          title: 'Explain the Error',
-          explanation: `Python raised NameError: name '${varName}' is not defined on line ${errorLine}. Python looked for '${varName}' in local, enclosing, and global scopes but found nothing.${
-            similar ? ` A closely spelled variable '${similar}' exists in your code.` : ''
-          }`,
-          problematicSnippet: varName,
-          whyPythonErrors: 'In Python, variables must be assigned a value before they can be read or referenced. Misspelling a variable name causes Python to look for an identifier that does not exist.',
-          conceptTeaching: 'Python is strictly case-sensitive. Variable names must match their declaration character-for-character.',
-          correctExample: `total = 100\nprint(total)  # Correct spelling`,
-          evidence: {
+    if (similar) {
+      const fixedLine = lineContent.replace(new RegExp(`\\b${varName}\\b`, 'g'), similar)
+      const isFunctionCall = isBuiltin || lineContent.includes(`${varName}(`)
+      const title = isFunctionCall
+        ? `Misspelled Function Name '${varName}'`
+        : `Misspelled Variable '${varName}'`
+
+      issues.push({
+        id: `issue_${Date.now()}_nameerror_typo`,
+        line: errorLine,
+        title,
+        category: 'name-error-typo',
+        summary: isFunctionCall
+          ? `Line ${errorLine}: You misspelled the function name. Write '${similar}' instead of '${varName}'.`
+          : `Line ${errorLine}: '${varName}' is not defined. Did you mean '${similar}'?`,
+        levels: {
+          level1: {
+            title: 'Hint',
+            hint: isFunctionCall
+              ? `You have a typo on line ${errorLine}. Python does not recognize '${varName}' — did you mean '${similar}'?`
+              : `Check your spelling on line ${errorLine}. Did you mean to use '${similar}'?`,
+            concept: isFunctionCall ? 'Python built-in functions' : 'variable names and spelling',
             line: errorLine,
-            observedValue: `'${varName}' is not defined`,
-            expectedBehavior: similar ? `'${similar}'` : 'Defined variable in scope',
+          },
+          level2: {
+            title: 'Explanation',
+            explanation: isFunctionCall
+              ? `Python raised a NameError because '${varName}' does not exist. Python has a built-in function named '${similar}' to output text, but Python names are case-sensitive and must be spelled exactly.`
+              : `Python raised a NameError because '${varName}' does not exist. You defined '${similar}' in your code. Python variable names are case-sensitive and must match character-for-character.`,
+            problematicSnippet: varName,
+            whyPythonErrors: `Python looked for '${varName}' in memory and built-in functions, but could not find anything matching that exact spelling.`,
+            conceptTeaching: `Check function and variable spelling carefully. Python cannot guess what you meant if a letter is missing, mistyped, or capitalized differently.`,
+            correctExample: `${similar}("hello")`,
+            evidence: {
+              line: errorLine,
+              observedValue: `'${varName}' is not defined`,
+              expectedBehavior: `'${similar}'`,
+            },
+          },
+          level3: {
+            title: 'Correct Answer',
+            solution: isFunctionCall
+              ? `You misspelled the function name. Write '${similar}' instead of '${varName}'.`
+              : `Change '${varName}' to '${similar}'.`,
+            whyItWorks: `Writing '${similar}' matches Python's ${isBuiltin ? 'built-in' : 'defined'} name.`,
+            expectedOutput: `Executes '${similar}' without NameError.`,
+            preventionTip: `Double-check your spelling and look for syntax highlighting in the editor.`,
+            suggestedFix: {
+              originalText: lineContent,
+              replacementText: fixedLine,
+              startLine: errorLine,
+              endLine: errorLine,
+              explanation: `Change '${varName}' to '${similar}'.`,
+            },
           },
         },
-        level3: {
-          title: 'Complete Solution',
-          solution: similar
-            ? `Replace '${varName}' with the correctly spelled '${similar}'.`
-            : `Assign a value to '${varName}' before referencing it on line ${errorLine}.`,
-          whyItWorks: 'Using the matching identifier allows Python to resolve the variable from scope.',
-          expectedOutput: `Resolves to the value stored in '${similar || varName}'.`,
-          preventionTip: 'Use editor autocomplete and descriptive variable names to prevent spelling mistakes.',
-          suggestedFix: {
-            originalText: lineContent,
-            replacementText: fixedLine,
-            startLine: errorLine,
-            endLine: errorLine,
-            explanation: similar ? `Correct typo from '${varName}' to '${similar}'.` : `Initialize '${varName}' before use.`,
+        tryItYourself: {
+          question: isFunctionCall
+            ? `Which Python function outputs text to the screen?`
+            : `Why did Python raise a NameError for '${varName}'?`,
+          options: isFunctionCall
+            ? ['display()', 'print()', 'output()', 'echo()']
+            : [
+                'The variable was misspelled or not defined before use.',
+                'The variable name was written in numbers only.',
+                'The line ended with a semicolon.',
+                'The file was not saved.',
+              ],
+          correctIndex: isFunctionCall ? 1 : 0,
+          explanation: isFunctionCall
+            ? `In Python, print() is the built-in function used to display messages and data.`
+            : `Python raises NameError whenever it encounters a word that hasn't been defined in the program.`,
+        },
+      })
+    } else {
+      // Undefined variable with no similar match
+      issues.push({
+        id: `issue_${Date.now()}_nameerror_undefined`,
+        line: errorLine,
+        title: `Undefined Variable '${varName}'`,
+        category: 'name-error-typo',
+        summary: `Line ${errorLine}: Variable '${varName}' was used before it was created.`,
+        levels: {
+          level1: {
+            title: 'Hint',
+            hint: `Variable '${varName}' is used on line ${errorLine}, but Python has not seen this variable before.`,
+            concept: 'variable creation and assignment',
+            line: errorLine,
+          },
+          level2: {
+            title: 'Explanation',
+            explanation: `Python raised NameError: name '${varName}' is not defined on line ${errorLine}. In Python, you must create a variable and give it a value (for example: ${varName} = 0) on a line above this one before you can use it.`,
+            problematicSnippet: varName,
+            whyPythonErrors: `Python tried to read the value of '${varName}', but no value has been stored in it yet.`,
+            conceptTeaching: `To create a variable in Python, write its name followed by '=' and a value, for example: ${varName} = 10.`,
+            correctExample: `${varName} = 10\nprint(${varName})`,
+            evidence: {
+              line: errorLine,
+              observedValue: `'${varName}' is not defined`,
+              expectedBehavior: `Create '${varName} = <value>' before line ${errorLine}`,
+            },
+          },
+          level3: {
+            title: 'Correct Answer',
+            solution: `Create '${varName}' and give it a value on a line above line ${errorLine} (for example: ${varName} = 0), or check if you typed the wrong variable name.`,
+            whyItWorks: `Giving '${varName}' a value before reading it allows Python to find it in memory.`,
+            expectedOutput: `Resolves to the value stored in '${varName}'.`,
+            preventionTip: `Make sure every variable is assigned a value before it appears in expressions or function calls.`,
+            suggestedFix: undefined,
           },
         },
-      },
-      tryItYourself: {
-        question: 'Why does Python raise a NameError?',
-        options: [
-          'Because a variable was used before being assigned a value.',
-          'Because two numbers were divided.',
-          'Because a loop ran too fast.',
-          'Because a function had multiple return statements.',
-        ],
-        correctIndex: 0,
-        explanation: 'NameError occurs whenever Python encounters an identifier that has not been defined in the current scope.',
-      },
-    })
+        tryItYourself: {
+          question: `How do you create a variable named '${varName}' with value 5 in Python?`,
+          options: [
+            `var ${varName} = 5`,
+            `${varName} = 5`,
+            `int ${varName} = 5`,
+            `set ${varName} to 5`,
+          ],
+          correctIndex: 1,
+          explanation: `In Python, simply write the variable name, an '=' sign, and the value: ${varName} = 5.`,
+        },
+      })
+    }
   }
 
   // ==========================================================================
@@ -1284,13 +1538,13 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
         summary: `Line ${lineNum} has an extra '}' brace in an f-string expression.`,
         levels: {
           level1: {
-            title: 'Helpful Hint',
+            title: 'Hint',
             hint: `Count the braces around '{${varName}}}' on line ${lineNum}. There is a duplicate closing brace.`,
             concept: 'f-string formatting',
             line: lineNum,
           },
           level2: {
-            title: 'Explain the Error',
+            title: 'Explanation',
             explanation: `Line ${lineNum} has '{${varName}}}'. In Python f-strings, braces must be in single matching pairs {var}.`,
             problematicSnippet: `{${varName}}}`,
             whyPythonErrors: "Single '}' characters are not allowed in f-strings.",
@@ -1298,7 +1552,7 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
             correctExample: `print(f"{${varName}}")`,
           },
           level3: {
-            title: 'Complete Solution',
+            title: 'Correct Answer',
             solution: `Remove the duplicate closing brace on line ${lineNum}.`,
             whyItWorks: 'Enclosing the variable in a single pair of braces satisfies f-string grammar.',
             preventionTip: 'Ensure balanced braces across all f-strings.',
@@ -1312,52 +1566,163 @@ export function diagnoseBug(context: CoachAnalysisContext): BugDiagnosis | null 
           },
         },
       })
+      continue
+    }
+
+    // Check for misspelled built-in on a different line (e.g. prnt(...))
+    const prntMatch = curLine.match(/\b(prnt|pritn|pint|prntf|rang|lengh|intger)\s*\(/)
+    if (prntMatch) {
+      const misspelled = prntMatch[1]
+      const corrected = misspelled.startsWith('p')
+        ? 'print'
+        : misspelled === 'rang'
+          ? 'range'
+          : misspelled === 'lengh'
+            ? 'len'
+            : 'int'
+      issues.push({
+        id: `issue_${Date.now()}_line_${lineNum}_misspelled`,
+        line: lineNum,
+        title: `Misspelled Function '${misspelled}' on Line ${lineNum}`,
+        category: 'name-error-typo',
+        summary: `Line ${lineNum}: You misspelled the function name. Write '${corrected}' instead of '${misspelled}'.`,
+        levels: {
+          level1: {
+            title: 'Hint',
+            hint: `You have a spelling mistake on line ${lineNum}. Did you mean '${corrected}'?`,
+            concept: 'Python built-in functions',
+            line: lineNum,
+          },
+          level2: {
+            title: 'Explanation',
+            explanation: `Python does not recognize '${misspelled}'. In Python, the function is spelled '${corrected}'.`,
+            problematicSnippet: misspelled,
+            whyPythonErrors: `Python could not find a function named '${misspelled}'.`,
+            conceptTeaching: `Python built-in function names must be spelled exactly.`,
+            correctExample: `${corrected}("hello")`,
+          },
+          level3: {
+            title: 'Correct Answer',
+            solution: `You misspelled the function name. Write '${corrected}' instead of '${misspelled}'.`,
+            whyItWorks: `Using '${corrected}' calls Python's built-in function.`,
+            preventionTip: `Check the spelling of Python functions.`,
+            suggestedFix: {
+              originalText: curLine,
+              replacementText: curLine.replace(new RegExp(`\\b${misspelled}\\b`), corrected),
+              startLine: lineNum,
+              endLine: lineNum,
+              explanation: `Change '${misspelled}' to '${corrected}'.`,
+            },
+          },
+        },
+      })
+      continue
+    }
+
+    // Check for missing colon on header on a different line
+    if (
+      curLine.match(/^\s*(if|elif|else|for|while|def|class)\b/) &&
+      !curLine.trim().endsWith(':')
+    ) {
+      issues.push({
+        id: `issue_${Date.now()}_line_${lineNum}_missing_colon`,
+        line: lineNum,
+        title: `Missing Colon ':' on Line ${lineNum}`,
+        category: 'syntax-error',
+        summary: `Line ${lineNum} ends without a required colon ':'.`,
+        levels: {
+          level1: {
+            title: 'Hint',
+            hint: `Look at the end of line ${lineNum}. Python requires a colon ':' at the end of this line.`,
+            concept: 'compound statement syntax',
+            line: lineNum,
+          },
+          level2: {
+            title: 'Explanation',
+            explanation: `Lines starting with if, for, while, or def must end with a colon (:).`,
+            problematicSnippet: curLine.trim(),
+            whyPythonErrors: `Python needs the colon to mark the start of the indented block.`,
+            conceptTeaching: `Always add a colon at the end of header lines.`,
+            correctExample: `${curLine.trim()}:`,
+          },
+          level3: {
+            title: 'Correct Answer',
+            solution: `Add a colon ':' at the end of line ${lineNum}.`,
+            whyItWorks: `The colon satisfies Python syntax for statement headers.`,
+            preventionTip: `Remember to type a colon at the end of if/for/def lines.`,
+            suggestedFix: {
+              originalText: curLine,
+              replacementText: curLine.trimEnd() + ':',
+              startLine: lineNum,
+              endLine: lineNum,
+              explanation: `Add colon at end of line ${lineNum}.`,
+            },
+          },
+        },
+      })
+      continue
     }
   }
 
   // ==========================================================================
-  // 18. General Fallback if No Specific Issue Captured
+  // 18. Fallback if No Specific Issue Captured
   // ==========================================================================
   if (issues.length === 0) {
     if (errorType || errorMessage) {
+      const cleanMsg = (errorMessage || '')
+        .replace(/^(?:PythonError:\s*|Traceback\s*\([^)]*\):\s*|[\w]+Error:\s*)+/i, '')
+        .trim()
+
+      let mappedCategory: BugDiagnosis['category'] = 'syntax-error'
+      if (errorType === 'NameError') mappedCategory = 'name-error-typo'
+      else if (errorType === 'TypeError') mappedCategory = 'type-mismatch'
+      else if (errorType === 'ZeroDivisionError') mappedCategory = 'zero-division'
+      else if (errorType === 'IndentationError') mappedCategory = 'indentation-error'
+      else if (errorType === 'IndexError') mappedCategory = 'index-out-of-bounds'
+      else if (errorType === 'KeyError') mappedCategory = 'key-error'
+      else if (errorType === 'ValueError') mappedCategory = 'value-error'
+      else if (errorType === 'AttributeError') mappedCategory = 'attribute-error'
+      else if (errorType === 'RecursionError') mappedCategory = 'recursion-error'
+      else if (errorType === 'TimeoutError') mappedCategory = 'timeout-infinite-loop'
+
+      const titleName = errorType ? errorType.replace(/([A-Z])/g, ' $1').trim() : 'Syntax Error'
+
       issues.push({
-        id: `issue_${Date.now()}_general`,
+        id: `issue_${Date.now()}_fallback`,
         line: errorLine,
-        title: `${errorType || 'Runtime Error'} on Line ${errorLine}`,
-        category: 'general-runtime-error',
-        summary: errorMessage || 'An unexpected error occurred during execution.',
+        title: `${titleName} on Line ${errorLine}`,
+        category: mappedCategory,
+        summary: cleanMsg ? `Line ${errorLine}: ${cleanMsg}` : `Python reported ${titleName} on line ${errorLine}.`,
         levels: {
           level1: {
-            title: 'Helpful Hint',
-            hint: `Inspect line ${errorLine}. What operation or statement is being executed?`,
-            concept: 'runtime execution',
+            title: 'Hint',
+            hint: cleanMsg
+              ? `Python reported on line ${errorLine}: ${cleanMsg}. Inspect what is written on this line.`
+              : `Inspect line ${errorLine} for syntax mistakes, unclosed symbols, or misspelled names.`,
+            concept: titleName,
             line: errorLine,
           },
           level2: {
-            title: 'Explain the Error',
-            explanation: `Python raised ${errorType || 'an error'} on line ${errorLine}: '${lineContent.trim()}'.\nMessage: ${errorMessage}`,
+            title: 'Explanation',
+            explanation: `On line ${errorLine}, Python encountered '${lineContent.trim()}'. Python reported: ${cleanMsg || errorType}. This means Python could not execute this statement as written.`,
             problematicSnippet: lineContent.trim(),
-            whyPythonErrors: 'An unexpected exception occurred during runtime execution.',
-            conceptTeaching: 'Review statement syntax and variable scope for line.',
-            correctExample: lineContent.trim(),
+            whyPythonErrors: cleanMsg || `Python raised ${titleName} on line ${errorLine}.`,
+            conceptTeaching: `Review line ${errorLine} to ensure statements adhere to Python rules for ${titleName}.`,
+            correctExample: '',
             evidence: {
               line: errorLine,
-              observedValue: errorMessage,
-              expectedBehavior: 'Valid statement execution',
+              observedValue: cleanMsg || errorType,
+              expectedBehavior: 'Valid Python statement',
             },
           },
           level3: {
-            title: 'Complete Solution',
-            solution: 'Review line syntax and verify that all referenced variables and types are valid.',
-            whyItWorks: 'Correcting syntax or types resolves runtime exceptions.',
-            preventionTip: 'Test individual expressions using the interactive studio.',
-            suggestedFix: {
-              originalText: lineContent,
-              replacementText: lineContent,
-              startLine: errorLine,
-              endLine: errorLine,
-              explanation: 'Review line syntax.',
-            },
+            title: 'Correct Answer',
+            solution: cleanMsg
+              ? `Fix the issue reported on line ${errorLine} (${cleanMsg}). Manually update the statement in the code editor.`
+              : `Correct the statement on line ${errorLine} to follow valid Python syntax.`,
+            whyItWorks: 'Fixing the statement allows Python to compile and execute without raising an error.',
+            preventionTip: 'Double-check delimiters, types, and function names before running your code.',
+            suggestedFix: undefined,
           },
         },
       })

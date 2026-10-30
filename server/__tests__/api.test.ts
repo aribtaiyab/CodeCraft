@@ -378,4 +378,240 @@ describe('Phase 5 Backend API & Security Gates', () => {
     expect(res.body.error.code).toBe('RATE_LIMITED')
     expect(res.body.error.message).toContain('Rate limit reached')
   })
+
+  // --------------------------------------------------------------------------
+  // 10. Enhanced CS Teacher Full-Program Structure & Palindrome Teaching
+  // --------------------------------------------------------------------------
+  it('POST /api/ai/explain delivers 5-part CS teacher structure with step-by-step palindrome teaching', async () => {
+    const mockPalindromeResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              summary: 'Defines a palindrome checker function and tests it with "Racecar".',
+              mainIdeaSteps: [
+                '1. Define the is_palindrome function accepting a parameter s.',
+                '2. Receive the argument "Racecar" and use lower() to convert it to lowercase "racecar".',
+                '3. Reverse the lowercase string using slicing [::-1], yielding "racecar".',
+                '4. Compare original and reversed strings, producing Boolean True.',
+                '5. Execute the if block and print "Racecar is a palindrome".',
+              ],
+              conceptDetails: [
+                {
+                  name: 'String Slicing',
+                  meaning: 'Extracts parts of a sequence. [::-1] steps backwards to reverse a string.',
+                  codeUsage: 'clean[::-1] reverses the lowercase text.',
+                  example: '"cat"[::-1]',
+                },
+                {
+                  name: 'Boolean Condition',
+                  meaning: 'Boolean means a data type with two possible values, True or False.',
+                  codeUsage: 'clean == clean[::-1] evaluates to True.',
+                  example: 'x == y',
+                },
+              ],
+              keyConcepts: ['String Slicing', 'Boolean Condition', 'Functions'],
+              lineExplanations: [
+                { line: 1, code: 'def is_palindrome(s):', explanation: 'Defines the palindrome verification function.' },
+                { line: 2, code: '    clean = s.lower()', explanation: 'Converts text to lowercase to ignore case differences.' },
+                { line: 3, code: '    return clean == clean[::-1]', explanation: 'Reverses the string with [::-1] and compares it, returning True if identical.' },
+                { line: 4, code: 'word = "Racecar"', explanation: 'Creates variable word holding the string "Racecar".' },
+                { line: 5, code: 'if is_palindrome(word):', explanation: 'Calls the function with "Racecar" and checks if return value is True.' },
+                { line: 6, code: '    print(f"{word} is a palindrome")', explanation: 'Prints the confirmation message because the condition is True.' },
+              ],
+              detailedExplanation: 'This program checks whether a word is spelled identically forwards and backwards.',
+              expectedOutput: {
+                output: 'Racecar is a palindrome',
+                explanation: 'Because "Racecar" normalized and reversed is "racecar", the condition evaluates to True.',
+              },
+            }),
+          },
+        },
+      ],
+    }
+
+    const mockClient = new GroqClient({
+      customFetch: (async () => new Response(JSON.stringify(mockPalindromeResponse), { status: 200 })) as unknown as typeof fetch,
+      apiKey: 'gsk_mock_test_key',
+    })
+    const app = createApp(mockClient)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: [
+          'def is_palindrome(s):',
+          '    clean = s.lower()',
+          '    return clean == clean[::-1]',
+          'word = "Racecar"',
+          'if is_palindrome(word):',
+          '    print(f"{word} is a palindrome")',
+        ].join('\n'),
+        sourceHash: 'hash_pal_test',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.isSelectionOnly).toBe(false)
+    expect(res.body.summary).toContain('palindrome')
+    // Section B: Numbered Steps
+    expect(res.body.mainIdeaSteps).toBeDefined()
+    expect(res.body.mainIdeaSteps.length).toBe(5)
+    expect(res.body.mainIdeaSteps[1]).toContain('lower()')
+    expect(res.body.mainIdeaSteps[2]).toContain('[::-1]')
+    expect(res.body.mainIdeaSteps[3]).toContain('Boolean True')
+    // Section C: Concept Details
+    expect(res.body.conceptDetails).toBeDefined()
+    expect(res.body.conceptDetails[0].name).toBe('String Slicing')
+    expect(res.body.conceptDetails[1].meaning).toContain('Boolean')
+    // Section D: Line-by-line
+    expect(res.body.lineExplanations.length).toBe(6)
+    expect(res.body.lineExplanations[2].code).toContain('[::-1]')
+    // Section E: Output
+    expect(res.body.expectedOutput).toBeDefined()
+    expect(res.body.expectedOutput.output).toBe('Racecar is a palindrome')
+  })
+
+  // --------------------------------------------------------------------------
+  // 11. Regression Test: Selected-Code Explanation with 7-8 lines context
+  // --------------------------------------------------------------------------
+  it('preserves selected-code explanation behavior with surrounding lines context', async () => {
+    let capturedBody = ''
+    const mockFetch = async (_url: string | URL | Request, init?: RequestInit) => {
+      capturedBody = String(init?.body || '')
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  summary: 'Explains lines 5 to 6',
+                  detailedExplanation: 'Calls the function and prints output.',
+                  lineExplanations: [{ line: 5, code: 'print("hi")', explanation: 'Outputs text' }],
+                  keyConcepts: ['Built-in Functions'],
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    }
+
+    const mockClient = new GroqClient({
+      customFetch: mockFetch as unknown as typeof fetch,
+      apiKey: 'gsk_mock_test_key',
+    })
+    const app = createApp(mockClient)
+
+    const fullCode = [
+      '# Line 1',
+      '# Line 2',
+      '# Line 3',
+      '# Line 4',
+      'x = 10',
+      'print(x)',
+      '# Line 7',
+      '# Line 8',
+      '# Line 9',
+    ].join('\n')
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: fullCode,
+        selection: { startLine: 5, endLine: 6 },
+        sourceHash: 'hash_sel_regression',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.isSelectionOnly).toBe(true)
+    expect(res.body.selectedRange.startLine).toBe(5)
+    expect(res.body.selectedRange.endLine).toBe(6)
+    // Verify prompt included surrounding context
+    expect(capturedBody).toContain('Surrounding context')
+    expect(capturedBody).toContain('lines 5 to 6')
+  })
+
+  // --------------------------------------------------------------------------
+  // 12. Regression Test: Code Quiz / Q&A is strictly preserved
+  // --------------------------------------------------------------------------
+  it('preserves Code Quiz Q&A and MCQ generation endpoints unchanged', async () => {
+    const mockFetch = async (_url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body || '{}'))
+      const isMcq = body.messages?.[0]?.content?.includes('multiple-choice')
+      if (isMcq) {
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    questions: [
+                      {
+                        question: 'What is the output of print(2 * 3)?',
+                        options: ['5', '6', '23', 'None'],
+                        correctIndex: 1,
+                        explanation: '2 multiplied by 3 equals 6.',
+                        conceptTag: 'arithmetic',
+                      },
+                    ],
+                  }),
+                },
+              },
+            ],
+          }),
+          { status: 200 }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: 'Slicing syntax [::-1] steps backwards by 1.',
+                  relevantLines: [3],
+                  followUpSuggestions: ['What does [::2] do?'],
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    }
+
+    const mockClient = new GroqClient({
+      customFetch: mockFetch as unknown as typeof fetch,
+      apiKey: 'gsk_mock_test_key',
+    })
+    const app = createApp(mockClient)
+
+    // Verify Q&A ask endpoint
+    const askRes = await request(app)
+      .post('/api/ai/ask')
+      .send({
+        code: 's = "hello"\nprint(s[::-1])',
+        question: 'How does slicing work?',
+        sourceHash: 'hash_ask_q',
+      })
+
+    expect(askRes.status).toBe(200)
+    expect(askRes.body.answer).toContain('Slicing syntax')
+    expect(askRes.body.followUpSuggestions.length).toBe(1)
+
+    // Verify MCQ generation endpoint
+    const mcqRes = await request(app)
+      .post('/api/ai/generate-mcqs')
+      .send({
+        code: 'print(2 * 3)',
+        sourceHash: 'hash_mcq_gen',
+      })
+
+    expect(mcqRes.status).toBe(200)
+    expect(mcqRes.body.questions.length).toBe(1)
+    expect(mcqRes.body.questions[0].options.length).toBe(4)
+    expect(mcqRes.body.questions[0].correctIndex).toBe(1)
+  })
 })

@@ -144,41 +144,111 @@ export class GroqClient {
       req.selection.startLine <= req.selection.endLine
 
     let targetCodeDescription: string
+    let systemPrompt: string
+
     if (isSelectionOnly) {
-      const selectedSlice = lines.slice(req.selection!.startLine - 1, req.selection!.endLine).join('\n')
-      targetCodeDescription = `The user selected lines ${req.selection!.startLine} to ${req.selection!.endLine} within their Python program:
+      const startLine = req.selection!.startLine
+      const endLine = req.selection!.endLine
+      const selectedSlice = lines.slice(startLine - 1, endLine).join('\n')
+
+      // Approximately 7–8 surrounding lines of context (up to 4 before, 4 after)
+      const contextStart = Math.max(1, startLine - 4)
+      const contextEnd = Math.min(lines.length, endLine + 4)
+      const surroundingSlice = lines
+        .slice(contextStart - 1, contextEnd)
+        .map((l, idx) => `Line ${contextStart + idx}: ${l}`)
+        .join('\n')
+
+      targetCodeDescription = `The user selected lines ${startLine} to ${endLine} within their Python program:
 \`\`\`python
 ${selectedSlice}
+\`\`\`
+Surrounding context (~7-8 lines around selection, lines ${contextStart} to ${contextEnd}):
+\`\`\`python
+${surroundingSlice}
 \`\`\`
 Full program context:
 \`\`\`python
 ${req.code}
 \`\`\``
+
+      systemPrompt = `You are CodeCraft's Expert Computer Science Teacher.
+The student selected specific lines (${startLine} to ${endLine}) within their Python program.
+Explain these specific lines with reference to their surrounding context (~7-8 surrounding lines provided).
+
+Guidelines:
+1. Explain what these selected lines do, why they are there, and how they interact with surrounding variables, functions, and control flow.
+2. Use simple, natural English while keeping technical terms (variables, slicing, parameters, etc.) defined simply.
+3. Provide line-by-line breakdown for the selected lines.
+4. List key programming concepts demonstrated by the selected code.
+
+Response format: Return ONLY a valid JSON object matching this schema:
+{
+  "summary": "1-2 sentence summary of what the selected lines do in this context",
+  "detailedExplanation": "Clear, step-by-step explanation of the selected lines and their interaction with the surrounding code.",
+  "lineExplanations": [
+    { "line": ${startLine}, "code": "line of code", "explanation": "what this line does" }
+  ],
+  "keyConcepts": ["Concept 1", "Concept 2"]
+}`
     } else {
       targetCodeDescription = `Full program:
 \`\`\`python
 ${req.code}
 \`\`\``
-    }
 
-    const systemPrompt = `You are CodeCraft's Expert Python Tutor.
-Explain the student's Python code in a warm, encouraging, clear, and beginner-accessible manner.
-Rules:
-1. Always base your explanation strictly on the provided code. Never guess intent.
-2. Return your response strictly as a JSON object adhering to the schema below.
-3. Keep the summary under 2 sentences.
-4. Provide a line-by-line breakdown for the analyzed lines.
-5. List key programming concepts demonstrated in this code.
+      systemPrompt = `You are CodeCraft's Expert Computer Science Teacher.
+Your role is to explain Python code to students in simple, natural English while retaining correct technical terminology.
+Teach like an outstanding university CS instructor: explain WHAT happens, HOW it works, WHY it is written this way, and WHAT happens next in execution order.
 
-Required JSON Schema:
+Follow this exact 5-part teaching structure:
+A) WHAT DOES THIS CODE DO: Provide a 2-3 sentence high-level overview.
+B) UNDERSTAND THE MAIN IDEA: Provide numbered logical steps in exact execution order (e.g. 1. Function definition..., 2. Calling function with argument..., 3. Evaluating condition..., 4. Printing result...). Explain why each step happens.
+   For example, in a palindrome check:
+   - Receiving argument 'Racecar'
+   - lower() converting it to 'racecar' to ignore case differences
+   - [::-1] string slicing reversing it to 'racecar'
+   - Comparing both strings to get Boolean True
+   - Executing the if-block because the condition evaluated to True.
+C) IMPORTANT CONCEPTS: Identify only the concepts actually used (e.g. Functions, Parameters, Arguments, Variables, Slicing, Return Values, Boolean, Conditions, Loops, Lists, Dictionaries, f-strings, Recursion).
+   For each concept:
+   - name: Technical name
+   - meaning: Simple definition in basic English (e.g. "Boolean: a data type with two possible values, True or False.")
+   - codeUsage: How it is used in this code
+   - example: Short 1-line code example if helpful
+D) LINE-BY-LINE BREAKDOWN:
+   - Skip empty blank lines and redundant comments.
+   - For each meaningful line, provide line number, code snippet, and 1-3 simple sentences explaining what it does and clarifying tricky syntax (e.g. slice notation, function headers).
+E) FINAL OUTPUT: State the actual terminal output when determinable, with a short explanation of why. If the code requires interactive user input, state "(Interactive user input required)".
+
+Adapt explanation depth: Simple programs (like Hello World) get short explanations; intermediate/advanced programs get appropriate detail without unnecessary repetition.
+
+Response format: Return ONLY a valid JSON object matching this schema:
 {
-  "summary": "1-2 sentence high-level summary",
-  "detailedExplanation": "Clear, paragraph-level explanation of how the code executes from start to finish",
-  "lineExplanations": [
-    { "line": 1, "code": "line of code", "explanation": "what this line does" }
+  "summary": "2-3 sentence overview of what the code does",
+  "mainIdeaSteps": [
+    "1. First step in execution order...",
+    "2. Next step explaining what happens and why..."
   ],
-  "keyConcepts": ["Concept 1", "Concept 2"]
+  "conceptDetails": [
+    {
+      "name": "Technical Name",
+      "meaning": "Simple plain English meaning",
+      "codeUsage": "How it is used in this code",
+      "example": "small code example"
+    }
+  ],
+  "keyConcepts": ["Concept 1", "Concept 2"],
+  "lineExplanations": [
+    { "line": 1, "code": "code", "explanation": "1-3 clear sentences" }
+  ],
+  "detailedExplanation": "Cohesive step-by-step narrative covering what happens, how, and why.",
+  "expectedOutput": {
+    "output": "Exact expected terminal output",
+    "explanation": "Brief explanation of why this output is produced"
+  }
 }`
+    }
 
     const rawJson = await this.callGroqChat(
       [
@@ -193,6 +263,9 @@ Required JSON Schema:
       detailedExplanation?: string
       lineExplanations?: Array<{ line: number; code?: string; explanation: string }>
       keyConcepts?: string[]
+      conceptDetails?: Array<{ name: string; meaning: string; codeUsage: string; example?: string }>
+      mainIdeaSteps?: string[]
+      expectedOutput?: { output: string; explanation: string }
     }
 
     try {
@@ -208,6 +281,11 @@ Required JSON Schema:
       explanation: le.explanation || '',
     }))
 
+    const keyConcepts =
+      parsed.keyConcepts && parsed.keyConcepts.length > 0
+        ? parsed.keyConcepts
+        : (parsed.conceptDetails || []).map((c) => c.name)
+
     return {
       id: `exp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       sourceHash: req.sourceHash,
@@ -216,7 +294,15 @@ Required JSON Schema:
       summary: parsed.summary || 'Code analysis complete.',
       detailedExplanation: parsed.detailedExplanation || '',
       lineExplanations: formattedLines,
-      keyConcepts: parsed.keyConcepts || [],
+      keyConcepts,
+      conceptDetails: parsed.conceptDetails,
+      mainIdeaSteps: parsed.mainIdeaSteps,
+      expectedOutput: parsed.expectedOutput
+        ? {
+            output: String(parsed.expectedOutput.output ?? ''),
+            explanation: String(parsed.expectedOutput.explanation ?? ''),
+          }
+        : undefined,
       isSelectionOnly: !!isSelectionOnly,
       selectedRange: isSelectionOnly ? req.selection : undefined,
     }

@@ -366,13 +366,99 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
 
             {/* Explanation Results */}
             {explanation && (
-              <div className={styles.explainCard}>
-                <div className={styles.explainCard__summary}>
-                  {explanation.summary}
+              <div className={styles.explainContainer}>
+                {/* Header Badge */}
+                <div className={styles.explainHeader}>
+                  <div className={styles.explainHeaderLeft}>
+                    <Sparkles size={14} className={styles.explainHeaderIcon} />
+                    <span className={styles.explainHeaderTitle}>
+                      {explanation.isSelectionOnly
+                        ? `Selected Lines ${explanation.selectedRange?.startLine}–${explanation.selectedRange?.endLine}`
+                        : 'Computer Science Teacher Explanation'}
+                    </span>
+                  </div>
+                  <span className={styles.modelPill}>
+                    {explanation.model ? explanation.model.split('/').pop() : 'AI Mentor'}
+                  </span>
                 </div>
 
-                {explanation.keyConcepts &&
-                  explanation.keyConcepts.length > 0 && (
+                {/* Section A: What does this code do? */}
+                <div className={styles.explainSection}>
+                  <div className={styles.sectionHeading}>
+                    <span className={styles.sectionIndexBadge}>A</span>
+                    <span className={styles.sectionTitle}>What Does This Code Do?</span>
+                  </div>
+                  <div className={styles.summaryBox}>
+                    {explanation.summary}
+                  </div>
+                </div>
+
+                {/* Section B: Understand the Main Idea */}
+                {explanation.mainIdeaSteps && explanation.mainIdeaSteps.length > 0 ? (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>B</span>
+                      <span className={styles.sectionTitle}>Understand the Main Idea</span>
+                    </div>
+                    <div className={styles.stepsList}>
+                      {explanation.mainIdeaSteps.map((step, idx) => {
+                        const stepMatch = step.match(/^\s*(\d+)[.)]\s*(.*)$/)
+                        const stepNum = stepMatch ? stepMatch[1] : String(idx + 1)
+                        const stepText = stepMatch ? stepMatch[2] : step
+
+                        return (
+                          <div key={idx} className={styles.stepItem}>
+                            <span className={styles.stepNumberBadge}>{stepNum}</span>
+                            <div className={styles.stepContent}>{stepText}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : explanation.detailedExplanation && !explanation.isSelectionOnly ? (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>B</span>
+                      <span className={styles.sectionTitle}>Understand the Main Idea</span>
+                    </div>
+                    <div className={styles.detailedText}>
+                      {explanation.detailedExplanation}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Section C: Important Concepts */}
+                {explanation.conceptDetails && explanation.conceptDetails.length > 0 ? (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>C</span>
+                      <span className={styles.sectionTitle}>Important Concepts</span>
+                    </div>
+                    <div className={styles.conceptCardsGrid}>
+                      {explanation.conceptDetails.map((concept, idx) => (
+                        <div key={idx} className={styles.conceptCard}>
+                          <div className={styles.conceptCardHeader}>
+                            <span className={styles.conceptCardName}>{concept.name}</span>
+                            {concept.example && (
+                              <code className={styles.conceptExamplePill}>{concept.example}</code>
+                            )}
+                          </div>
+                          <div className={styles.conceptMeaning}>
+                            <strong>Meaning:</strong> {concept.meaning}
+                          </div>
+                          <div className={styles.conceptUsage}>
+                            <strong>In this code:</strong> {concept.codeUsage}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : explanation.keyConcepts && explanation.keyConcepts.length > 0 ? (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>C</span>
+                      <span className={styles.sectionTitle}>Key Concepts</span>
+                    </div>
                     <div className={styles.conceptTags}>
                       {explanation.keyConcepts.map((concept, idx) => (
                         <span key={idx} className={styles.conceptTag}>
@@ -380,30 +466,73 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                         </span>
                       ))}
                     </div>
-                  )}
+                  </div>
+                ) : null}
 
-                <div className={styles.detailedText}>
-                  {explanation.detailedExplanation}
-                </div>
-
-                {/* Line by Line Breakdown */}
-                {explanation.lineExplanations &&
-                  explanation.lineExplanations.length > 0 && (
-                    <div className={styles.lineBreakdown}>
-                      <div className={styles.lineBreakdown__title}>
-                        Line-by-Line Breakdown
-                      </div>
-                      {explanation.lineExplanations.map((le, idx) => (
-                        <div key={idx} className={styles.lineRow}>
-                          <span className={styles.lineNo}>L{le.line}</span>
-                          <span className={styles.lineCode}>{le.code}</span>
-                          <span className={styles.lineExp}>
-                            {le.explanation}
-                          </span>
-                        </div>
-                      ))}
+                {/* If selection-only and detailedExplanation exists */}
+                {explanation.isSelectionOnly && explanation.detailedExplanation && (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionTitle}>Contextual Analysis</span>
                     </div>
-                  )}
+                    <div className={styles.detailedText}>
+                      {explanation.detailedExplanation}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section D: Line-by-Line Breakdown */}
+                {explanation.lineExplanations && explanation.lineExplanations.length > 0 && (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>D</span>
+                      <span className={styles.sectionTitle}>Line-by-Line Breakdown</span>
+                    </div>
+                    <div className={styles.lineBreakdownList}>
+                      {explanation.lineExplanations
+                        .filter((le) => le.code.trim().length > 0)
+                        .map((le, idx) => (
+                          <div key={idx} className={styles.lineBreakdownCard}>
+                            <div className={styles.lineBreakdownHeader}>
+                              <span className={styles.lineNoBadge}>Line {le.line}</span>
+                              <code className={styles.lineCodeSnippet}>{le.code.trim()}</code>
+                            </div>
+                            <div className={styles.lineExplanationText}>
+                              {le.explanation}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section E: Final Output */}
+                {explanation.expectedOutput && (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>E</span>
+                      <span className={styles.sectionTitle}>Final Output</span>
+                    </div>
+                    <div className={styles.outputBox}>
+                      <div className={styles.outputConsole}>
+                        <div className={styles.outputConsoleHeader}>
+                          <span className={styles.consoleDot} />
+                          <span className={styles.consoleDot} />
+                          <span className={styles.consoleDot} />
+                          <span className={styles.consoleTitle}>Program Output</span>
+                        </div>
+                        <pre className={styles.outputContent}>
+                          <code>{explanation.expectedOutput.output || '(No output produced)'}</code>
+                        </pre>
+                      </div>
+                      {explanation.expectedOutput.explanation && (
+                        <div className={styles.outputWhyText}>
+                          <strong>Why:</strong> {explanation.expectedOutput.explanation}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

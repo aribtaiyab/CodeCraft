@@ -293,4 +293,256 @@ describe('Enhanced Smart Debugging Coach: Precision Diagnosis & Progressive Leve
     expect(diagnosis!.issues[0].levels.level3.suggestedFix?.replacementText).toBe('    print(f"Start: {x}")')
     expect(diagnosis!.issues[1].levels.level3.suggestedFix?.replacementText).toBe('    print(f"End: {y}")')
   })
+
+  it('diagnoses prnt("heloo") correctly as NameError and suggests print("heloo")', () => {
+    const code = 'prnt("heloo")'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'NameError',
+        message: "name 'prnt' is not defined",
+        traceback: 'File "<string>", line 1\nNameError: name \'prnt\' is not defined',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    const issue = diagnosis!.issues[0]
+    expect(issue.category).toBe('name-error-typo')
+    expect(issue.title).toContain("Misspelled Function Name 'prnt'")
+    expect(issue.line).toBe(1)
+
+    // Level 1: Hint
+    expect(issue.levels.level1.hint).toContain('print')
+
+    // Level 2: Explain
+    expect(issue.levels.level2.explanation).toContain('print')
+
+    // Level 3: Solution
+    expect(issue.levels.level3.suggestedFix).toBeDefined()
+    expect(issue.levels.level3.suggestedFix?.originalText).toBe('prnt("heloo")')
+    expect(issue.levels.level3.suggestedFix?.replacementText).toBe('print("heloo")')
+    // Genuinely changes the erroneous part (never identical!)
+    expect(issue.levels.level3.suggestedFix?.replacementText).not.toBe(issue.levels.level3.suggestedFix?.originalText)
+  })
+
+  it('diagnoses missing closing parenthesis and bracket as SyntaxError', () => {
+    // Parenthesis test
+    const parenCode = 'print("hello"'
+    const parenDiag = diagnoseBug({
+      code: parenCode,
+      lastError: {
+        errorType: 'SyntaxError',
+        message: "'(' was never closed",
+        traceback: 'File "<string>", line 1\nSyntaxError: \'(\' was never closed',
+      },
+    })
+
+    expect(parenDiag).not.toBeNull()
+    expect(parenDiag!.issues[0].category).toBe('syntax-error')
+    expect(parenDiag!.issues[0].title).toContain('Parenthesis')
+    expect(parenDiag!.issues[0].levels.level3.suggestedFix?.replacementText).toBe('print("hello")')
+
+    // Bracket test
+    const bracketCode = 'nums = [1, 2, 3'
+    const bracketDiag = diagnoseBug({
+      code: bracketCode,
+      lastError: {
+        errorType: 'SyntaxError',
+        message: "'[' was never closed",
+        traceback: 'File "<string>", line 1\nSyntaxError: \'[\' was never closed',
+      },
+    })
+
+    expect(bracketDiag).not.toBeNull()
+    expect(bracketDiag!.issues[0].category).toBe('syntax-error')
+    expect(bracketDiag!.issues[0].title).toContain('Bracket')
+    expect(bracketDiag!.issues[0].levels.level3.suggestedFix?.replacementText).toBe('nums = [1, 2, 3]')
+  })
+
+  it('diagnoses undefined variable without inventing a fake fix or repeating identical code', () => {
+    const code = 'print(mystery_variable)'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'NameError',
+        message: "name 'mystery_variable' is not defined",
+        traceback: 'File "<string>", line 1\nNameError: name \'mystery_variable\' is not defined',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    const issue = diagnosis!.issues[0]
+    expect(issue.category).toBe('name-error-typo')
+    expect(issue.title).toContain("Undefined Variable 'mystery_variable'")
+    // Level 3 explains the limitation and does not repeat identical line
+    expect(issue.levels.level3.solution).toContain('mystery_variable')
+    expect(issue.levels.level3.suggestedFix?.replacementText).not.toBe(code)
+  })
+
+  it('diagnoses ZeroDivisionError with guard solution and line-level focus', () => {
+    const code = 'result = 100 / 0'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'ZeroDivisionError',
+        message: 'division by zero',
+        traceback: 'File "<string>", line 1\nZeroDivisionError: division by zero',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis!.issues[0].category).toBe('zero-division')
+    expect(diagnosis!.issues[0].line).toBe(1)
+  })
+
+  it('diagnoses TypeError when adding string and integer', () => {
+    const code = 'msg = "Score: " + 99'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'TypeError',
+        message: 'can only concatenate str (not "int") to str',
+        traceback: 'File "<string>", line 1\nTypeError: can only concatenate str',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis!.issues[0].category).toBe('type-mismatch')
+    expect(diagnosis!.issues[0].line).toBe(1)
+  })
+
+  it('diagnoses IndexError on out-of-bounds list index', () => {
+    const code = 'items = [10, 20]\nval = items[5]'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'IndexError',
+        message: 'list index out of range',
+        traceback: 'File "<string>", line 2\nIndexError: list index out of range',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis!.issues[0].category).toBe('index-out-of-bounds')
+    expect(diagnosis!.issues[0].line).toBe(2)
+  })
+
+  // ==========================================================================
+  // Targeted Verification: User Requirements for Diagnosis Quality
+  // ==========================================================================
+  it('accurately diagnoses print("kkk" with exact 3 levels and valid correction', () => {
+    const code = 'print("kkk"'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'PythonError',
+        message: "SyntaxError: '(' was never closed",
+        traceback: 'File "<string>", line 1\n    print("kkk"\n    ^\nSyntaxError: \'(\' was never closed',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis?.category).toBe('syntax-error')
+    expect(diagnosis?.line).toBe(1)
+
+    const issue = diagnosis!.issues[0]
+    expect(issue.line).toBe(1)
+    expect(issue.title).toContain('Parenthesis')
+    expect(issue.summary).toContain("opening '(' has no matching closing ')'")
+
+    // Level 1 Hint: Check whether you closed the parenthesis.
+    expect(issue.levels.level1.hint).toBe('Check whether you closed the parenthesis.')
+
+    // Level 2 Explanation: Your print statement starts with ( but does not end with ). Python needs both.
+    expect(issue.levels.level2.explanation).toBe(
+      'Your print statement starts with ( but does not end with ). Python needs both.'
+    )
+
+    // Level 3 Correct Answer: Incorrect line and corrected line
+    expect(issue.levels.level3.suggestedFix).toBeDefined()
+    expect(issue.levels.level3.suggestedFix?.originalText).toBe('print("kkk"')
+    expect(issue.levels.level3.suggestedFix?.replacementText).toBe('print("kkk")')
+    expect(issue.levels.level3.suggestedFix?.originalText).not.toBe(
+      issue.levels.level3.suggestedFix?.replacementText
+    )
+    expect(issue.levels.level3.solution).toContain('closing parenthesis')
+  })
+
+  it('accurately diagnoses missing square bracket: numbers = [1, 2, 3', () => {
+    const code = 'numbers = [1, 2, 3'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'SyntaxError',
+        message: "'[' was never closed",
+        traceback: 'File "<string>", line 1\nSyntaxError: \'[\' was never closed',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis?.category).toBe('syntax-error')
+    expect(diagnosis?.line).toBe(1)
+    const issue = diagnosis!.issues[0]
+    expect(issue.title).toContain('Bracket')
+    expect(issue.levels.level3.suggestedFix?.replacementText).toBe('numbers = [1, 2, 3]')
+  })
+
+  it('accurately diagnoses unclosed curly brace: data = {"a": 1', () => {
+    const code = 'data = {"a": 1'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'SyntaxError',
+        message: "'{' was never closed",
+        traceback: 'File "<string>", line 1\nSyntaxError: \'{\' was never closed',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis?.category).toBe('syntax-error')
+    expect(diagnosis?.line).toBe(1)
+    const issue = diagnosis!.issues[0]
+    expect(issue.title).toContain('Brace')
+    expect(issue.levels.level3.suggestedFix?.replacementText).toBe('data = {"a": 1}')
+  })
+
+  it('accurately diagnoses misspelled function name: prnt("hello")', () => {
+    const code = 'prnt("hello")'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'NameError',
+        message: "name 'prnt' is not defined",
+        traceback: 'File "<string>", line 1\nNameError: name \'prnt\' is not defined',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis?.category).toBe('name-error-typo')
+    expect(diagnosis?.line).toBe(1)
+    const issue = diagnosis!.issues[0]
+    expect(issue.title).toContain('Misspelled Function')
+    expect(issue.levels.level3.suggestedFix?.replacementText).toBe('print("hello")')
+  })
+
+  it('accurately diagnoses undefined variable without inventing invalid fix: x = mystery_value + 1', () => {
+    const code = 'x = mystery_value + 1'
+    const diagnosis = diagnoseBug({
+      code,
+      lastError: {
+        errorType: 'NameError',
+        message: "name 'mystery_value' is not defined",
+        traceback: 'File "<string>", line 1\nNameError: name \'mystery_value\' is not defined',
+      },
+    })
+
+    expect(diagnosis).not.toBeNull()
+    expect(diagnosis?.category).toBe('name-error-typo')
+    expect(diagnosis?.line).toBe(1)
+    const issue = diagnosis!.issues[0]
+    expect(issue.title).toContain("Undefined Variable 'mystery_value'")
+    // Must NOT propose invalid code or identical replacement
+    expect(issue.levels.level3.suggestedFix).toBeUndefined()
+    expect(issue.levels.level3.solution).toContain('mystery_value')
+  })
 })

@@ -13,6 +13,18 @@ export interface LineExplanation {
   explanation: string
 }
 
+export interface ConceptDetail {
+  name: string
+  meaning: string
+  codeUsage: string
+  example?: string
+}
+
+export interface ExpectedOutput {
+  output: string
+  explanation: string
+}
+
 export interface ExplainResponse {
   id: string
   sourceHash: string
@@ -22,6 +34,9 @@ export interface ExplainResponse {
   detailedExplanation: string
   lineExplanations: LineExplanation[]
   keyConcepts: string[]
+  conceptDetails?: ConceptDetail[]
+  mainIdeaSteps?: string[]
+  expectedOutput?: ExpectedOutput
   isSelectionOnly: boolean
   selectedRange?: LineRange
 }

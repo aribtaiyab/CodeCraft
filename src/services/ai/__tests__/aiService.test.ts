@@ -82,6 +82,58 @@ describe('Frontend AiService Client', () => {
     expect(capturedBody).toContain('startLine":1')
   })
 
+  it('explainCode parses full-program CS teacher explanation with 5 structured sections', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/ai/explain') {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              id: 'exp_full_456',
+              sourceHash: 'hash_full',
+              isStale: false,
+              model: 'llama-3.3-70b-versatile',
+              summary: 'Checks if text is a palindrome.',
+              mainIdeaSteps: [
+                '1. Receive argument.',
+                '2. Lowercase text.',
+                '3. Reverse with [::-1].',
+                '4. Compare and return Boolean.',
+              ],
+              conceptDetails: [
+                {
+                  name: 'String Slicing',
+                  meaning: 'Reverses text with [::-1]',
+                  codeUsage: 'clean[::-1]',
+                  example: '"a"[::-1]',
+                },
+              ],
+              keyConcepts: ['String Slicing'],
+              lineExplanations: [
+                { line: 1, code: 'def is_pal(s):', explanation: 'Defines function.' },
+              ],
+              detailedExplanation: 'Full walkthrough.',
+              expectedOutput: {
+                output: 'Racecar is a palindrome',
+                explanation: 'Condition is True.',
+              },
+              isSelectionOnly: false,
+            }),
+          })
+        }
+        return Promise.reject(new Error('Unexpected URL'))
+      })
+    )
+
+    const res = await aiService.explainCode('def is_pal(s):\n    return s == s[::-1]\n')
+    expect(res.id).toBe('exp_full_456')
+    expect(res.isSelectionOnly).toBe(false)
+    expect(res.mainIdeaSteps?.length).toBe(4)
+    expect(res.conceptDetails?.[0].name).toBe('String Slicing')
+    expect(res.expectedOutput?.output).toBe('Racecar is a palindrome')
+  })
+
   it('askQuestion sends question and runtimeContext to /api/ai/ask', async () => {
     let capturedBody = ''
     vi.stubGlobal(

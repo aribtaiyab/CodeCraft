@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
 import {
@@ -20,8 +20,14 @@ import {
   LifeBuoy,
   FlaskConical,
   Eye,
+  Maximize2,
+  Columns,
+  Search,
+  Type,
+  WrapText,
+  Save,
 } from 'lucide-react'
-import { Button, Badge, Tabs } from '../../components'
+import { Badge, Tabs } from '../../components'
 import { usePyodide } from '../../services/pyodide'
 import {
   TraceVisualizer,
@@ -29,6 +35,8 @@ import {
   DebuggingCoachPanel,
   TestYourFixPanel,
   AiMentorPanel,
+  CommandPaletteModal,
+  type CommandItem,
 } from './components'
 import {
   diagnoseBug,
@@ -109,56 +117,76 @@ main();
   markdown: '',
 }
 
+// Warm, restrained syntax token rules tailored for CodeCraft charcoal/bronze palette
 const EDITOR_THEME_RULES = [
   { token: 'comment', foreground: '857E71', fontStyle: 'italic' },
   { token: 'keyword', foreground: 'B8895B', fontStyle: 'bold' },
-  { token: 'string', foreground: '5E9E6E' },
-  { token: 'number', foreground: '7A9EBA' },
-  { token: 'type', foreground: 'D4A876' },
-  { token: 'function', foreground: 'C8C2B4' },
+  { token: 'keyword.control', foreground: 'B8895B', fontStyle: 'bold' },
+  { token: 'keyword.operator', foreground: 'D8B58B' },
+  { token: 'string', foreground: '8FA678' },
+  { token: 'string.escape', foreground: 'D8B58B' },
+  { token: 'number', foreground: 'D4A876' },
+  { token: 'type', foreground: 'E0C09E', fontStyle: 'bold' },
+  { token: 'function', foreground: 'F4F0E8' },
+  { token: 'variable', foreground: 'D5CFC5' },
+  { token: 'variable.parameter', foreground: 'C5BDB1' },
+  { token: 'delimiter', foreground: 'B9B2A7' },
+  { token: 'operator', foreground: 'B8895B' },
+  { token: 'identifier', foreground: 'F4F0E8' },
 ]
 
 export function CodeStudioPage() {
-  // Phase 7: URL exercise parameter loading
+  // URL exercise parameter loading or workspace auto-restore
   const [searchParams] = useSearchParams()
   const exerciseParam = searchParams.get('exerciseId')
   const initialCode = exerciseParam
     ? DEBUGGING_EXERCISES.find((e) => e.id === exerciseParam)?.buggyCode || STARTER_CODE.python
-    : STARTER_CODE.python
+    : localStorage.getItem('codecraft_studio_saved_code') || STARTER_CODE.python
 
   const [language, setLanguage] = useState<Language>('python')
   const [code, setCode] = useState<string>(initialCode)
   const [copied, setCopied] = useState(false)
+  const [saveToast, setSaveToast] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
-  const [fontSize, setFontSize] = useState(14)
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = localStorage.getItem('codecraft_studio_font_size')
+    return saved ? Number(saved) : 15
+  })
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [wordWrap, setWordWrap] = useState<'off' | 'on'>('off')
   const [inputVal, setInputVal] = useState('')
 
-  // Phase 4: Debugging Coach & Test Results State
+  // Active tools tab state
+  const [activeTab, setActiveTab] = useState<string>('output')
+
+  // Draggable Split Pane & Maximized state
+  const [toolsWidth, setToolsWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('codecraft_studio_tools_width')
+    return saved ? Math.min(Math.max(Number(saved), 320), 800) : 480
+  })
+  const [isDragging, setIsDragging] = useState(false)
+  const [isEditorMaximized, setIsEditorMaximized] = useState(false)
+
+  // Cursor & selection tracking
+  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 })
+  const [selectionCount, setSelectionCount] = useState(0)
+  const [selectionRange, setSelectionRange] = useState<{ startLine: number; endLine: number } | null>(null)
+
+  // Command palette modal state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+
+  // Debugging Coach & Test Results State
   const [diagnosis, setDiagnosis] = useState<BugDiagnosis | null>(null)
   const [testResults, setTestResults] = useState<TestAssertionResult[] | null>(null)
   const [isRunningTests, setIsRunningTests] = useState(false)
 
-  // Phase 5: Selection range for line explanation
-  const [selectionRange, setSelectionRange] = useState<{ startLine: number; endLine: number } | null>(null)
-
   const consoleEndRef = useRef<HTMLDivElement | null>(null)
   const stdinInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Monaco Editor Reference for line decoration
+  // Monaco Editor References
   const editorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null)
   const decorationsCollectionRef = useRef<import('monaco-editor').editor.IEditorDecorationsCollection | null>(null)
-
-  // Layout resize trigger for Monaco Editor
-  useEffect(() => {
-    const handleResize = () => {
-      editorRef.current?.layout()
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Pyodide Execution & Tracing Hook
   const {
@@ -172,7 +200,6 @@ export function CodeStudioPage() {
     submitInput,
     clearOutput,
     resetEngine,
-    // Phase 3: Trace Visualizer
     traceResult,
     currentStepIndex,
     currentStep,
@@ -180,10 +207,8 @@ export function CodeStudioPage() {
     stepBackward,
     goToStep,
     resetTrace,
-    // Phase 3: Stale state
     isStale,
     markCodeChanged,
-    // Phase 3: Prediction
     prediction,
     setPrediction,
     predictionResult,
@@ -191,6 +216,46 @@ export function CodeStudioPage() {
   } = usePyodide({ defaultTimeoutMs: 15000 })
 
   const currentLang = LANGUAGE_OPTIONS.find((l) => l.value === language)!
+
+  // Save font size preference
+  useEffect(() => {
+    localStorage.setItem('codecraft_studio_font_size', String(fontSize))
+  }, [fontSize])
+
+  // Resize listener for Monaco
+  useEffect(() => {
+    const handleResize = () => {
+      editorRef.current?.layout()
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Draggable divider mouse listener
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const minWidth = 320
+      const maxWidth = Math.max(minWidth, window.innerWidth - 380)
+      const newWidth = Math.min(Math.max(window.innerWidth - e.clientX, minWidth), maxWidth)
+      setToolsWidth(newWidth)
+      editorRef.current?.layout()
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+      localStorage.setItem('codecraft_studio_tools_width', String(toolsWidth))
+      editorRef.current?.layout()
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, toolsWidth])
 
   // Synchronize Monaco line highlighting with current trace step
   useEffect(() => {
@@ -247,6 +312,7 @@ export function CodeStudioPage() {
   const analyzedErrorKeyRef = useRef<string | null>(null)
   const analyzedTestsKeyRef = useRef<string | null>(null)
   const cursorSelectionSubRef = useRef<import('monaco-editor').IDisposable | null>(null)
+  const cursorPosSubRef = useRef<import('monaco-editor').IDisposable | null>(null)
   const diagnosisRef = useRef<BugDiagnosis | null>(diagnosis)
 
   useEffect(() => {
@@ -257,6 +323,7 @@ export function CodeStudioPage() {
   useEffect(() => {
     return () => {
       cursorSelectionSubRef.current?.dispose()
+      cursorPosSubRef.current?.dispose()
       decorationsCollectionRef.current?.clear()
     }
   }, [])
@@ -343,7 +410,6 @@ export function CodeStudioPage() {
         const errKey = `${errEntry.text}:${code.length}`
         if (analyzedErrorKeyRef.current !== errKey) {
           analyzedErrorKeyRef.current = errKey
-          // Extract exact Python error type (e.g. SyntaxError, NameError)
           const typeMatch = errEntry.text.match(
             /\b(SyntaxError|IndentationError|NameError|TypeError|ValueError|IndexError|KeyError|ZeroDivisionError|AttributeError|ImportError|ModuleNotFoundError|RecursionError|TimeoutError)\b/
           )
@@ -418,13 +484,23 @@ export function CodeStudioPage() {
     setIsRunningTests(false)
   }, [stopExecution])
 
-  const handleCopyCode = async () => {
+  const handleCopyCode = useCallback(async () => {
     await navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
+  }, [code])
 
-  const handleReset = () => {
+  const handleSave = useCallback(() => {
+    try {
+      localStorage.setItem('codecraft_studio_saved_code', code)
+      setSaveToast(true)
+      setTimeout(() => setSaveToast(false), 2200)
+    } catch {
+      // LocalStorage quota or privacy mode fallback
+    }
+  }, [code])
+
+  const handleReset = useCallback(() => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
     setCode(STARTER_CODE[language])
@@ -434,7 +510,23 @@ export function CodeStudioPage() {
     if (language === 'python') {
       resetEngine()
     }
-  }
+  }, [language, resetEngine])
+
+  const toggleEditorMaximize = useCallback(() => {
+    setIsEditorMaximized((prev) => !prev)
+    setTimeout(() => editorRef.current?.layout(), 50)
+  }, [])
+
+  const handleExportFile = useCallback(() => {
+    const ext = language === 'python' ? 'py' : language === 'javascript' ? 'js' : 'ts'
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `main.${ext}`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [code, language])
 
   const handleStdinSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -443,7 +535,7 @@ export function CodeStudioPage() {
     setInputVal('')
   }
 
-  // Phase 4: Test Fix Runner
+  // Test Fix runner
   const handleRunTestScript = (script: string) => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
@@ -467,36 +559,52 @@ export function CodeStudioPage() {
       inherit: true,
       rules: EDITOR_THEME_RULES,
       colors: {
-        'editor.background':              '#1E1C18',
-        'editor.foreground':              '#F4F0E8',
-        'editor.lineHighlightBackground': '#24221E',
-        'editor.selectionBackground':     '#B8895B33',
-        'editorLineNumber.foreground':    '#857E71',
-        'editorLineNumber.activeForeground': '#B8895B',
-        'editorCursor.foreground':        '#B8895B',
-        'editor.findMatchBackground':     '#B8895B44',
-        'editorIndentGuide.background1':  '#2C2A25',
-        'editorIndentGuide.activeBackground1': '#3A3730',
-        'scrollbarSlider.background':     '#3A373066',
-        'scrollbarSlider.hoverBackground':'#B8895B44',
-        'editorWidget.background':        '#24221E',
-        'editorWidget.border':            '#3A3730',
-        'input.background':               '#191815',
-        'input.foreground':               '#F4F0E8',
-        'input.border':                   '#3A3730',
-        'focusBorder':                    '#B8895B',
-        'list.activeSelectionBackground': '#B8895B22',
-        'list.hoverBackground':           '#2C2A25',
+        'editor.background':                  '#191815',
+        'editor.foreground':                  '#F4F0E8',
+        'editor.lineHighlightBackground':     '#24221E99',
+        'editor.lineHighlightBorder':         '#302C26',
+        'editor.selectionBackground':         '#B8895B38',
+        'editor.selectionHighlightBackground':'#B8895B20',
+        'editor.inactiveSelectionBackground': '#2D2924',
+        'editorLineNumber.foreground':        '#6B6357',
+        'editorLineNumber.activeForeground':  '#D8B58B',
+        'editorCursor.foreground':            '#D8B58B',
+        'editor.findMatchBackground':         '#B8895B55',
+        'editor.findMatchHighlightBackground':'#B8895B28',
+        'editorIndentGuide.background1':      '#26231E',
+        'editorIndentGuide.activeBackground1':'#454037',
+        'editorBracketMatch.background':      '#B8895B25',
+        'editorBracketMatch.border':          '#B8895B88',
+        'scrollbarSlider.background':         '#302C2688',
+        'scrollbarSlider.hoverBackground':    '#454037CC',
+        'scrollbarSlider.activeBackground':   '#B8895B66',
+        'editorWidget.background':            '#24221E',
+        'editorWidget.border':                '#454037',
+        'editorSuggestWidget.background':     '#24221E',
+        'editorSuggestWidget.border':         '#454037',
+        'editorSuggestWidget.foreground':     '#F4F0E8',
+        'editorSuggestWidget.selectedBackground': '#302C26',
+        'editorSuggestWidget.highlightForeground': '#D8B58B',
+        'editorHoverWidget.background':       '#24221E',
+        'editorHoverWidget.border':           '#454037',
+        'input.background':                   '#191815',
+        'input.foreground':                   '#F4F0E8',
+        'input.border':                       '#454037',
+        'focusBorder':                        '#B8895B',
+        'list.activeSelectionBackground':     '#302C26',
+        'list.activeSelectionForeground':     '#F4F0E8',
+        'list.hoverBackground':               '#2A2722',
       },
     })
     m.editor.setTheme('codecraft')
 
-    // Keyboard shortcut: Ctrl+Enter or Cmd+Enter to Run Code
-    ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.Enter, () => {
-      handleRun()
+    // Track live cursor position
+    cursorPosSubRef.current?.dispose()
+    cursorPosSubRef.current = ed.onDidChangeCursorPosition((e) => {
+      setCursorPos({ line: e.position.lineNumber, col: e.position.column })
     })
 
-    // Phase 5: Track cursor selection for selected lines explanation
+    // Track cursor selection
     cursorSelectionSubRef.current?.dispose()
     cursorSelectionSubRef.current = ed.onDidChangeCursorSelection((e) => {
       const sel = e.selection
@@ -505,16 +613,227 @@ export function CodeStudioPage() {
         (sel.startLineNumber !== sel.endLineNumber ||
           sel.startColumn !== sel.endColumn)
       ) {
+        const selText = ed.getModel()?.getValueInRange(sel) || ''
+        setSelectionCount(selText.length)
         setSelectionRange({
           startLine: sel.startLineNumber,
           endLine: sel.endLineNumber,
         })
       } else {
+        setSelectionCount(0)
         setSelectionRange(null)
       }
     })
+
+    // Keyboard Shortcuts inside Monaco
+    ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.Enter, () => {
+      handleRun()
+    })
+    ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.KeyS, () => {
+      handleSave()
+    })
+    ed.addCommand(m.KeyMod.CtrlCmd | m.KeyMod.Shift | m.KeyCode.KeyP, () => {
+      setIsCommandPaletteOpen(true)
+    })
+    ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.KeyK, () => {
+      setIsCommandPaletteOpen(true)
+    })
   }
 
+  // Global window keyboard shortcuts when editor isn't focused
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+        e.preventDefault()
+        setIsCommandPaletteOpen(true)
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        setIsCommandPaletteOpen(true)
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        handleSave()
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault()
+        handleRun()
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [handleSave, handleRun])
+
+  // Command Palette Items
+  const paletteCommands: CommandItem[] = useMemo(() => [
+    {
+      id: 'run-code',
+      title: 'Run Code and Trace',
+      subtitle: 'Execute Python in Pyodide WebAssembly with runtime tracing',
+      shortcut: 'Ctrl+Enter',
+      category: 'execution',
+      icon: <Play size={16} />,
+      action: handleRun,
+    },
+    {
+      id: 'stop-code',
+      title: 'Stop Execution',
+      subtitle: 'Halt active execution or interrupt loops',
+      category: 'execution',
+      icon: <Square size={16} />,
+      action: handleStop,
+    },
+    {
+      id: 'save-code',
+      title: 'Save Code to Workspace',
+      subtitle: 'Persist current Python code in local storage',
+      shortcut: 'Ctrl+S',
+      category: 'editor',
+      icon: <Save size={16} />,
+      action: handleSave,
+    },
+    {
+      id: 'clear-console',
+      title: 'Clear Console Output',
+      subtitle: 'Remove all standard output, warnings and error traces',
+      category: 'execution',
+      icon: <Trash2 size={16} />,
+      action: clearOutput,
+    },
+    {
+      id: 'copy-code',
+      title: 'Copy All Code',
+      subtitle: 'Copy editor content to system clipboard',
+      category: 'editor',
+      icon: <Copy size={16} />,
+      action: handleCopyCode,
+    },
+    {
+      id: 'reset-code',
+      title: 'Reset to Starter Code',
+      subtitle: 'Restore clean template and reset execution engine',
+      category: 'editor',
+      icon: <RotateCcw size={16} />,
+      action: handleReset,
+    },
+    {
+      id: 'font-increase',
+      title: 'Increase Editor Font Size',
+      subtitle: `Current: ${fontSize}px`,
+      category: 'editor',
+      icon: <Type size={16} />,
+      action: () => setFontSize((s) => Math.min(22, s + 1)),
+    },
+    {
+      id: 'font-decrease',
+      title: 'Decrease Editor Font Size',
+      subtitle: `Current: ${fontSize}px`,
+      category: 'editor',
+      icon: <Type size={16} />,
+      action: () => setFontSize((s) => Math.max(12, s - 1)),
+    },
+    {
+      id: 'toggle-wordwrap',
+      title: `Toggle Word Wrap (Currently ${wordWrap})`,
+      subtitle: 'Enable or disable soft wrapping of long lines',
+      category: 'editor',
+      icon: <WrapText size={16} />,
+      action: () => setWordWrap((w) => (w === 'off' ? 'on' : 'off')),
+    },
+    {
+      id: 'toggle-maximize',
+      title: isEditorMaximized ? 'Restore Tools Panel' : 'Maximize Editor (Full Width)',
+      subtitle: isEditorMaximized ? 'Show Console & Learning Tools side-by-side' : 'Expand editor to 100% width',
+      category: 'navigation',
+      icon: isEditorMaximized ? <Columns size={16} /> : <Maximize2 size={16} />,
+      action: toggleEditorMaximize,
+    },
+    {
+      id: 'tab-console',
+      title: 'Switch to Console',
+      subtitle: 'View standard output, execution logs, and interactive input',
+      category: 'navigation',
+      icon: <Terminal size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('output')
+      },
+    },
+    {
+      id: 'tab-coach',
+      title: 'Switch to Debug Coach',
+      subtitle: 'Inspect error diagnosis, line highlights, and fix guidance',
+      category: 'navigation',
+      icon: <LifeBuoy size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('coach')
+      },
+    },
+    {
+      id: 'tab-aimentor',
+      title: 'Switch to AI Mentor',
+      subtitle: 'Ask questions, explain code, and understand concepts',
+      category: 'navigation',
+      icon: <Sparkles size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('aimentor')
+      },
+    },
+    {
+      id: 'tab-predict',
+      title: 'Switch to Predict',
+      subtitle: 'Mental model training: guess output before running',
+      category: 'navigation',
+      icon: <Eye size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('prediction')
+      },
+    },
+    {
+      id: 'tab-visualizer',
+      title: 'Switch to Visualizer',
+      subtitle: 'Step through Python execution and variable state live',
+      category: 'navigation',
+      icon: <Layers size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('visualizer')
+      },
+    },
+    {
+      id: 'tab-testfix',
+      title: 'Switch to Test Fix',
+      subtitle: 'Run automated assertions against code to verify fixes',
+      category: 'navigation',
+      icon: <FlaskConical size={16} />,
+      action: () => {
+        setIsEditorMaximized(false)
+        setActiveTab('testfix')
+      },
+    },
+    {
+      id: 'export-file',
+      title: 'Export Python File',
+      subtitle: 'Download main.py to disk',
+      category: 'editor',
+      icon: <Download size={16} />,
+      action: handleExportFile,
+    },
+  ], [
+    fontSize,
+    wordWrap,
+    isEditorMaximized,
+    handleRun,
+    handleStop,
+    handleSave,
+    clearOutput,
+    handleCopyCode,
+    handleReset,
+    toggleEditorMaximize,
+    handleExportFile,
+  ])
+
+  // Exact 6 Learning Tools Tabs in required order
   const outputTabs = [
     {
       id: 'output',
@@ -555,21 +874,24 @@ export function CodeStudioPage() {
 
   return (
     <div className={styles.page}>
-      {/* ---- Top bar ---- */}
+      {/* ---- Toolbar with Organized File/Environment, Editing, and Execution Sections ---- */}
       <div className={styles.topBar}>
-        <div className={styles.topBar__left}>
+        {/* 1. File / Environment Controls */}
+        <div className={styles.topBar__group}>
           <div className={styles.topBar__fileInfo}>
             <FileCode size={15} strokeWidth={1.75} className={styles.topBar__fileIcon} />
             <span className={styles.topBar__fileName}>
               main.{language === 'typescript' ? 'ts' : language === 'javascript' ? 'js' : 'py'}
             </span>
-            {isStale && (
+            {saveToast ? (
+              <span className={styles.savedToastBadge}>Saved</span>
+            ) : isStale ? (
               <span title="Code modified since last run">
                 <Badge variant="warning" size="sm">
                   Modified
                 </Badge>
               </span>
-            )}
+            ) : null}
           </div>
 
           {/* Language selector */}
@@ -582,6 +904,7 @@ export function CodeStudioPage() {
               aria-expanded={langMenuOpen}
               aria-label="Select programming language"
             >
+              <span className={styles.langDot} />
               <span>{currentLang.label}</span>
               <ChevronDown
                 size={13}
@@ -613,64 +936,99 @@ export function CodeStudioPage() {
           </div>
         </div>
 
-        <div className={styles.topBar__right}>
-          <div className={styles.topBar__utilityGroup}>
-            <Button
-              variant="ghost"
-              size="sm"
-              iconLeft={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopyCode}
-              title="Copy code to clipboard"
-            >
-              {copied ? 'Copied' : 'Copy'}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              iconLeft={<RotateCcw size={14} />}
-              onClick={handleReset}
-              title="Reset code and engine state"
-            >
-              Reset
-            </Button>
-
+        {/* 2. Editing & Studio Controls */}
+        <div className={styles.topBar__group}>
+          {/* Quick font size controls */}
+          <div className={styles.fontStepper} title="Editor font size">
             <button
-              className={styles.topBar__settingsBtn}
-              onClick={() => setSettingsOpen((v) => !v)}
-              title="Editor settings"
-              aria-label="Toggle editor settings"
+              className={styles.fontStepper__btn}
+              onClick={() => setFontSize((s) => Math.max(12, s - 1))}
+              disabled={fontSize <= 12}
+              title="Decrease font size"
+              aria-label="Decrease font size"
             >
-              <Settings2 size={15} />
+              A-
+            </button>
+            <span className={styles.fontStepper__val}>{fontSize}px</span>
+            <button
+              className={styles.fontStepper__btn}
+              onClick={() => setFontSize((s) => Math.min(22, s + 1))}
+              disabled={fontSize >= 22}
+              title="Increase font size"
+              aria-label="Increase font size"
+            >
+              A+
             </button>
           </div>
 
-          <div className={styles.topBar__actionGroup}>
-            {/* Stop Button */}
-            <button
-              id="stop-code-btn"
-              className={styles.btnStop}
-              onClick={handleStop}
-              disabled={!isRunning}
-              title={isRunning ? 'Stop Python execution (interrupts infinite loops)' : 'No code currently running'}
-            >
-              <Square size={13} />
-              Stop
-            </button>
+          <button
+            className={styles.toolBtn}
+            onClick={handleCopyCode}
+            title="Copy code to clipboard"
+            aria-label="Copy code"
+          >
+            {copied ? <Check size={14} className={styles.checkIcon} /> : <Copy size={14} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
 
-            {/* Run Button */}
-            <Button
-              id="run-code-btn"
-              variant="primary"
-              size="sm"
-              iconLeft={<Play size={14} />}
-              onClick={handleRun}
-              disabled={isRunning || isEngineLoading}
-              title="Run Code and Trace (Ctrl+Enter)"
-            >
-              {isEngineLoading ? 'Loading Pyodide...' : isRunning ? 'Running...' : 'Run'}
-            </Button>
-          </div>
+          <button
+            className={styles.toolBtn}
+            onClick={handleReset}
+            title="Reset to starter code"
+            aria-label="Reset code"
+          >
+            <RotateCcw size={14} />
+            <span>Reset</span>
+          </button>
+
+          {/* Command Palette Trigger */}
+          <button
+            className={styles.commandPaletteTrigger}
+            onClick={() => setIsCommandPaletteOpen(true)}
+            title="Command Palette (Ctrl+Shift+P / ⌘K)"
+            aria-label="Open Command Palette"
+          >
+            <Search size={13} />
+            <span className={styles.commandPaletteText}>Commands</span>
+            <kbd className={styles.commandPaletteKbd}>⌘K</kbd>
+          </button>
+
+          <button
+            className={`${styles.iconBtn} ${settingsOpen ? styles.iconBtnActive : ''}`}
+            onClick={() => setSettingsOpen((v) => !v)}
+            title="Editor settings"
+            aria-label="Toggle editor settings"
+          >
+            <Settings2 size={15} />
+          </button>
+        </div>
+
+        {/* 3. Execution Controls */}
+        <div className={styles.topBar__group}>
+          {/* Stop Button */}
+          <button
+            id="stop-code-btn"
+            className={styles.btnStop}
+            onClick={handleStop}
+            disabled={!isRunning}
+            title={isRunning ? 'Stop Python execution (interrupts infinite loops)' : 'No code currently running'}
+          >
+            <Square size={13} />
+            <span>Stop</span>
+          </button>
+
+          {/* Primary Bronze Run Button */}
+          <button
+            id="run-code-btn"
+            className={styles.btnRun}
+            onClick={handleRun}
+            disabled={isRunning || isEngineLoading}
+            title="Run Code & Trace (Ctrl+Enter)"
+          >
+            <Play size={14} className={styles.runIcon} />
+            <span>{isEngineLoading ? 'Loading Pyodide...' : isRunning ? 'Running...' : 'Run'}</span>
+            <kbd className={styles.runKbdHint}>Ctrl+↵</kbd>
+          </button>
         </div>
       </div>
 
@@ -721,9 +1079,9 @@ export function CodeStudioPage() {
         </div>
       )}
 
-      {/* ---- Split layout ---- */}
-      <div className={styles.split}>
-        {/* Editor pane */}
+      {/* ---- Split Workspace Layout with Draggable Divider ---- */}
+      <div className={`${styles.split} ${isDragging ? styles.splitDragging : ''}`}>
+        {/* 1. Code Editor Pane */}
         <div className={styles.editorPane} aria-label="Code editor">
           <Editor
             height="100%"
@@ -733,9 +1091,11 @@ export function CodeStudioPage() {
             onMount={handleEditorMount}
             options={{
               fontSize,
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+              lineHeight: Math.round(fontSize * 1.6),
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', 'Fira Code', monospace",
               fontLigatures: true,
               lineNumbers: 'on',
+              lineNumbersMinChars: 3,
               glyphMargin: true,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
@@ -746,156 +1106,214 @@ export function CodeStudioPage() {
               smoothScrolling: true,
               cursorBlinking: 'smooth',
               cursorSmoothCaretAnimation: 'on',
+              cursorWidth: 2,
               bracketPairColorization: { enabled: true },
-              padding: { top: 16, bottom: 16 },
+              guides: {
+                indentation: true,
+                bracketPairs: true,
+              },
+              folding: true,
+              foldingHighlight: true,
+              padding: { top: 16, bottom: 20 },
+              suggestOnTriggerCharacters: true,
+              quickSuggestions: { other: true, comments: false, strings: false },
+              parameterHints: { enabled: true },
             }}
           />
         </div>
 
-        {/* Output pane */}
-        <div className={styles.outputPane}>
-          <Tabs tabs={outputTabs} defaultTab="output">
-            {(activeTab) => (
-              <>
-                {/* 1. Console Tab */}
-                {activeTab === 'output' && (
-                  <div className={styles.outputContent}>
-                    <div className={styles.outputToolbar}>
-                      <div className={styles.outputToolbar__left}>
-                        <Terminal size={13} />
-                        <span>Console Output</span>
-                        {output.length > 0 && (
-                          <Badge variant="default" size="sm">{output.length}</Badge>
-                        )}
-                      </div>
-                      <button
-                        className={styles.outputClearBtn}
-                        onClick={clearOutput}
-                        disabled={output.length === 0}
-                        title="Clear output"
-                        aria-label="Clear console output"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+        {/* 2. Draggable Resizable Divider (hidden when editor maximized) */}
+        {!isEditorMaximized && (
+          <div
+            className={styles.dividerHandle}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setIsDragging(true)
+            }}
+            onDoubleClick={() => setToolsWidth(480)}
+            title="Drag to resize · Double-click to reset"
+            role="separator"
+            aria-orientation="vertical"
+            tabIndex={0}
+          >
+            <div className={styles.dividerGrip} />
+          </div>
+        )}
 
-                    <div className={styles.outputLog} aria-live="polite" aria-label="Console output">
-                      {output.length === 0 ? (
-                        <div className={styles.outputEmpty}>
-                          <Terminal size={32} strokeWidth={1} />
-                          <p>Run your code to see output here.</p>
-                          <p className={styles.outputEmpty__note}>
-                            Pyodide WebAssembly runtime active · Press Ctrl+Enter to run
-                          </p>
+        {/* 3. Output & Learning Tools Pane (hidden when editor maximized) */}
+        {!isEditorMaximized && (
+          <div
+            className={styles.outputPane}
+            style={{ width: `${toolsWidth}px` }}
+          >
+            <Tabs
+              tabs={outputTabs}
+              activeTab={activeTab}
+              onChange={(tabId) => setActiveTab(tabId)}
+              size="sm"
+            >
+              {(tab) => (
+                <>
+                  {/* Tab 1: Console */}
+                  {tab === 'output' && (
+                    <div className={styles.outputContent}>
+                      <div className={styles.outputToolbar}>
+                        <div className={styles.outputToolbar__left}>
+                          <Terminal size={13} className={styles.outputToolbar__icon} />
+                          <span className={styles.outputToolbar__title}>Console Output</span>
+                          {output.length > 0 && (
+                            <span className={styles.outputCountBadge}>
+                              {output.length} {output.length === 1 ? 'line' : 'lines'}
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        output.map((entry) => (
-                          <div
-                            key={entry.id}
-                            className={`${styles.outputLine} ${styles[`outputLine--${entry.type}`]}`}
+                        <div className={styles.outputToolbar__right}>
+                          {state === 'running' ? (
+                            <span className={styles.executionBadgeRunning}>Running...</span>
+                          ) : state === 'error' ? (
+                            <span className={styles.executionBadgeError}>Error</span>
+                          ) : output.length > 0 ? (
+                            <span className={styles.executionBadgeSuccess}>Completed</span>
+                          ) : null}
+                          <button
+                            className={styles.outputClearBtn}
+                            onClick={clearOutput}
+                            disabled={output.length === 0}
+                            title="Clear console output"
+                            aria-label="Clear console output"
                           >
-                            <span className={styles.outputLine__ts}>{entry.timestamp}</span>
-                            <span className={styles.outputLine__text}>{entry.text}</span>
+                            <Trash2 size={13} />
+                            <span>Clear</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.outputLog} aria-live="polite" aria-label="Console output">
+                        {output.length === 0 ? (
+                          <div className={styles.outputEmpty}>
+                            <div className={styles.outputEmpty__iconBox}>
+                              <Terminal size={24} strokeWidth={1.5} />
+                            </div>
+                            <p className={styles.outputEmpty__message}>
+                              Your output will appear here. Write some Python code and press Run to see what happens.
+                            </p>
+                            <div className={styles.outputEmpty__shortcut}>
+                              <span className={styles.outputEmpty__shortcutLabel}>Shortcut:</span>
+                              <kbd className={styles.kbdBadge}>Ctrl</kbd>
+                              <span className={styles.kbdPlus}>+</span>
+                              <kbd className={styles.kbdBadge}>Enter</kbd>
+                            </div>
                           </div>
-                        ))
+                        ) : (
+                          output.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className={`${styles.outputLine} ${styles[`outputLine--${entry.type}`]}`}
+                            >
+                              <span className={styles.outputLine__ts}>{entry.timestamp}</span>
+                              <span className={styles.outputLine__text}>{entry.text}</span>
+                            </div>
+                          ))
+                        )}
+                        <div ref={consoleEndRef} />
+                      </div>
+
+                      {/* Interactive stdin input bar when waiting for input */}
+                      {state === 'waiting_input' && (
+                        <form className={styles.stdinBar} onSubmit={handleStdinSubmit}>
+                          <HelpCircle size={15} className={styles.stdinIcon} />
+                          <span className={styles.stdinPromptLabel}>input():</span>
+                          <input
+                            ref={stdinInputRef}
+                            type="text"
+                            className={styles.stdinInput}
+                            placeholder="Type input and press Enter..."
+                            value={inputVal}
+                            onChange={(e) => setInputVal(e.target.value)}
+                          />
+                          <button type="submit" className={styles.stdinSubmitBtn}>
+                            <CornerDownLeft size={13} />
+                            Submit
+                          </button>
+                        </form>
                       )}
-                      <div ref={consoleEndRef} />
                     </div>
+                  )}
 
-                    {/* Interactive stdin input bar when waiting for input */}
-                    {state === 'waiting_input' && (
-                      <form className={styles.stdinBar} onSubmit={handleStdinSubmit}>
-                        <HelpCircle size={15} className={styles.stdinIcon} />
-                        <span className={styles.stdinPromptLabel}>input():</span>
-                        <input
-                          ref={stdinInputRef}
-                          type="text"
-                          className={styles.stdinInput}
-                          placeholder="Type input and press Enter..."
-                          value={inputVal}
-                          onChange={(e) => setInputVal(e.target.value)}
-                        />
-                        <button type="submit" className={styles.stdinSubmitBtn}>
-                          <CornerDownLeft size={13} />
-                          Submit
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                )}
+                  {/* Tab 2: Debug Coach */}
+                  {tab === 'coach' && (
+                    <DebuggingCoachPanel
+                      diagnosis={diagnosis}
+                      isStale={isStale}
+                    />
+                  )}
 
-                {/* 2. Debug Coach Tab */}
-                {activeTab === 'coach' && (
-                  <DebuggingCoachPanel
-                    diagnosis={diagnosis}
-                    isStale={isStale}
-                  />
-                )}
+                  {/* Tab 3: AI Mentor */}
+                  {tab === 'aimentor' && (
+                    <AiMentorPanel
+                      currentCode={code}
+                      selectionRange={selectionRange}
+                      lastStdout={output
+                        .filter((e) => e.type === 'stdout')
+                        .map((e) => e.text)
+                        .join('\n')}
+                      lastError={
+                        output
+                          .slice()
+                          .reverse()
+                          .find((e) => e.type === 'error')?.text
+                      }
+                      isStale={isStale}
+                    />
+                  )}
 
-                {/* 3. AI Mentor Tab */}
-                {activeTab === 'aimentor' && (
-                  <AiMentorPanel
-                    currentCode={code}
-                    selectionRange={selectionRange}
-                    lastStdout={output
-                      .filter((e) => e.type === 'stdout')
-                      .map((e) => e.text)
-                      .join('\n')}
-                    lastError={
-                      output
-                        .slice()
-                        .reverse()
-                        .find((e) => e.type === 'error')?.text
-                    }
-                    isStale={isStale}
-                  />
-                )}
+                  {/* Tab 4: Predict */}
+                  {tab === 'prediction' && (
+                    <PredictionPanel
+                      prediction={prediction}
+                      setPrediction={setPrediction}
+                      predictionResult={predictionResult}
+                      clearPrediction={clearPrediction}
+                      isStale={isStale}
+                    />
+                  )}
 
-                {/* 4. Predict Tab */}
-                {activeTab === 'prediction' && (
-                  <PredictionPanel
-                    prediction={prediction}
-                    setPrediction={setPrediction}
-                    predictionResult={predictionResult}
-                    clearPrediction={clearPrediction}
-                    isStale={isStale}
-                  />
-                )}
+                  {/* Tab 5: Visualizer */}
+                  {tab === 'visualizer' && (
+                    <TraceVisualizer
+                      traceResult={traceResult}
+                      currentStepIndex={currentStepIndex}
+                      currentStep={currentStep}
+                      isStale={isStale}
+                      stepForward={stepForward}
+                      stepBackward={stepBackward}
+                      goToStep={goToStep}
+                      resetTrace={resetTrace}
+                    />
+                  )}
 
-                {/* 5. Visualizer Tab */}
-                {activeTab === 'visualizer' && (
-                  <TraceVisualizer
-                    traceResult={traceResult}
-                    currentStepIndex={currentStepIndex}
-                    currentStep={currentStep}
-                    isStale={isStale}
-                    stepForward={stepForward}
-                    stepBackward={stepBackward}
-                    goToStep={goToStep}
-                    resetTrace={resetTrace}
-                  />
-                )}
-
-                {/* 6. Test Fix Tab */}
-                {activeTab === 'testfix' && (
-                  <TestYourFixPanel
-                    currentCode={code}
-                    testResults={testResults}
-                    isRunningTests={isRunningTests}
-                    isStale={isStale}
-                    onRunTests={handleRunTestScript}
-                    onReturnToEditor={() => editorRef.current?.focus()}
-                  />
-                )}
-              </>
-            )}
-          </Tabs>
-        </div>
+                  {/* Tab 6: Test Fix */}
+                  {tab === 'testfix' && (
+                    <TestYourFixPanel
+                      currentCode={code}
+                      testResults={testResults}
+                      isRunningTests={isRunningTests}
+                      isStale={isStale}
+                      onRunTests={handleRunTestScript}
+                      onReturnToEditor={() => editorRef.current?.focus()}
+                    />
+                  )}
+                </>
+              )}
+            </Tabs>
+          </div>
+        )}
       </div>
 
-      {/* ---- Status bar ---- */}
+      {/* ---- Status Bar ---- */}
       <div className={styles.statusBar} aria-label="Editor status">
         <div className={styles.statusBar__left}>
+          {/* Runtime Indicator */}
           <span className={styles.statusBar__item}>
             <span
               className={[
@@ -918,43 +1336,81 @@ export function CodeStudioPage() {
               : state === 'error'
               ? 'Execution error'
               : pyodideInfo
-              ? `Python ${pyodideInfo.pythonVersion} ready`
-              : 'Python ready'}
+              ? `Python ${pyodideInfo.pythonVersion} · Ready`
+              : 'Python 3.12 · Ready'}
           </span>
+
           <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
+          {/* Cursor Position & Selection */}
+          <span className={styles.statusBar__item}>
+            Ln {cursorPos.line}, Col {cursorPos.col}
+            {selectionCount > 0 && (
+              <span className={styles.statusBar__selection}> ({selectionCount} sel)</span>
+            )}
+          </span>
+
+          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
+          {/* Indentation */}
+          <span className={styles.statusBar__item}>Spaces: 4</span>
+
+          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
+          {/* Encoding & Language */}
+          <span className={styles.statusBar__item}>UTF-8</span>
+
+          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
           <span className={styles.statusBar__item}>{currentLang.label}</span>
-          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
           {traceResult && (
             <>
+              <span className={styles.statusBar__sep} aria-hidden="true">·</span>
               <span className={styles.statusBar__item}>
                 Trace: Step {currentStepIndex + 1}/{traceResult.steps.length}
               </span>
-              <span className={styles.statusBar__sep} aria-hidden="true">·</span>
             </>
           )}
-          <span className={styles.statusBar__item}>Timeout: {timeoutMs / 1000}s</span>
         </div>
 
         <div className={styles.statusBar__right}>
-          <Badge variant="bronze" size="sm">Python 3.12 · Live Inspector Active</Badge>
+          <span className={styles.statusBar__item}>Timeout: {timeoutMs / 1000}s</span>
+
+          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
+          {/* Maximize / Restore Editor Button */}
           <button
-            className={styles.statusBar__item}
-            title="Export code"
-            aria-label="Download code file"
-            onClick={() => {
-              const blob = new Blob([code], { type: 'text/plain;charset=utf-8' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `main.${language === 'python' ? 'py' : language === 'javascript' ? 'js' : 'ts'}`
-              a.click()
-              URL.revokeObjectURL(url)
-            }}
+            className={styles.statusBar__btn}
+            onClick={toggleEditorMaximize}
+            title={isEditorMaximized ? 'Restore side-by-side tools panel' : 'Maximize editor (hide panel)'}
+            aria-label={isEditorMaximized ? 'Restore side-by-side tools panel' : 'Maximize editor (hide panel)'}
           >
-            <Download size={12} /> Export
+            {isEditorMaximized ? <Columns size={12} /> : <Maximize2 size={12} />}
+            <span>{isEditorMaximized ? 'Restore Panel' : 'Full Editor'}</span>
+          </button>
+
+          <span className={styles.statusBar__sep} aria-hidden="true">·</span>
+
+          {/* Export File Button */}
+          <button
+            className={styles.statusBar__btn}
+            title="Export code file"
+            aria-label="Download code file"
+            onClick={handleExportFile}
+          >
+            <Download size={12} />
+            <span>Export</span>
           </button>
         </div>
       </div>
+
+      {/* ---- Command Palette Modal (Ctrl+Shift+P / ⌘K) ---- */}
+      <CommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        commands={paletteCommands}
+      />
     </div>
   )
 }

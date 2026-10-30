@@ -1,0 +1,250 @@
+/* ============================================================================
+   CodeCraft — Command Palette Styles
+   Palette: #191815, #24221E, #302C26, #B8895B, #D8B58B, #F4F0E8, #B9B2A7, #454037
+   ============================================================================ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(14, 13, 11, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(60px, 12vh, 120px);
+  padding-left: 16px;
+  padding-right: 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  width: 100%;
+  max-width: 580px;
+  background-color: #24221e;
+  border: 1px solid #454037;
+  border-radius: 10px;
+  box-shadow:
+    0 20px 48px -8px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(184, 137, 91, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideDown 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Search bar header */
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #302c26;
+  background-color: #1f1d19;
+}
+
+.searchIcon {
+  color: #b8895b;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f4f0e8;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.searchInput::placeholder {
+  color: #7a7368;
+}
+
+.escBadge {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  color: #8c8477;
+  background-color: #282520;
+  border: 1px solid #38342c;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+
+.clearBtn {
+  background: transparent;
+  border: none;
+  color: #8c8477;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.clearBtn:hover {
+  color: #f4f0e8;
+}
+
+/* Command List */
+.commandList {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.commandList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.commandList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.commandList::-webkit-scrollbar-thumb {
+  background: #36322b;
+  border-radius: 3px;
+}
+
+.commandList::-webkit-scrollbar-thumb:hover {
+  background: #48433a;
+}
+
+.emptyResults {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 16px;
+  color: #8c8477;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.emptyIcon {
+  color: #5a5448;
+}
+
+/* Command Item */
+.commandItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #f4f0e8;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.commandItem:hover,
+.commandItemActive {
+  background-color: #2d2924;
+  border-color: #3d372e;
+}
+
+.itemIcon {
+  color: #b8895b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.itemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f4f0e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commandItemActive .itemTitle {
+  color: #ffffff;
+}
+
+.itemSubtitle {
+  font-size: 11px;
+  color: #8c8477;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shortcutKey {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  color: #b9b2a7;
+  background-color: #1b1916;
+  border: 1px solid #38342c;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Footer Hints */
+.footerHints {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background-color: #1d1b17;
+  border-top: 1px solid #302c26;
+  font-size: 11px;
+  color: #8c8477;
+}
+
+.hintPair {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hintKbd {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  background-color: #27241f;
+  border: 1px solid #38342d;
+  border-radius: 3px;
+  color: #b9b2a7;
+}

@@ -64,15 +64,6 @@ export function usePyodide(options: UsePyodideOptions = {}) {
       },
       onReady: (info) => {
         setPyodideInfo(info)
-        setOutput((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            type: 'system',
-            text: `Python ${info.pythonVersion} (Pyodide ${info.version}) ready.`,
-            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-          },
-        ])
       },
       onTrace: (trace) => {
         if (trace && trace.steps.length > 0) {

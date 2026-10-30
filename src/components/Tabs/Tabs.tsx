@@ -5,16 +5,20 @@ import styles from './Tabs.module.css'
 type Props = {
   tabs: TabItem[]
   defaultTab?: string
+  activeTab?: string
   onChange?: (id: string) => void
   children: (activeId: string) => React.ReactNode
   size?: 'sm' | 'md'
 }
 
-export function Tabs({ tabs, defaultTab, onChange, children, size = 'md' }: Props) {
-  const [active, setActive] = useState(defaultTab ?? tabs[0]?.id ?? '')
+export function Tabs({ tabs, defaultTab, activeTab: activeProp, onChange, children, size = 'md' }: Props) {
+  const [internalActive, setInternalActive] = useState(defaultTab ?? tabs[0]?.id ?? '')
+  const active = activeProp !== undefined ? activeProp : internalActive
 
   const handleSelect = (id: string) => {
-    setActive(id)
+    if (activeProp === undefined) {
+      setInternalActive(id)
+    }
     onChange?.(id)
   }
 

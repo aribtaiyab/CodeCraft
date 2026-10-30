@@ -141,7 +141,10 @@ export function Navigation() {
             </nav>
 
             <div className={styles.nav__mobileMeta}>
-              <span className={styles.nav__phase}>Python 3.12 Engine</span>
+              <div className={styles.nav__statusInstrument}>
+                <span className={styles.nav__engineDot} aria-hidden="true" />
+                <span className={styles.nav__engineLabel}>Python 3.12 Engine</span>
+              </div>
             </div>
           </div>
         </div>

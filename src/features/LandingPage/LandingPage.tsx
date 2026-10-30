@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
   Code2,
-  FlaskConical,
   BookOpen,
   ArrowRight,
   Terminal,
@@ -10,6 +9,7 @@ import {
   ShieldCheck,
   Cpu,
   Workflow,
+  CheckCircle2,
 } from 'lucide-react'
 import heroBg from '../../assets/hero-bg.jpg'
 import styles from './LandingPage.module.css'
@@ -20,10 +20,10 @@ export function LandingPage() {
   return (
     <div className={styles.page}>
       {/* ================================================================== */}
-      {/* 1. HERO SECTION (Cinematic Editorial Asymmetrical Layout)          */}
+      {/* 1. ASYMMETRICAL EDITORIAL HERO                                     */}
       {/* ================================================================== */}
       <section className={styles.hero} aria-label="Hero">
-        {/* Atmospheric Background Layer */}
+        {/* Integrated Mountain Sunset Canvas */}
         <div className={styles.hero__backdrop} aria-hidden="true">
           <img
             src={heroBg}
@@ -32,171 +32,284 @@ export function LandingPage() {
             loading="eager"
           />
           <div className={styles.hero__bgOverlay} />
-          <div className={styles.hero__bgWarmth} />
+          <div className={styles.hero__ambientGlow} />
         </div>
 
-        <div className={styles.hero__inner}>
-          {/* Left Column: Editorial Headline & Actions */}
-          <div className={styles.hero__copy}>
-            {/* Architectural Kicker */}
-            <div className={styles.hero__kicker}>
-              <span className={styles.hero__kickerDot} aria-hidden="true" />
-              <span>Python 3.12 WebAssembly Environment</span>
+        <div className={styles.hero__container}>
+          {/* Architectural Masthead Line */}
+          <div className={styles.hero__masthead}>
+            <div className={styles.mastheadTag}>
+              <span className={styles.mastheadCross}>+</span>
+              <span>VOL. 01 — RUNTIME INTUITION</span>
+            </div>
+            <div className={styles.mastheadMeta}>
+              <span>CLIENT-SIDE WEBASSEMBLY</span>
+              <span className={styles.mastheadSep}>/</span>
+              <span>DETERMINISTIC TRACE</span>
+              <span className={styles.mastheadSep}>/</span>
+              <span>EVIDENCE MENTORSHIP</span>
+            </div>
+          </div>
+
+          {/* Layered Expressive Headline */}
+          <div className={styles.hero__headlineSpread}>
+            <div className={styles.headlineKicker}>
+              <span className={styles.kickerDot} />
+              <span>Python 3.12 Developer Studio</span>
             </div>
 
-            {/* Controlled, High-Contrast Typography */}
-            <h1 className={styles.hero__headline}>
-              Write code.
-              <span className={styles.hero__headlineAccent}>
-                See how it works.
+            <h1 className={styles.hero__title}>
+              <span className={styles.titleLineUpper}>Don't just write code.</span>
+              <span className={styles.titleLineAccent}>
+                <em>Understand</em> every step.
               </span>
             </h1>
-
-            {/* Concise Supporting Copy */}
-            <p className={styles.hero__lead}>
-              Run Python. Follow every step. Understand errors.
-              Build confidence through practice.
-            </p>
-
-            {/* Primary & Secondary Actions */}
-            <div className={styles.hero__actions}>
-              <Link to="/studio" className={styles.btnPrimary}>
-                <span>Enter Code Studio</span>
-                <ArrowRight size={15} className={styles.btnIcon} />
-              </Link>
-              <Link to="/learn" className={styles.btnSecondary}>
-                <Compass size={15} />
-                <span>Explore Learn</span>
-              </Link>
-            </div>
-
-            {/* Technical Micro-Coordinates */}
-            <div className={styles.hero__specs}>
-              <div className={styles.specItem}>
-                <span className={styles.specKey}>RUNTIME</span>
-                <span className={styles.specVal}>Pyodide WASM</span>
-              </div>
-              <span className={styles.specDivider} aria-hidden="true">/</span>
-              <div className={styles.specItem}>
-                <span className={styles.specKey}>EXECUTION</span>
-                <span className={styles.specVal}>Client-Side Worker</span>
-              </div>
-              <span className={styles.specDivider} aria-hidden="true">/</span>
-              <div className={styles.specItem}>
-                <span className={styles.specKey}>STATE</span>
-                <span className={styles.specVal}>Step Traceable</span>
-              </div>
-            </div>
           </div>
 
-          {/* Right Column: Authentic Unified CodeCraft Studio Console */}
-          <div className={styles.hero__visual} aria-label="Interactive Python Studio preview">
-            <div className={styles.consoleWindow}>
-              {/* Console Window Header */}
-              <div className={styles.consoleHeader}>
-                <div className={styles.consoleDots} aria-hidden="true">
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                </div>
-                <div className={styles.consoleTab}>
-                  <Code2 size={12} className={styles.consoleTabIcon} />
-                  <span>palindrome.py</span>
-                </div>
-                <div className={styles.consoleStatus}>
-                  <span className={styles.statusLiveDot} />
-                  <span>Step 3 of 4</span>
-                </div>
+          {/* Asymmetrical Content & Cognitive Runtime Atlas Grid */}
+          <div className={styles.hero__mainGrid}>
+            {/* Storytelling Narrative & Action Column */}
+            <div className={styles.hero__storyCol}>
+              <p className={styles.hero__manifesto}>
+                Syntax teaches you what to type. CodeCraft shows you how Python
+                actually thinks. Run code in WebAssembly, step through program memory
+                line by line, and turn runtime mistakes into permanent intuition.
+              </p>
+
+              <div className={styles.hero__actions}>
+                <Link to="/studio" className={styles.btnPrimary}>
+                  <span>Enter Code Studio</span>
+                  <ArrowRight size={15} className={styles.btnIcon} />
+                </Link>
+                <Link to="/learn" className={styles.btnSecondary}>
+                  <Compass size={15} className={styles.btnSecondaryIcon} />
+                  <span>Explore Curriculum</span>
+                </Link>
               </div>
 
-              {/* Editor Workspace with Syntax Highlighting */}
-              <div className={styles.consoleEditor}>
-                <div className={styles.editorGutter} aria-hidden="true">
-                  <span>1</span>
-                  <span>2</span>
-                  <span className={styles.gutterActive}>3</span>
-                  <span>4</span>
-                  <span>5</span>
-                  <span>6</span>
+              {/* Three-Phase Learning Progression */}
+              <div className={styles.hero__progression}>
+                <div className={styles.progressionItem}>
+                  <span className={styles.progressionNum}>01</span>
+                  <div className={styles.progressionText}>
+                    <strong>Write Python</strong>
+                    <span>In-Browser Pyodide 3.12</span>
+                  </div>
                 </div>
-                <div className={styles.codeLines}>
-                  <div className={styles.codeRow}>
-                    <span className={styles.tokKeyword}>def</span>{' '}
-                    <span className={styles.tokFunc}>is_palindrome</span>(
-                    <span className={styles.tokParam}>word</span>:{' '}
-                    <span className={styles.tokType}>str</span>) -&gt;{' '}
-                    <span className={styles.tokType}>bool</span>:
+                <span className={styles.progressionArrow} aria-hidden="true">&rarr;</span>
+                <div className={styles.progressionItem}>
+                  <span className={styles.progressionNum}>02</span>
+                  <div className={styles.progressionText}>
+                    <strong>Trace Memory</strong>
+                    <span>Step-by-step state</span>
                   </div>
-                  <div className={styles.codeRow}>
-                    {'    '}<span className={styles.tokVar}>clean</span> ={' '}
-                    <span className={styles.tokParam}>word</span>.<span className={styles.tokFunc}>lower</span>()
+                </div>
+                <span className={styles.progressionArrow} aria-hidden="true">&rarr;</span>
+                <div className={styles.progressionItem}>
+                  <span className={styles.progressionNum}>03</span>
+                  <div className={styles.progressionText}>
+                    <strong>Master Logic</strong>
+                    <span>Evidence-based coaching</span>
                   </div>
-                  <div className={`${styles.codeRow} ${styles.codeRowActive}`}>
-                    {'    '}<span className={styles.tokKeyword}>return</span>{' '}
-                    <span className={styles.tokVar}>clean</span> =={' '}
-                    <span className={styles.tokVar}>clean</span>[::<span className={styles.tokNum}>-1</span>]
-                    <span className={styles.stepPointerBadge}>
-                      ▶ Step 3: Compare slice
+                </div>
+              </div>
+            </div>
+
+            {/* Connected Python Execution Flow Atlas */}
+            <div className={styles.hero__atlasCol}>
+              <div className={styles.atlasConnected}>
+                {/* 1. Orchestration Masthead */}
+                <div className={styles.atlasMasthead}>
+                  <div className={styles.atlasMastheadLeft}>
+                    <span className={styles.pulseNode} />
+                    <span className={styles.atlasFlowBadge}>STEP 03 OF 03</span>
+                    <span className={styles.atlasFlowTitle}>
+                      binary_search(nums, target=21)
                     </span>
                   </div>
-                  <div className={styles.codeRow}>
-                    <span className={styles.tokVar}>sample</span> ={' '}
-                    <span className={styles.tokStr}>"Racecar"</span>
-                  </div>
-                  <div className={styles.codeRow}>
-                    <span className={styles.tokVar}>result</span> ={' '}
-                    <span className={styles.tokFunc}>is_palindrome</span>(
-                    <span className={styles.tokVar}>sample</span>)
-                  </div>
-                  <div className={styles.codeRow}>
-                    <span className={styles.tokFunc}>print</span>(
-                    <span className={styles.tokStr}>f"Result: &#123;result&#125;"</span>)
+                  <div className={styles.atlasMastheadRight}>
+                    <span className={styles.atlasEnvTag}>Pyodide WASM · Python 3.12</span>
                   </div>
                 </div>
-              </div>
 
-              {/* Integrated Variable State Matrix */}
-              <div className={styles.consoleMatrix}>
-                <div className={styles.matrixHeader}>
-                  <div className={styles.matrixTitle}>
-                    <Layers size={11} />
-                    <span>Variable Memory at Step 3</span>
-                  </div>
-                  <span className={styles.matrixTag}>Active Scope: is_palindrome</span>
-                </div>
-                <div className={styles.matrixGrid}>
-                  <div className={styles.matrixCell}>
-                    <span className={styles.matrixKey}>word</span>
-                    <span className={styles.matrixVal}>"Racecar"</span>
-                    <span className={styles.matrixType}>str</span>
-                  </div>
-                  <div className={styles.matrixCell}>
-                    <span className={styles.matrixKey}>clean</span>
-                    <span className={styles.matrixVal}>"racecar"</span>
-                    <span className={styles.matrixType}>str</span>
-                  </div>
-                  <div className={styles.matrixCell}>
-                    <span className={styles.matrixKey}>clean[::-1]</span>
-                    <span className={styles.matrixVal}>"racecar"</span>
-                    <span className={styles.matrixType}>str</span>
-                  </div>
-                  <div className={`${styles.matrixCell} ${styles.matrixCellActive}`}>
-                    <span className={styles.matrixKey}>evaluation</span>
-                    <span className={styles.matrixValHighlight}>True</span>
-                    <span className={styles.matrixType}>bool</span>
-                  </div>
-                </div>
-              </div>
+                {/* 2. Coherent Flow Matrix: Code Instruction -> State Transformation */}
+                <div className={styles.atlasFlowBody}>
+                  {/* Left Column: Code Instruction with Active Step */}
+                  <div className={styles.atlasCodeStream}>
+                    <div className={styles.streamLabel}>
+                      <span>EXECUTION THREAD</span>
+                      <span className={styles.streamSub}>binary_search.py</span>
+                    </div>
 
-              {/* Integrated Output Drawer */}
-              <div className={styles.consoleOutput}>
-                <div className={styles.outputLeft}>
-                  <Terminal size={11} className={styles.terminalIcon} />
-                  <span className={styles.outputCommand}>python palindrome.py</span>
-                  <span className={styles.outputArrow}>&rarr;</span>
-                  <span className={styles.outputResult}>Result: True</span>
+                    <div className={styles.codeListing}>
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>1</span>
+                        <code className={styles.rowCode}>
+                          <span className={styles.cKw}>def</span>{' '}
+                          <span className={styles.cFn}>binary_search</span>(
+                          <span className={styles.cVar}>nums</span>,{' '}
+                          <span className={styles.cVar}>target</span>):
+                        </code>
+                      </div>
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>2</span>
+                        <code className={styles.rowCode}>
+                          {'  '}<span className={styles.cVar}>low</span>,{' '}
+                          <span className={styles.cVar}>high</span> ={' '}
+                          <span className={styles.cNum}>0</span>,{' '}
+                          <span className={styles.cFn}>len</span>(<span className={styles.cVar}>nums</span>) -{' '}
+                          <span className={styles.cNum}>1</span>
+                        </code>
+                      </div>
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>3</span>
+                        <code className={styles.rowCode}>
+                          {'  '}<span className={styles.cKw}>while</span>{' '}
+                          <span className={styles.cVar}>low</span> &lt;={' '}
+                          <span className={styles.cVar}>high</span>:
+                        </code>
+                      </div>
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>4</span>
+                        <code className={styles.rowCode}>
+                          {'    '}<span className={styles.cVar}>mid</span> = (
+                          <span className={styles.cVar}>low</span> +{' '}
+                          <span className={styles.cVar}>high</span>) //{' '}
+                          <span className={styles.cNum}>2</span>
+                        </code>
+                      </div>
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>5</span>
+                        <code className={styles.rowCode}>
+                          {'    '}<span className={styles.cKw}>if</span>{' '}
+                          <span className={styles.cVar}>nums</span>[
+                          <span className={styles.cVar}>mid</span>] =={' '}
+                          <span className={styles.cVar}>target</span>:
+                        </code>
+                      </div>
+
+                      {/* Active Execution Line with Connected Trace Origin */}
+                      <div className={`${styles.codeRow} ${styles.codeRowActive}`}>
+                        <span className={styles.rowNumActive}>6</span>
+                        <code className={styles.rowCode}>
+                          {'      '}<span className={styles.cKw}>return</span>{' '}
+                          <span className={styles.cVar}>mid</span>
+                        </code>
+                        <div className={styles.activeStepTag}>
+                          <span className={styles.activeStepDot} />
+                          <span>Matched</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.codeRow}>
+                        <span className={styles.rowNum}>7</span>
+                        <code className={styles.rowCode}>
+                          {'    '}<span className={styles.cKw}>elif</span>{' '}
+                          <span className={styles.cVar}>nums</span>[
+                          <span className={styles.cVar}>mid</span>] &lt;{' '}
+                          <span className={styles.cVar}>target</span>:
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual Connection Conduit between Code and State */}
+                  <div className={styles.atlasConnectorRail} aria-hidden="true">
+                    <div className={styles.connectorLineTop} />
+                    <div className={styles.connectorNode}>
+                      <span className={styles.nodeCore} />
+                    </div>
+                    <div className={styles.connectorLineBottom} />
+                  </div>
+
+                  {/* Right Column: Live Memory Array & Pointer Transformation */}
+                  <div className={styles.atlasStateStream}>
+                    <div className={styles.streamLabel}>
+                      <span>MEMORY BUFFER &amp; POINTER MATRIX</span>
+                      <span className={styles.streamSub}>nums: list[int]</span>
+                    </div>
+
+                    {/* Array Cells Visualization */}
+                    <div className={styles.arrayContainer}>
+                      <div className={styles.arrayMeta}>
+                        <span>Contiguous Array Buffer (len=6)</span>
+                        <span className={styles.arrayTargetTag}>target = 21</span>
+                      </div>
+
+                      <div className={styles.arrayCellsGrid}>
+                        <div className={styles.arrayCell}>
+                          <span className={styles.cellIndex}>[0]</span>
+                          <span className={styles.cellVal}>4</span>
+                          <span className={styles.cellStatus}>eliminated</span>
+                        </div>
+                        <div className={styles.arrayCell}>
+                          <span className={styles.cellIndex}>[1]</span>
+                          <span className={styles.cellVal}>9</span>
+                          <span className={styles.cellStatus}>eliminated</span>
+                        </div>
+                        <div className={styles.arrayCell}>
+                          <span className={styles.cellIndex}>[2]</span>
+                          <span className={styles.cellVal}>15</span>
+                          <span className={styles.cellStatus}>step 1</span>
+                        </div>
+                        <div className={`${styles.arrayCell} ${styles.cellActive}`}>
+                          <span className={styles.cellIndexActive}>[3]</span>
+                          <span className={styles.cellValActive}>21</span>
+                          <div className={styles.pointerPill}>
+                            <span className={styles.pointerCaret}>▲</span>
+                            <span>mid = 3</span>
+                          </div>
+                        </div>
+                        <div className={styles.arrayCell}>
+                          <span className={styles.cellIndex}>[4]</span>
+                          <span className={styles.cellVal}>34</span>
+                          <span className={styles.cellStatus}>step 2</span>
+                        </div>
+                        <div className={styles.arrayCell}>
+                          <span className={styles.cellIndex}>[5]</span>
+                          <span className={styles.cellVal}>50</span>
+                          <span className={styles.cellStatus}>eliminated</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live Register Telemetry */}
+                    <div className={styles.registerMatrix}>
+                      <div className={styles.regField}>
+                        <span className={styles.regLabel}>low / high</span>
+                        <span className={styles.regValue}>3, 3</span>
+                      </div>
+                      <div className={styles.regField}>
+                        <span className={styles.regLabel}>evaluated</span>
+                        <span className={styles.regValue}>nums[3] = 21</span>
+                      </div>
+                      <div className={`${styles.regField} ${styles.regFieldHighlight}`}>
+                        <span className={styles.regLabel}>equality</span>
+                        <span className={styles.regValueMatch}>21 == 21 (True)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className={styles.outputTiming}>0.8ms</span>
+
+                {/* 3. Output & Pipeline Conduit */}
+                <div className={styles.atlasOutputStrip}>
+                  <div className={styles.outputLeft}>
+                    <div className={styles.outputLeadIcon}>
+                      <Workflow size={13} />
+                    </div>
+                    <div className={styles.outputText}>
+                      <span className={styles.outputReturnBadge}>RETURN</span>
+                      <span className={styles.outputVal}>Index 3</span>
+                      <span className={styles.outputDivider}>/</span>
+                      <span className={styles.outputDesc}>
+                        Target 21 resolved in 3 logarithmic subdivisions
+                      </span>
+                    </div>
+                  </div>
+                  <div className={styles.outputTelemetry}>
+                    <span>Pyodide WebAssembly · 0.8ms</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -204,142 +317,123 @@ export function LandingPage() {
       </section>
 
       {/* ================================================================== */}
-      {/* 2. THREE CORE PRODUCT AREAS (Phase 9)                              */}
+      {/* 2. THE THREE CRUCIBLES (Asymmetrical Editorial Dossier)             */}
       {/* ================================================================== */}
-      <section className={styles.pillarsSection} aria-labelledby="pillars-heading">
-        <div className={styles.pillarsContainer}>
-          <div className={styles.pillarsHeader}>
-            <span className={styles.sectionKicker}>Learning System</span>
-            <h2 id="pillars-heading" className={styles.sectionTitle}>
-              Three Environments. One Cohesive Workflow.
+      <section className={styles.triadSection} aria-labelledby="triad-heading">
+        <div className={styles.triadContainer}>
+          <div className={styles.triadHeader}>
+            <span className={styles.editorialChapter}>[ ARCHITECTURE ]</span>
+            <h2 id="triad-heading" className={styles.triadMainTitle}>
+              Three Pillars of Python Mastery
             </h2>
-            <p className={styles.sectionSubtitle}>
-              CodeCraft unifies editor execution, verified assessments, and progressive
-              curriculum into a single focused learning studio.
+            <p className={styles.triadLead}>
+              CodeCraft eliminates passive video watching. Everything is anchored
+              in writing code, inspecting runtime state, and resolving mistakes.
             </p>
           </div>
 
-          <div className={styles.pillarsGrid}>
-            {/* Pillar 1: Code Studio */}
-            <div className={styles.pillarCard}>
-              <div className={styles.pillarCardTop}>
-                <div className={styles.pillarIcon}>
-                  <Code2 size={20} strokeWidth={1.75} />
+          <div className={styles.dossierGrid}>
+            {/* Dossier 01: Lead Feature — Code Studio */}
+            <div className={styles.dossierLead}>
+              <div className={styles.dossierIndexTag}>
+                <span className={styles.dossierIndexNum}>01</span>
+                <span className={styles.dossierBadge}>CORE WORKSPACE</span>
+              </div>
+              <div className={styles.dossierLeadBody}>
+                <div className={styles.dossierLeadMain}>
+                  <h3 className={styles.dossierTitle}>The Code Studio</h3>
+                  <p className={styles.dossierDescription}>
+                    Run real Python 3.12 in WebAssembly without cloud servers,
+                    installation, or environment setup. Step forward and backward
+                    through program memory, observe variables mutate in real time,
+                    and receive evidence-based guidance from the Smart Debugging Coach.
+                  </p>
+                  <ul className={styles.dossierSpecsList}>
+                    <li>
+                      <CheckCircle2 size={13} className={styles.specCheck} />
+                      <span>Monaco editor with full Python language syntax intelligence</span>
+                    </li>
+                    <li>
+                      <CheckCircle2 size={13} className={styles.specCheck} />
+                      <span>Deterministic step-by-step visual execution tracer</span>
+                    </li>
+                    <li>
+                      <CheckCircle2 size={13} className={styles.specCheck} />
+                      <span>3-level progressive Smart Debugging Coach (Hint &rarr; Explanation &rarr; Solution)</span>
+                    </li>
+                  </ul>
+                  <Link to="/studio" className={styles.dossierActionPrimary}>
+                    <span>Launch Code Studio</span>
+                    <ArrowRight size={14} />
+                  </Link>
                 </div>
-                <span className={styles.pillarTag}>Core Workspace</span>
-              </div>
-              <h3 className={styles.pillarTitle}>Code Studio</h3>
-              <p className={styles.pillarLead}>
-                Write and execute Python in an isolated WebAssembly sandbox. Step
-                through line-by-line variable updates, and resolve mistakes with
-                the Smart Debugging Coach.
-              </p>
-              <ul className={styles.pillarFeatures}>
-                <li>Monaco editor with full Python syntax intelligence</li>
-                <li>Visual execution tracer with state snapshots</li>
-                <li>Evidence-based Smart Debugging Coach</li>
-              </ul>
-              <Link to="/studio" className={styles.pillarAction}>
-                <span>Enter Code Studio</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            {/* Pillar 2: AI Test Lab */}
-            <div className={styles.pillarCard}>
-              <div className={styles.pillarCardTop}>
-                <div className={styles.pillarIcon}>
-                  <FlaskConical size={20} strokeWidth={1.75} />
+                <div className={styles.dossierLeadAside}>
+                  <div className={styles.asidePill}>
+                    <Code2 size={18} className={styles.asideIcon} />
+                    <span className={styles.asideTitle}>WebAssembly Worker</span>
+                    <span className={styles.asideSubtitle}>Zero Cloud Latency</span>
+                  </div>
+                  <div className={styles.asideTerminal}>
+                    <div className={styles.asideTermHeader}>
+                      <Terminal size={11} />
+                      <span>stdout · stdout.io</span>
+                    </div>
+                    <code>
+                      $ python main.py<br />
+                      &gt;&gt;&gt; Fibonacci sequence verified.<br />
+                      [Finished in 0.8ms · 0 memory leaks]
+                    </code>
+                  </div>
                 </div>
-                <span className={styles.pillarTag}>Assessment Lab</span>
               </div>
-              <h3 className={styles.pillarTitle}>AI Test Lab</h3>
-              <p className={styles.pillarLead}>
-                Practice with generated assessments, evaluate your understanding,
-                and review results. Every multiple-choice question is verified by
-                the genuine Python engine.
-              </p>
-              <ul className={styles.pillarFeatures}>
-                <li>Output questions verified by Pyodide runtime</li>
-                <li>Adaptive difficulty tailored to your progress</li>
-                <li>Targeted retesting directly from debugging diagnoses</li>
-              </ul>
-              <Link to="/testlab" className={styles.pillarAction}>
-                <span>Enter Test Lab</span>
-                <ArrowRight size={14} />
-              </Link>
             </div>
 
-            {/* Pillar 3: Learn */}
-            <div className={styles.pillarCard}>
-              <div className={styles.pillarCardTop}>
-                <div className={styles.pillarIcon}>
-                  <BookOpen size={20} strokeWidth={1.75} />
+            {/* Dossier 02 & 03: Asymmetrical Companions */}
+            <div className={styles.dossierSubGrid}>
+              {/* Dossier 02: AI Test Lab */}
+              <div className={styles.dossierSubCard}>
+                <div className={styles.dossierIndexTag}>
+                  <span className={styles.dossierIndexNum}>02</span>
+                  <span className={styles.dossierBadge}>ASSESSMENT LAB</span>
                 </div>
-                <span className={styles.pillarTag}>Curriculum</span>
-              </div>
-              <h3 className={styles.pillarTitle}>Learn</h3>
-              <p className={styles.pillarLead}>
-                Build programming foundations and strengthen your understanding
-                with a structured modular curriculum, mastery indicators, and
-                targeted exercises.
-              </p>
-              <ul className={styles.pillarFeatures}>
-                <li>Curated topics from fundamentals to data structures</li>
-                <li>Real-time mastery tracking with learning event history</li>
-                <li>Dedicated debugging practice exercises with pre-set bugs</li>
-              </ul>
-              <Link to="/learn" className={styles.pillarAction}>
-                <span>Explore Curriculum</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================== */}
-      {/* 3. ARCHITECTURE & ENGINEERING TRANSPARENCY                         */}
-      {/* ================================================================== */}
-      <section className={styles.principlesSection} aria-label="Engineering principles">
-        <div className={styles.principlesContainer}>
-          <div className={styles.principlesGrid}>
-            <div className={styles.principleCard}>
-              <div className={styles.principleIcon}>
-                <Cpu size={18} strokeWidth={1.75} />
-              </div>
-              <div className={styles.principleBody}>
-                <h3 className={styles.principleTitle}>Real Runtime Execution</h3>
-                <p className={styles.principleText}>
-                  Your Python code executes in a genuine WebAssembly Pyodide runtime inside
-                  a dedicated browser Web Worker with authentic stdout, stderr, and tracebacks.
+                <h3 className={styles.dossierTitle}>AI Test Lab</h3>
+                <p className={styles.dossierDescription}>
+                  Practice with generated assessments where every single question
+                  and test case is compiled and verified directly by the live Python
+                  engine. No hallucinations or misleading answer keys.
                 </p>
+                <ul className={styles.dossierSpecsListSmall}>
+                  <li>Verified by client Pyodide runtime</li>
+                  <li>Adaptive difficulty tailored to your progress</li>
+                  <li>Targeted retesting directly from debugging diagnoses</li>
+                </ul>
+                <Link to="/testlab" className={styles.dossierAction}>
+                  <span>Enter Test Lab</span>
+                  <ArrowRight size={13} />
+                </Link>
               </div>
-            </div>
 
-            <div className={styles.principleCard}>
-              <div className={styles.principleIcon}>
-                <Workflow size={18} strokeWidth={1.75} />
-              </div>
-              <div className={styles.principleBody}>
-                <h3 className={styles.principleTitle}>Deterministic Diagnostics</h3>
-                <p className={styles.principleText}>
-                  The Smart Debugging Coach analyzes concrete trace state and test assertions,
-                  guiding students with three progressive levels rather than generic guesses.
+              {/* Dossier 03: The Curriculum */}
+              <div className={styles.dossierSubCard}>
+                <div className={styles.dossierIndexTag}>
+                  <span className={styles.dossierIndexNum}>03</span>
+                  <span className={styles.dossierBadge}>CURRICULUM</span>
+                </div>
+                <h3 className={styles.dossierTitle}>Learn</h3>
+                <p className={styles.dossierDescription}>
+                  A structured modular roadmap from Python fundamentals to data
+                  structures, complete with real-time mastery tracking, error
+                  taxonomies, and dedicated debugging exercises.
                 </p>
-              </div>
-            </div>
-
-            <div className={styles.principleCard}>
-              <div className={styles.principleIcon}>
-                <ShieldCheck size={18} strokeWidth={1.75} />
-              </div>
-              <div className={styles.principleBody}>
-                <h3 className={styles.principleTitle}>Hardened Security</h3>
-                <p className={styles.principleText}>
-                  AI features communicate exclusively with a secured server backend. API
-                  keys and credentials are never exposed to browser clients.
-                </p>
+                <ul className={styles.dossierSpecsListSmall}>
+                  <li>Curated progressive lessons with mastery milestones</li>
+                  <li>Real-time mastery tracking with learning event history</li>
+                  <li>Targeted debugging exercises with pre-set bugs</li>
+                </ul>
+                <Link to="/learn" className={styles.dossierAction}>
+                  <span>Explore Curriculum</span>
+                  <ArrowRight size={13} />
+                </Link>
               </div>
             </div>
           </div>
@@ -347,20 +441,84 @@ export function LandingPage() {
       </section>
 
       {/* ================================================================== */}
-      {/* 4. EDITORIAL BOTTOM CTA                                            */}
+      {/* 3. TECHNICAL MANIFESTO (Engineering Principles)                     */}
       {/* ================================================================== */}
-      <section className={styles.ctaSection} aria-labelledby="cta-heading">
-        <div className={styles.ctaContainer}>
-          <div className={styles.ctaCard}>
-            <span className={styles.ctaKicker}>Ready to Begin</span>
-            <h2 id="cta-heading" className={styles.ctaTitle}>
+      <section className={styles.manifestoSection} aria-label="Engineering principles">
+        <div className={styles.manifestoContainer}>
+          <div className={styles.manifestoGrid}>
+            <div className={styles.manifestoLeadCol}>
+              <span className={styles.editorialChapter}>[ PHILOSOPHY ]</span>
+              <h2 className={styles.manifestoHeadline}>
+                Engineered for Truth.
+              </h2>
+              <p className={styles.manifestoSub}>
+                No fake streaks. No invented performance metrics. No simulated outputs.
+                Every interaction is grounded in real Python compiler mechanics.
+              </p>
+            </div>
+
+            <div className={styles.manifestoSpecsCol}>
+              <div className={styles.specRow}>
+                <div className={styles.specIconMark}>
+                  <Cpu size={16} strokeWidth={1.75} />
+                </div>
+                <div className={styles.specRowContent}>
+                  <h3 className={styles.specTitle}>True Runtime Execution</h3>
+                  <p className={styles.specDesc}>
+                    Your Python code executes in a genuine WebAssembly Pyodide runtime
+                    inside a dedicated browser Web Worker with authentic stdout, stderr,
+                    and tracebacks.
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.specRow}>
+                <div className={styles.specIconMark}>
+                  <Layers size={16} strokeWidth={1.75} />
+                </div>
+                <div className={styles.specRowContent}>
+                  <h3 className={styles.specTitle}>Deterministic State Snapshots</h3>
+                  <p className={styles.specDesc}>
+                    The Smart Debugging Coach analyzes concrete trace state and test
+                    assertions, guiding you with three progressive levels rather than
+                    generic advice.
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.specRow}>
+                <div className={styles.specIconMark}>
+                  <ShieldCheck size={16} strokeWidth={1.75} />
+                </div>
+                <div className={styles.specRowContent}>
+                  <h3 className={styles.specTitle}>Hardened Host Privacy</h3>
+                  <p className={styles.specDesc}>
+                    AI mentor features communicate exclusively with a secured server
+                    relay. Your code runs locally in your browser, and API keys are
+                    never exposed to the client.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* 4. EDITORIAL CLOSING INVITATION                                    */}
+      {/* ================================================================== */}
+      <section className={styles.closingSection} aria-labelledby="closing-heading">
+        <div className={styles.closingContainer}>
+          <div className={styles.closingCard}>
+            <span className={styles.editorialChapter}>[ READY TO BEGIN ]</span>
+            <h2 id="closing-heading" className={styles.closingTitle}>
               Start coding with clear understanding.
             </h2>
-            <p className={styles.ctaLead}>
+            <p className={styles.closingLead}>
               Open Code Studio to write, trace, and diagnose Python code in WebAssembly,
               or test your skills in the AI Test Lab.
             </p>
-            <div className={styles.ctaButtons}>
+            <div className={styles.closingButtons}>
               <Link to="/studio" className={styles.btnPrimary}>
                 <span>Enter Code Studio</span>
                 <ArrowRight size={15} className={styles.btnIcon} />
@@ -375,7 +533,7 @@ export function LandingPage() {
       </section>
 
       {/* ================================================================== */}
-      {/* 5. REFINED FOOTER                                                  */}
+      {/* 5. ARCHITECTURAL FOOTER                                             */}
       {/* ================================================================== */}
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>

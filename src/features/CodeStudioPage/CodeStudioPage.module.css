@@ -12,9 +12,17 @@
    ============================================================================ */
 
 .page {
+  /* Layout geometry accounting for floating glass navbar:
+     - Outer nav wrapper has 12px padding-top + 54px capsule = 66px bottom edge
+     - Adding 16px comfortable vertical breathing room = 82px total top clearance
+     - Accurately offsets past .app-shell__main's base padding-top (60px) */
+  --studio-nav-offset: 82px;
+
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--nav-height, 56px));
+  height: calc(100vh - var(--studio-nav-offset));
+  height: calc(100dvh - var(--studio-nav-offset));
+  margin-top: calc(var(--studio-nav-offset) - var(--nav-height, 60px));
   background: #191815;
   overflow: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -972,5 +980,12 @@
   .statusBar__sep:nth-of-type(n+4),
   .statusBar__item:nth-of-type(n+4) {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    /* Mobile navbar geometry: 8px top padding + 48px capsule + 12px comfortable gap = 68px */
+    --studio-nav-offset: 68px;
   }
 }

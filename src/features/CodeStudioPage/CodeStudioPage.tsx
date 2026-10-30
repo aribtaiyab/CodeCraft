@@ -56,32 +56,13 @@ const LANGUAGE_OPTIONS: { value: Language; label: string; monacoLang: string }[]
 ]
 
 const STARTER_CODE: Record<Language, string> = {
-  python: `# CodeCraft — Python Execution & Tracing Studio
-# Phase 4: Smart Debugging Coach + Test Your Fix
+  python: `# Print a message
+print("Hello, World!")
 
-def process_inventory(items: list[str]) -> dict:
-    """Count item occurrences and categorize."""
-    counts = {}
-    for item in items:
-        if item in counts:
-            counts[item] += 1
-        else:
-            counts[item] = 1
-    return counts
-
-def main() -> None:
-    print("Initializing inventory scan...")
-    batch = ["bronze", "charcoal", "ivory", "bronze", "graphite", "bronze"]
-    result = process_inventory(batch)
-    
-    total_unique = len(result)
-    print(f"Discovered {total_unique} unique items:")
-    for material, count in result.items():
-        print(f"  {material}: {count}")
-    print("Scan complete.")
-
-if __name__ == "__main__":
-    main()
+# Simple calculation
+a = 5
+b = 10
+print(a + b)
 `,
   javascript: `// CodeCraft — JavaScript Studio
 // Note: Python is active with real execution, tracing, and debugging coach.
@@ -139,9 +120,12 @@ export function CodeStudioPage() {
   // URL exercise parameter loading or workspace auto-restore
   const [searchParams] = useSearchParams()
   const exerciseParam = searchParams.get('exerciseId')
+  const savedCode = localStorage.getItem('codecraft_studio_saved_code')
   const initialCode = exerciseParam
     ? DEBUGGING_EXERCISES.find((e) => e.id === exerciseParam)?.buggyCode || STARTER_CODE.python
-    : localStorage.getItem('codecraft_studio_saved_code') || STARTER_CODE.python
+    : savedCode && !savedCode.includes('process_inventory')
+      ? savedCode
+      : STARTER_CODE.python
 
   const [language, setLanguage] = useState<Language>('python')
   const [code, setCode] = useState<string>(initialCode)

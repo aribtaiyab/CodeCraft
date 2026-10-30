@@ -11,10 +11,6 @@ import {
   Send,
   AlertTriangle,
   CheckCircle2,
-  Key,
-  Copy,
-  Check,
-  RefreshCw,
   Layers,
 } from 'lucide-react'
 import {
@@ -74,9 +70,6 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
   const [quizError, setQuizError] = useState<string | null>(null)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({})
-
-  // Copied state
-  const [copiedKeySnippet, setCopiedKeySnippet] = useState(false)
 
   // Check health on mount
   useEffect(() => {
@@ -203,12 +196,6 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
     }))
   }
 
-  const handleCopyConfig = () => {
-    navigator.clipboard.writeText('GROQ_API_KEY=your_fresh_groq_api_key_here')
-    setCopiedKeySnippet(true)
-    setTimeout(() => setCopiedKeySnippet(false), 2000)
-  }
-
   const hasKey = healthStatus?.hasGroqKey ?? false
   const isServerOffline = healthStatus?.status === 'unreachable'
 
@@ -261,64 +248,6 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
           <div className={styles.staleBanner} role="alert">
             <AlertTriangle size={14} />
             <span>Code modified since last AI analysis. Re-run in Code Studio to update.</span>
-          </div>
-        )}
-
-        {/* Missing API Key or Backend Offline Notice */}
-        {(!hasKey || isServerOffline) && (
-          <div className={styles.configCard}>
-            <div className={styles.configCard__header}>
-              <Key size={16} />
-              <span>
-                {isServerOffline
-                  ? 'CodeCraft Backend Server Not Running'
-                  : 'Groq API Key Required for Phase 5'}
-              </span>
-            </div>
-            <div className={styles.configCard__body}>
-              {isServerOffline ? (
-                <p>
-                  Start the local CodeCraft backend by running{' '}
-                  <code>npm run server</code>. Ordinary Python execution,
-                  predict, trace, and tests continue to work independently.
-                </p>
-              ) : (
-                <p>
-                  To enable Groq-powered code explanations, contextual follow-up
-                  Q&A, and code-specific MCQs, create a fresh Groq API key and
-                  place it in your local <code>.env</code> file:
-                </p>
-              )}
-            </div>
-            {!isServerOffline && (
-              <>
-                <div className={styles.configSnippet}>
-                  GROQ_API_KEY=your_fresh_groq_api_key_here
-                </div>
-                <div className={styles.actionBar}>
-                  <button
-                    className={styles.actionBtn}
-                    onClick={handleCopyConfig}
-                  >
-                    {copiedKeySnippet ? <Check size={14} /> : <Copy size={14} />}
-                    {copiedKeySnippet ? 'Copied' : 'Copy Template'}
-                  </button>
-                  <button
-                    className={`${styles.actionBtn} ${styles['actionBtn--outline']}`}
-                    onClick={() => {
-                      setIsLoadingHealth(true)
-                      aiService.checkHealth().then((s) => {
-                        setHealthStatus(s)
-                        setIsLoadingHealth(false)
-                      })
-                    }}
-                  >
-                    <RefreshCw size={13} />
-                    Check Connection
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         )}
 

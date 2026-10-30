@@ -1,9 +1,9 @@
 /* ==========================================================================
-   CodeCraft — Warm Smoked-Glass Navigation Bar
-   Aesthetic: Subtle Translucent Charcoal/Smoked Glass, Warm Bronze Accents,
-              Tasteful Backdrop Blur & Architectural Precision
+   CodeCraft — Floating Smoked-Glass Navigation Bar
+   Aesthetic: Translucent Charcoal Glass, Warm Bronze Specular Highlights,
+              Generous Breathing Room & Mountain Atmosphere Integration
    Palette: Translucent charcoal (#161411), warm bronze (#B8895B, #D8B58B),
-            ivory (#F4F0E8), muted ivory (#B9B2A7), border (#454037)
+            ivory (#F4F0E8), muted ivory (#B9B2A7), warm border (#454037)
    ========================================================================== */
 
 /* ---- Navbar Shell ---- */
@@ -12,48 +12,76 @@
   top: 0;
   left: 0;
   right: 0;
-  height: var(--nav-height, 56px);
-  /* Warm smoked-glass background: allows mountain sunset atmosphere to filter through softly */
-  background: rgba(22, 20, 17, 0.68);
-  backdrop-filter: blur(16px) saturate(1.25);
-  -webkit-backdrop-filter: blur(16px) saturate(1.25);
-  /* Fine warm bronze-tinted glass border with restrained bottom shadow */
-  border-bottom: 1px solid rgba(184, 137, 91, 0.18);
-  box-shadow:
-    0 4px 20px -2px rgba(0, 0, 0, 0.35),
-    inset 0 -1px 0 0 rgba(216, 181, 139, 0.04);
   z-index: var(--z-nav, 100);
-  transition: background var(--transition-base, 0.2s ease), border-color var(--transition-base, 0.2s ease);
-}
-
-.nav__inner {
   display: flex;
   align-items: center;
-  height: 100%;
-  max-width: 1280px;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  pointer-events: none; /* Allows clicks through empty space around the floating capsule */
+}
+
+/* Floating Smoked-Glass Capsule */
+.nav__inner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1240px;
+  height: 54px;
   margin: 0 auto;
-  padding: 0 var(--space-6, 1.5rem);
-  gap: var(--space-8, 2rem);
+  padding: 0 1.35rem;
+  /* Translucent charcoal glass — mountain sunset atmosphere filters through */
+  background: rgba(22, 20, 17, 0.76);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  /* Refined warm bronze-tinted glass border */
+  border: 1px solid rgba(184, 137, 91, 0.28);
+  border-radius: 14px;
+  /* Multi-layered soft ambient drop shadow + upper specular bronze highlight */
+  box-shadow:
+    0 14px 36px -6px rgba(0, 0, 0, 0.6),
+    0 4px 14px -2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(216, 181, 139, 0.18);
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.nav__inner:hover {
+  border-color: rgba(184, 137, 91, 0.38);
+  box-shadow:
+    0 18px 42px -6px rgba(0, 0, 0, 0.7),
+    0 6px 16px -2px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(216, 181, 139, 0.24);
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(20px)) {
+  .nav__inner {
+    background: rgba(22, 20, 17, 0.95);
+  }
 }
 
 /* ---- Brand Logo ---- */
 .nav__logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.75rem;
   text-decoration: none;
   flex-shrink: 0;
   user-select: none;
   border-radius: var(--radius-sm, 6px);
-  transition: opacity 0.15s ease;
+  transition: opacity 0.18s ease;
 }
 
 .nav__logo:hover {
-  opacity: 0.92;
+  opacity: 0.95;
 }
 
 .nav__logo:focus-visible {
-  outline: 2px solid rgba(184, 137, 91, 0.6);
+  outline: 2px solid rgba(184, 137, 91, 0.65);
   outline-offset: 3px;
 }
 
@@ -61,26 +89,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  /* Smoked bronze glass container */
-  background: rgba(184, 137, 91, 0.12);
-  border: 1px solid rgba(184, 137, 91, 0.28);
-  border-radius: var(--radius-sm, 6px);
+  width: 32px;
+  height: 32px;
+  /* Smoked bronze glass container with generous presence */
+  background: rgba(184, 137, 91, 0.14);
+  border: 1px solid rgba(184, 137, 91, 0.34);
+  border-radius: 8px;
   color: var(--color-bronze-soft, #D8B58B);
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: inset 0 1px 0 0 rgba(216, 181, 139, 0.18);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .nav__logo:hover .nav__logoMark {
-  background: rgba(184, 137, 91, 0.2);
+  background: rgba(184, 137, 91, 0.24);
   border-color: var(--color-bronze, #B8895B);
-  box-shadow: 0 0 10px rgba(184, 137, 91, 0.25);
+  box-shadow:
+    0 0 14px rgba(184, 137, 91, 0.35),
+    inset 0 1px 0 0 rgba(216, 181, 139, 0.28);
   transform: translateY(-0.5px);
 }
 
 .nav__logoText {
   font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-ivory, #F4F0E8);
   letter-spacing: -0.015em;
@@ -97,58 +132,93 @@
 .nav__links {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  margin-left: var(--space-1, 0.25rem);
+  gap: 0.45rem;
+  margin-left: var(--space-4, 1rem);
 }
 
 .nav__link {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 0.85rem;
+  gap: 0.5rem;
+  padding: 0.45rem 0.95rem;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.845rem;
-  font-weight: 480;
+  font-size: 0.865rem;
+  font-weight: 500;
   color: var(--color-ivory-muted, #B9B2A7);
   text-decoration: none;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 8px;
   border: 1px solid transparent;
   transition:
-    color 0.18s ease,
-    background-color 0.18s ease,
-    border-color 0.18s ease;
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   letter-spacing: 0.01em;
 }
 
 .nav__linkIcon {
   color: var(--color-ivory-faint, #857E71);
-  transition: color 0.18s ease;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-/* Tasteful hover state */
+/* Elegant Animated Underline / Indicator */
+.nav__link::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  right: 50%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-bronze, #B8895B) 25%,
+    var(--color-bronze-soft, #D8B58B) 50%,
+    var(--color-bronze, #B8895B) 75%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  opacity: 0;
+  transition:
+    left 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    right 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+  pointer-events: none;
+}
+
+/* Hover state: quiet translucent bronze glass + animated underline expansion */
 .nav__link:hover {
   color: var(--color-ivory, #F4F0E8);
-  background: rgba(244, 240, 232, 0.045);
-  border-color: rgba(244, 240, 232, 0.06);
+  background: rgba(184, 137, 91, 0.08);
+  border-color: rgba(184, 137, 91, 0.16);
 }
 
 .nav__link:hover .nav__linkIcon {
   color: var(--color-bronze-soft, #D8B58B);
+  transform: translateY(-0.5px);
 }
 
-/* Keyboard focus state */
+.nav__link:hover::after {
+  left: 28%;
+  right: 28%;
+  opacity: 0.65;
+  box-shadow: 0 0 8px rgba(184, 137, 91, 0.45);
+}
+
+/* Accessible keyboard focus state */
 .nav__link:focus-visible {
-  outline: 2px solid rgba(184, 137, 91, 0.55);
+  outline: 2px solid rgba(184, 137, 91, 0.65);
   outline-offset: 2px;
 }
 
-/* Elegant active state — restrained smoked glass with subtle bronze border */
+/* Distinctive active state: warm bronze glass pill with fully illuminated indicator */
 .nav__link--active {
   color: var(--color-ivory, #F4F0E8) !important;
-  background: rgba(184, 137, 91, 0.08) !important;
-  border-color: rgba(184, 137, 91, 0.22) !important;
-  font-weight: 500;
+  background: rgba(184, 137, 91, 0.13) !important;
+  border-color: rgba(184, 137, 91, 0.3) !important;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 0 rgba(216, 181, 139, 0.12);
 }
 
 .nav__link--active .nav__linkIcon {
@@ -156,48 +226,60 @@
 }
 
 .nav__link--active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 20%;
-  right: 20%;
-  height: 1.5px;
-  background: var(--color-bronze-soft, #D8B58B);
-  border-radius: 1px;
-  box-shadow: 0 0 6px rgba(184, 137, 91, 0.5);
+  left: 18%;
+  right: 18%;
+  opacity: 1;
+  box-shadow: 0 0 10px rgba(184, 137, 91, 0.7);
 }
 
-/* ---- Right Status Instrument (Python Engine) ---- */
+/* ---- Right Status Instrument (Python Engine CTA) ---- */
 .nav__right {
   display: flex;
   align-items: center;
-  gap: var(--space-4, 1rem);
+  gap: 0.85rem;
   margin-left: auto;
 }
 
 .nav__statusInstrument {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.32rem 0.72rem;
-  /* Smoked glass pill */
-  background: rgba(28, 26, 22, 0.6);
-  border: 1px solid rgba(69, 64, 55, 0.45);
-  border-radius: var(--radius-sm, 6px);
+  gap: 0.55rem;
+  padding: 0.38rem 0.95rem;
+  /* Elevated smoked glass capsule */
+  background: rgba(30, 28, 24, 0.85);
+  border: 1px solid rgba(184, 137, 91, 0.32);
+  border-radius: 8px;
   font-family: var(--font-mono, monospace);
-  font-size: 0.72rem;
-  color: var(--color-ivory-muted, #B9B2A7);
+  font-size: 0.74rem;
+  color: var(--color-ivory, #F4F0E8);
   letter-spacing: 0.02em;
   user-select: none;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 0 rgba(216, 181, 139, 0.14);
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.2s ease;
+}
+
+.nav__statusInstrument:hover {
+  background: rgba(42, 38, 32, 0.95);
+  border-color: var(--color-bronze, #B8895B);
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(184, 137, 91, 0.25),
+    inset 0 1px 0 0 rgba(216, 181, 139, 0.24);
 }
 
 .nav__engineDot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #5CB85C;
-  box-shadow: 0 0 7px rgba(92, 184, 92, 0.65);
+  box-shadow: 0 0 8px rgba(92, 184, 92, 0.75);
   flex-shrink: 0;
   display: inline-block;
   animation: pulseDot 3s ease-in-out infinite;
@@ -209,13 +291,14 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.68;
-    transform: scale(0.92);
+    opacity: 0.65;
+    transform: scale(0.9);
   }
 }
 
 .nav__engineLabel {
   font-weight: 500;
+  color: var(--color-bronze-soft, #D8B58B);
 }
 
 /* ---- Mobile Menu Toggle ---- */
@@ -223,24 +306,32 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(28, 26, 22, 0.7);
-  border: 1px solid rgba(69, 64, 55, 0.45);
-  border-radius: var(--radius-sm, 6px);
+  width: 38px;
+  height: 38px;
+  background: rgba(30, 28, 24, 0.75);
+  border: 1px solid rgba(184, 137, 91, 0.32);
+  border-radius: 8px;
   color: var(--color-ivory-muted, #B9B2A7);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  box-shadow: inset 0 1px 0 0 rgba(216, 181, 139, 0.1);
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .nav__mobileToggle:hover {
-  background: rgba(48, 44, 38, 0.85);
+  background: rgba(48, 44, 38, 0.9);
   color: var(--color-ivory, #F4F0E8);
   border-color: var(--color-bronze, #B8895B);
+  box-shadow: 0 0 10px rgba(184, 137, 91, 0.3);
+  transform: translateY(-0.5px);
 }
 
 .nav__mobileToggle:focus-visible {
-  outline: 2px solid rgba(184, 137, 91, 0.55);
+  outline: 2px solid rgba(184, 137, 91, 0.65);
   outline-offset: 2px;
 }
 
@@ -254,9 +345,19 @@
 .nav__mobileBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(12, 11, 9, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(12, 11, 9, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .nav__mobilePanel {
@@ -264,17 +365,19 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 280px;
+  width: min(320px, 85vw);
   background: rgba(22, 20, 17, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(184, 137, 91, 0.2);
-  padding: var(--space-6, 1.5rem);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-left: 1px solid rgba(184, 137, 91, 0.25);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6, 1.5rem);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
-  animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 1.5rem;
+  box-shadow:
+    -12px 0 40px rgba(0, 0, 0, 0.75),
+    inset 1px 0 0 0 rgba(216, 181, 139, 0.08);
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideInRight {
@@ -290,7 +393,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: var(--space-4, 1rem);
+  padding-bottom: 1rem;
   border-bottom: 1px solid rgba(69, 64, 55, 0.4);
 }
 
@@ -298,55 +401,69 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
+  width: 34px;
+  height: 34px;
+  background: rgba(30, 28, 24, 0.6);
+  border: 1px solid rgba(69, 64, 55, 0.4);
   color: var(--color-ivory-muted, #B9B2A7);
   cursor: pointer;
-  border-radius: var(--radius-sm, 6px);
-  transition: color 0.15s ease, background 0.15s ease;
+  border-radius: 8px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nav__mobileClose:hover {
   color: var(--color-ivory, #F4F0E8);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(48, 44, 38, 0.85);
+  border-color: rgba(184, 137, 91, 0.4);
+}
+
+.nav__mobileClose:focus-visible {
+  outline: 2px solid rgba(184, 137, 91, 0.65);
+  outline-offset: 2px;
 }
 
 .nav__mobileLinks {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .nav__mobileLink {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
-  padding: 0.65rem 0.85rem;
-  font-size: 0.92rem;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--color-ivory-muted, #B9B2A7);
   text-decoration: none;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 8px;
   border: 1px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nav__mobileLink:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(244, 240, 232, 0.05);
   color: var(--color-ivory, #F4F0E8);
+  border-color: rgba(244, 240, 232, 0.08);
 }
 
 .nav__mobileLink--active {
-  background: rgba(184, 137, 91, 0.12) !important;
+  background: rgba(184, 137, 91, 0.14) !important;
   color: var(--color-bronze-soft, #D8B58B) !important;
-  border-color: rgba(184, 137, 91, 0.25) !important;
+  border-color: rgba(184, 137, 91, 0.32) !important;
   font-weight: 600;
 }
 
 .nav__mobileMeta {
   margin-top: auto;
-  padding-top: var(--space-4, 1rem);
+  padding-top: 1rem;
   border-top: 1px solid rgba(69, 64, 55, 0.35);
 }
 
@@ -358,5 +475,59 @@
 
   .nav__mobileToggle {
     display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .nav__inner {
+    padding: 0 0.85rem;
+    height: 48px;
+    border-radius: 11px;
+  }
+
+  .nav__logoMark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nav__logoText {
+    font-size: 1.02rem;
+  }
+
+  .nav__statusInstrument {
+    padding: 0.28rem 0.65rem;
+    font-size: 0.68rem;
+  }
+
+  .nav__mobileToggle {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ---- Accessibility: Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .nav__engineDot {
+    animation: none;
+  }
+
+  .nav__mobileBackdrop,
+  .nav__mobilePanel {
+    animation: none;
+  }
+
+  .nav__inner,
+  .nav__logoMark,
+  .nav__link,
+  .nav__link::after,
+  .nav__statusInstrument,
+  .nav__mobileToggle,
+  .nav__mobileClose,
+  .nav__mobileLink {
+    transition: none;
   }
 }

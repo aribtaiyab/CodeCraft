@@ -128,6 +128,9 @@ export interface TestCaseAssertion {
   callExpr: string // e.g., "safe_average([10, 20, 30])"
   expected: string // formatted string representation of expected result
   description?: string
+  inputDescription?: string
+  category?: 'normal' | 'zero' | 'decimal' | 'negative' | 'edge' | 'custom'
+  isCustom?: boolean
 }
 
 export type TestAssertionStatus =
@@ -146,6 +149,9 @@ export interface TestAssertionResult {
   actual?: string
   error?: string
   durationMs?: number
+  inputDescription?: string
+  failureReason?: string
+  isCustom?: boolean
 }
 
 export interface DebuggingExercise {

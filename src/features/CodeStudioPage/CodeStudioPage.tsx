@@ -443,17 +443,7 @@ export function CodeStudioPage() {
     setInputVal('')
   }
 
-  // Phase 4: Load Exercise Code
-  const handleLoadExerciseCode = (buggyCode: string) => {
-    analyzedErrorKeyRef.current = null
-    analyzedTestsKeyRef.current = null
-    setCode(buggyCode)
-    setTestResults(null)
-    setDiagnosis(null)
-    markCodeChanged()
-  }
-
-  // Phase 4: Test Your Fix Runner
+  // Phase 4: Test Fix Runner
   const handleRunTestScript = (script: string) => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
@@ -532,18 +522,8 @@ export function CodeStudioPage() {
       icon: <Terminal size={12} />,
     },
     {
-      id: 'visualizer',
-      label: traceResult ? `Visualizer (${traceResult.steps.length})` : 'Visualizer',
-      icon: <Layers size={12} />,
-    },
-    {
-      id: 'prediction',
-      label: predictionResult ? (predictionResult.isMatch ? 'Prediction ✓' : 'Prediction ✕') : 'Predict',
-      icon: <Eye size={12} />,
-    },
-    {
       id: 'coach',
-      label: diagnosis ? 'Coach (!)' : 'Coach',
+      label: diagnosis ? 'Debug Coach (!)' : 'Debug Coach',
       icon: <LifeBuoy size={12} />,
     },
     {
@@ -552,16 +532,21 @@ export function CodeStudioPage() {
       icon: <Sparkles size={12} />,
     },
     {
-      id: 'testfix',
-      label: testResults
-        ? `Tests (${testResults.filter((t) => t.status === 'passed').length}/${testResults.length})`
-        : 'Test Fix',
-      icon: <FlaskConical size={12} />,
+      id: 'prediction',
+      label: predictionResult ? (predictionResult.isMatch ? 'Predict ✓' : 'Predict ✕') : 'Predict',
+      icon: <Eye size={12} />,
     },
     {
-      id: 'problems',
-      label: 'Problems',
-      icon: <Check size={12} />,
+      id: 'visualizer',
+      label: traceResult ? `Visualizer (${traceResult.steps.length})` : 'Visualizer',
+      icon: <Layers size={12} />,
+    },
+    {
+      id: 'testfix',
+      label: testResults
+        ? `Test Fix (${testResults.filter((t) => t.status === 'passed').length}/${testResults.length})`
+        : 'Test Fix',
+      icon: <FlaskConical size={12} />,
     },
   ]
 
@@ -839,32 +824,7 @@ export function CodeStudioPage() {
                   </div>
                 )}
 
-                {/* 2. Visualizer Tab */}
-                {activeTab === 'visualizer' && (
-                  <TraceVisualizer
-                    traceResult={traceResult}
-                    currentStepIndex={currentStepIndex}
-                    currentStep={currentStep}
-                    isStale={isStale}
-                    stepForward={stepForward}
-                    stepBackward={stepBackward}
-                    goToStep={goToStep}
-                    resetTrace={resetTrace}
-                  />
-                )}
-
-                {/* 3. Prediction Tab */}
-                {activeTab === 'prediction' && (
-                  <PredictionPanel
-                    prediction={prediction}
-                    setPrediction={setPrediction}
-                    predictionResult={predictionResult}
-                    clearPrediction={clearPrediction}
-                    isStale={isStale}
-                  />
-                )}
-
-                {/* 4. Smart Debugging Coach Tab */}
+                {/* 2. Debug Coach Tab */}
                 {activeTab === 'coach' && (
                   <DebuggingCoachPanel
                     diagnosis={diagnosis}
@@ -872,7 +832,7 @@ export function CodeStudioPage() {
                   />
                 )}
 
-                {/* 5. AI Mentor Tab (Phase 5) */}
+                {/* 3. AI Mentor Tab */}
                 {activeTab === 'aimentor' && (
                   <AiMentorPanel
                     currentCode={code}
@@ -891,7 +851,32 @@ export function CodeStudioPage() {
                   />
                 )}
 
-                {/* 6. Test Your Fix Tab */}
+                {/* 4. Predict Tab */}
+                {activeTab === 'prediction' && (
+                  <PredictionPanel
+                    prediction={prediction}
+                    setPrediction={setPrediction}
+                    predictionResult={predictionResult}
+                    clearPrediction={clearPrediction}
+                    isStale={isStale}
+                  />
+                )}
+
+                {/* 5. Visualizer Tab */}
+                {activeTab === 'visualizer' && (
+                  <TraceVisualizer
+                    traceResult={traceResult}
+                    currentStepIndex={currentStepIndex}
+                    currentStep={currentStep}
+                    isStale={isStale}
+                    stepForward={stepForward}
+                    stepBackward={stepBackward}
+                    goToStep={goToStep}
+                    resetTrace={resetTrace}
+                  />
+                )}
+
+                {/* 6. Test Fix Tab */}
                 {activeTab === 'testfix' && (
                   <TestYourFixPanel
                     currentCode={code}
@@ -899,23 +884,8 @@ export function CodeStudioPage() {
                     isRunningTests={isRunningTests}
                     isStale={isStale}
                     onRunTests={handleRunTestScript}
-                    onLoadExerciseCode={handleLoadExerciseCode}
+                    onReturnToEditor={() => editorRef.current?.focus()}
                   />
-                )}
-
-                {/* 6. Problems Tab */}
-                {activeTab === 'problems' && (
-                  <div className={styles.outputContent}>
-                    <div className={styles.outputLog}>
-                      <div className={styles.outputEmpty}>
-                        <Check size={32} strokeWidth={1} />
-                        <p>No editor problems detected.</p>
-                        <p className={styles.outputEmpty__note}>
-                          Python syntax, runtime diagnostics, and coach suggestions appear in Coach and Test Fix.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 )}
               </>
             )}

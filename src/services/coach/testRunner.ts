@@ -31,12 +31,23 @@ for tc in test_cases:
     tc_id = tc['id']
     tc_name = tc['name']
     call_expr = tc['callExpr']
-    expected_str = tc['expected']
+    expected_str = str(tc['expected']).strip()
+    input_desc = tc.get('inputDescription', '')
+
+    # Completely clean, isolated namespace per test to prevent variable leaks
+    clean_ns = {}
+    load_error = None
+    try:
+        compiled = compile(user_code, '<test_run>', 'exec')
+        exec(compiled, clean_ns)
+    except Exception as e:
+        load_error = f"{type(e).__name__}: {str(e)}"
 
     if load_error is not None:
         results.append({
             'id': tc_id,
             'name': tc_name,
+            'inputDescription': input_desc,
             'status': 'error',
             'expected': expected_str,
             'actual': None,
@@ -47,16 +58,24 @@ for tc in test_cases:
 
     start_t = time.perf_counter()
     try:
-        val = eval(call_expr, ns)
+        val = eval(call_expr, clean_ns)
         dur = round((time.perf_counter() - start_t) * 1000, 2)
         actual_repr = repr(val)
+        actual_str = str(val)
         
         # Compare representation with expected
-        is_pass = (actual_repr == expected_str)
+        is_pass = (actual_repr == expected_str or actual_str == expected_str)
         # Also check numeric float equivalence (e.g. 20.0 == 20)
         if not is_pass:
             try:
-                if isinstance(val, (int, float)) and float(val) == float(expected_str):
+                if isinstance(val, (int, float)) and abs(float(val) - float(expected_str)) < 1e-6:
+                    is_pass = True
+            except Exception:
+                pass
+
+        if not is_pass:
+            try:
+                if expected_str.strip('"').strip("'") == actual_str.strip('"').strip("'"):
                     is_pass = True
             except Exception:
                 pass
@@ -64,9 +83,10 @@ for tc in test_cases:
         results.append({
             'id': tc_id,
             'name': tc_name,
+            'inputDescription': input_desc,
             'status': 'passed' if is_pass else 'failed',
             'expected': expected_str,
-            'actual': actual_repr,
+            'actual': actual_str if isinstance(val, (int, float, str)) else actual_repr,
             'durationMs': dur
         })
     except Exception as e:
@@ -74,6 +94,7 @@ for tc in test_cases:
         results.append({
             'id': tc_id,
             'name': tc_name,
+            'inputDescription': input_desc,
             'status': 'error',
             'expected': expected_str,
             'actual': None,

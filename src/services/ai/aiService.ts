@@ -20,6 +20,45 @@ export function computeCodeHash(code: string): string {
   return `hash_${Math.abs(hash)}_${code.length}`
 }
 
+function normalizeAiError(
+  errJson: { error?: { code?: string; message?: string; retryable?: boolean } },
+  status: number
+): Error & { code?: string; retryable?: boolean } {
+  const code = errJson.error?.code || 'AI_ERROR'
+  const rawMsg = errJson.error?.message || ''
+  const retryable = errJson.error?.retryable ?? (status === 429 || status >= 500)
+
+  let friendlyMessage = rawMsg
+
+  if (code === 'RATE_LIMITED' || status === 429) {
+    friendlyMessage = 'The AI service is experiencing high traffic. Please wait a moment and try again.'
+  } else if (code === 'TIMEOUT' || status === 504) {
+    friendlyMessage = 'The AI request timed out. Please try with a smaller code snippet or click Retry.'
+  } else if (code === 'MALFORMED_RESPONSE') {
+    friendlyMessage = 'The AI generated an incomplete response. Please click Retry to analyze your code again.'
+  } else if (code === 'AUTHENTICATION_ERROR' || code === 'MISSING_API_KEY' || status === 401) {
+    friendlyMessage = 'AI service authentication is not configured. Please check the backend server configuration.'
+  } else if (code === 'NETWORK_ERROR' || status === 503) {
+    friendlyMessage = 'Unable to connect to the AI service. Please check your network connection.'
+  } else if (code === 'MODEL_UNAVAILABLE' || status === 404) {
+    friendlyMessage = 'The configured AI model is currently unavailable on this account.'
+  } else if (
+    rawMsg.includes('failed_generation') ||
+    rawMsg.includes('Failed to generate JSON')
+  ) {
+    friendlyMessage = 'The AI model could not format its response properly. Please click Retry to generate again.'
+  }
+
+  if (!friendlyMessage) {
+    friendlyMessage = `AI Server Error (${status})`
+  }
+
+  const err = new Error(friendlyMessage)
+  ;(err as unknown as { code?: string; retryable?: boolean }).code = code
+  ;(err as unknown as { code?: string; retryable?: boolean }).retryable = retryable
+  return err as Error & { code?: string; retryable?: boolean }
+}
+
 class AiService {
   private activeExplainController: AbortController | null = null
   private activeAskController: AbortController | null = null
@@ -37,7 +76,7 @@ class AiService {
       return {
         status: data.status || 'ok',
         hasGroqKey: !!data.hasGroqKey,
-        model: data.model || 'llama-3.3-70b-versatile',
+        model: data.model || 'openai/gpt-oss-120b',
         version: data.version,
       }
     } catch {
@@ -55,7 +94,6 @@ class AiService {
       )
     }
 
-    // Abort previous pending explain request to prevent race conditions
     if (this.activeExplainController) {
       this.activeExplainController.abort()
     }
@@ -78,10 +116,7 @@ class AiService {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}))
-        const message = errJson.error?.message || `AI Server Error (${res.status})`
-        const err = new Error(message)
-        ;(err as unknown as { code?: string }).code = errJson.error?.code
-        throw err
+        throw normalizeAiError(errJson, res.status)
       }
 
       const data: ExplainResponse = await res.json()
@@ -138,10 +173,7 @@ class AiService {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}))
-        const message = errJson.error?.message || `AI Server Error (${res.status})`
-        const err = new Error(message)
-        ;(err as unknown as { code?: string }).code = errJson.error?.code
-        throw err
+        throw normalizeAiError(errJson, res.status)
       }
 
       const data: AskResponse = await res.json()
@@ -187,10 +219,7 @@ class AiService {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}))
-        const message = errJson.error?.message || `AI Server Error (${res.status})`
-        const err = new Error(message)
-        ;(err as unknown as { code?: string }).code = errJson.error?.code
-        throw err
+        throw normalizeAiError(errJson, res.status)
       }
 
       const data: GenerateMcqsResponse = await res.json()

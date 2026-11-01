@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Upper Zenith Gradient: Warm Champagne Light to Polished Gold -->
+    <linearGradient id="cc_zenith" x1="120" y1="76" x2="420" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF9"/>
+      <stop offset="22%" stop-color="#F4F0E8"/>
+      <stop offset="60%" stop-color="#D8B58B"/>
+      <stop offset="100%" stop-color="#B8895B"/>
+    </linearGradient>
+
+    <!-- Lower Keel Gradient: Polished Gold to Burnished Artisan Bronze -->
+    <linearGradient id="cc_keel" x1="120" y1="436" x2="420" y2="322" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#693C18"/>
+      <stop offset="35%" stop-color="#8E5B2F"/>
+      <stop offset="75%" stop-color="#B8895B"/>
+      <stop offset="100%" stop-color="#D8B58B"/>
+    </linearGradient>
+
+    <!-- Logic Chevron Gradient: High-clarity illumination -->
+    <linearGradient id="cc_chevron" x1="190" y1="200" x2="370" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF9"/>
+      <stop offset="35%" stop-color="#F4F0E8"/>
+      <stop offset="75%" stop-color="#D8B58B"/>
+      <stop offset="100%" stop-color="#B8895B"/>
+    </linearGradient>
+
+    <!-- Diamond Spark Core Gradient -->
+    <linearGradient id="cc_spark" x1="375" y1="230" x2="425" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF9"/>
+      <stop offset="45%" stop-color="#F4F0E8"/>
+      <stop offset="80%" stop-color="#D8B58B"/>
+      <stop offset="100%" stop-color="#8E5B2F"/>
+    </linearGradient>
+
+    <!-- Subtle inner rim specular highlight -->
+    <linearGradient id="cc_rim" x1="140" y1="120" x2="360" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  
+
+  <!-- Master Symbol Group: Mathematically Centered at (256, 256) -->
+  <g id="codecraft-brand-symbol">
+    <!-- 1. Upper Artisan Arc (Zenith Wing) -->
+    <!-- Flowing architectural C-wing with chamfered terminal -->
+    <path d="M 406 136 
+             C 366 84 306 56 238 56 
+             C 142 56 82 126 82 224 
+             C 82 234 83 244 85 254 
+             L 156 232 
+             C 155 229 154 226 154 224 
+             C 154 166 190 126 244 126 
+             C 286 126 322 146 346 178 
+             Z" 
+          fill="url(#cc_zenith)" />
+
+    <!-- 2. Lower Foundation Arc (Keel Wing) -->
+    <!-- Grounded architectural C-wing with matching chamfered terminal -->
+    <path d="M 406 376 
+             L 346 334 
+             C 322 366 286 386 244 386 
+             C 190 386 154 346 154 288 
+             C 154 286 155 283 156 280 
+             L 85 258 
+             C 83 268 82 278 82 288 
+             C 82 386 142 456 238 456 
+             C 306 456 366 428 406 376 
+             Z" 
+          fill="url(#cc_keel)" />
+
+    <!-- 3. Forward Logic Chevron (Execution Pointer: '>') -->
+    <!-- Precision faceted bracket nested in the C-aperture -->
+    <path d="M 212 256 
+             L 290 184 
+             L 340 222 
+             L 280 256 
+             L 340 290 
+             L 290 328 
+             Z" 
+          fill="url(#cc_chevron)" />
+
+    <!-- 4. Precision Diamond Spark (Logic Core) -->
+    <!-- Aligned at the focus of the aperture -->
+    <path d="M 382 256 
+             L 406 232 
+             L 430 256 
+             L 406 280 
+             Z" 
+          fill="url(#cc_spark)" />
+  </g>
+</svg>

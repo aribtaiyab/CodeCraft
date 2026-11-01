@@ -2,7 +2,7 @@
 // Automated Tests: CodeCraft Phase 5 Backend API Endpoints & Security
 // ============================================================================
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../app.ts'
 import { GroqClient } from '../groqClient.ts'
@@ -614,4 +614,430 @@ describe('Phase 5 Backend API & Security Gates', () => {
     expect(mcqRes.body.questions[0].options.length).toBe(4)
     expect(mcqRes.body.questions[0].correctIndex).toBe(1)
   })
+describe('Phase 5 Diagnostic & Resilience Suite', () => {
+  // 1. Normal Python question
+  it('handles a normal Python question correctly', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: 'In Python, a list is a mutable sequence of elements.',
+                  relevantLines: [1],
+                  followUpSuggestions: ['How do I append to a list?', 'What is a tuple?'],
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/ask')
+      .send({
+        code: 'numbers = [1, 2, 3]',
+        question: 'What is a list in Python?',
+        sourceHash: 'hash_list_q',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.answer).toContain('mutable sequence')
+    expect(res.body.relevantLines).toEqual([1])
+    expect(res.body.followUpSuggestions.length).toBe(2)
+  })
+
+  // 2. General programming question
+  it('handles a general programming question', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: 'Recursion is a programming technique where a function calls itself.',
+                  relevantLines: [],
+                  followUpSuggestions: ['What is a base case?', 'What is stack overflow?'],
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/ask')
+      .send({
+        code: '# General question\n',
+        question: 'What is recursion?',
+        sourceHash: 'hash_rec_q',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.answer).toContain('function calls itself')
+  })
+
+  // 3. Follow-up question with conversation history & runtime context
+  it('handles a follow-up question incorporating history and runtime context', async () => {
+    let capturedBody = ''
+    const mockFetch = vi.fn().mockImplementation((_url, init) => {
+      capturedBody = String(init.body)
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    answer: 'The IndexError occurred because index 5 exceeds the bounds of the 3-item list.',
+                    relevantLines: [2],
+                    followUpSuggestions: ['How to check list length?'],
+                  }),
+                },
+              },
+            ],
+          }),
+          { status: 200 }
+        )
+      )
+    })
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/ask')
+      .send({
+        code: 'items = [1, 2, 3]\nprint(items[5])',
+        question: 'Why did my program crash?',
+        runtimeContext: {
+          lastError: 'IndexError: list index out of range',
+          lastStdout: '',
+        },
+        conversationHistory: [
+          { role: 'user', content: 'What is this list?' },
+          { role: 'assistant', content: 'It is a 3-element list.' },
+        ],
+        sourceHash: 'hash_err_followup',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.answer).toContain('IndexError')
+    expect(capturedBody).toContain('IndexError: list index out of range')
+    expect(capturedBody).toContain('What is this list?')
+  })
+
+  // 4. Empty question rejection (400)
+  it('rejects empty question with 400 Bad Request', async () => {
+    const client = new GroqClient({ apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/ask')
+      .send({
+        code: 'x = 1',
+        question: '   ',
+        sourceHash: 'hash_empty_q',
+      })
+
+    expect(res.status).toBe(400)
+    expect(res.body.error.code).toBe('BAD_REQUEST')
+    expect(res.body.error.message).toContain("'question'")
+  })
+
+  // 5. Groq 400 json_validate_failed with failed_generation recovery success
+  it('recovers valid structured explanation from Groq failed_generation payload', async () => {
+    const truncatedPayload = {
+      summary: 'Program prints hello world.',
+      lineExplanations: [{ line: 1, code: 'print("hello")', explanation: 'Prints greeting.' }],
+    }
+    const failedGenStr = JSON.stringify(truncatedPayload).slice(0, -3)
+
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            message: "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+            code: 'json_validate_failed',
+            failed_generation: failedGenStr,
+          },
+        }),
+        { status: 400 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print("hello")',
+        sourceHash: 'hash_recover_ok',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.summary).toBe('Program prints hello world.')
+    expect(res.body.lineExplanations.length).toBe(1)
+  })
+
+  // 6. Malformed JSON with recovery failure (returns 502 MALFORMED_RESPONSE)
+  it('returns 502 MALFORMED_RESPONSE when model response is completely unparseable', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: '<<<INVALID NOT JSON AT ALL>>>',
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print("hello")',
+        sourceHash: 'hash_malformed_fail',
+      })
+
+    expect(res.status).toBe(502)
+    expect(res.body.error.code).toBe('MALFORMED_RESPONSE')
+    expect(res.body.error.message).toContain('valid JSON')
+  })
+
+  // 7. Missing JSON fields handled with defaults
+  it('handles missing optional fields safely by applying fallback values', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  summary: 'Minimal explanation provided.',
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'a = 10',
+        sourceHash: 'hash_missing_fields',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.summary).toBe('Minimal explanation provided.')
+    expect(Array.isArray(res.body.lineExplanations)).toBe(true)
+    expect(Array.isArray(res.body.keyConcepts)).toBe(true)
+  })
+
+  // 8. Empty AI response from Groq choices
+  it('returns 502 EMPTY_RESPONSE when Groq returns empty content', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: '',
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'x = 1',
+        sourceHash: 'hash_empty_resp',
+      })
+
+    expect(res.status).toBe(502)
+    expect(res.body.error.code).toBe('EMPTY_RESPONSE')
+  })
+
+  // 9. Groq 401 authentication failure
+  it('returns 401 AUTHENTICATION_ERROR when Groq rejects API key', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            message: 'Invalid API key provided.',
+            type: 'invalid_request_error',
+            code: 'invalid_api_key',
+          },
+        }),
+        { status: 401 }
+      )
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_bad_key' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print(1)',
+        sourceHash: 'hash_auth_fail',
+      })
+
+    expect(res.status).toBe(401)
+    expect(res.body.error.code).toBe('AUTHENTICATION_ERROR')
+    expect(res.body.error.message).toContain('Invalid Groq API key')
+  })
+
+  // 10. Provider 5xx error
+  it('returns 502 PROVIDER_ERROR when Groq encounters internal server error', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response('Internal Server Error', { status: 500, statusText: 'Internal Server Error' })
+    )
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print(1)',
+        sourceHash: 'hash_prov_500',
+      })
+
+    expect(res.status).toBe(502)
+    expect(res.body.error.code).toBe('PROVIDER_ERROR')
+    expect(res.body.error.retryable).toBe(true)
+  })
+
+  // 11. Network failure
+  it('returns 503 NETWORK_ERROR when fetch throws network error', async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new Error('fetch failed: ENOTFOUND api.groq.com'))
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print(1)',
+        sourceHash: 'hash_net_err',
+      })
+
+    expect(res.status).toBe(503)
+    expect(res.body.error.code).toBe('NETWORK_ERROR')
+    expect(res.body.error.retryable).toBe(true)
+  })
+
+  // 12. Timeout
+  it('returns 504 TIMEOUT when request aborts due to timeout', async () => {
+    const abortErr = new Error('The operation was aborted')
+    abortErr.name = 'AbortError'
+    const mockFetch = vi.fn().mockRejectedValue(abortErr)
+
+    const client = new GroqClient({ customFetch: mockFetch as unknown as typeof fetch, apiKey: 'gsk_test' })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print(1)',
+        sourceHash: 'hash_timeout',
+      })
+
+    expect(res.status).toBe(504)
+    expect(res.body.error.code).toBe('TIMEOUT')
+    expect(res.body.error.retryable).toBe(true)
+  })
+
+  // 13. Unsupported model auto-fallback
+  it('automatically falls back to an alternative model when primary model is 404', async () => {
+    let callCount = 0
+    const mockFetch = vi.fn().mockImplementation((_url, init) => {
+      callCount++
+      const body = JSON.parse(init.body)
+      if (body.model === 'invalid-primary-model') {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: {
+                message: 'The model invalid-primary-model does not exist or you do not have access to it.',
+                code: 'model_not_found',
+              },
+            }),
+            { status: 404 }
+          )
+        )
+      }
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    summary: 'Fallback model succeeded.',
+                    lineExplanations: [],
+                  }),
+                },
+              },
+            ],
+          }),
+          { status: 200 }
+        )
+      )
+    })
+
+    const client = new GroqClient({
+      customFetch: mockFetch as unknown as typeof fetch,
+      apiKey: 'gsk_test',
+      model: 'invalid-primary-model',
+    })
+    const app = createApp(client)
+
+    const res = await request(app)
+      .post('/api/ai/explain')
+      .send({
+        code: 'print(1)',
+        sourceHash: 'hash_fallback',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.summary).toBe('Fallback model succeeded.')
+    expect(callCount).toBe(2)
+  })
+})
+
 })

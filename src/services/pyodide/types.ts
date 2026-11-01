@@ -148,6 +148,7 @@ export interface WorkerSuccessMessage {
   runId: string
   durationMs: number
   trace?: TraceResult
+  stdout?: string
 }
 
 export interface WorkerErrorMessage {

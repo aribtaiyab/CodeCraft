@@ -30,6 +30,7 @@ export class PyodideService {
   private timeoutTimer: ReturnType<typeof setTimeout> | null = null
   private lineCount = 0
   private limitReached = false
+  private hasReceivedOutputForRun = false
 
   // SharedArrayBuffer synchronization for stdin & interrupt
   private sharedBuffer: SharedArrayBuffer | null = null
@@ -153,6 +154,7 @@ export class PyodideService {
 
       case 'STDOUT':
         if (msg.runId !== this.activeRunId) return
+        this.hasReceivedOutputForRun = true
         this.addConsoleEntry({
           type: 'stdout',
           text: msg.text,
@@ -162,6 +164,7 @@ export class PyodideService {
 
       case 'STDERR':
         if (msg.runId !== this.activeRunId) return
+        this.hasReceivedOutputForRun = true
         this.addConsoleEntry({
           type: 'stderr',
           text: msg.text,
@@ -184,12 +187,38 @@ export class PyodideService {
       case 'EXECUTION_SUCCESS':
         if (msg.runId !== this.activeRunId) return
         this.clearTimeoutTimer()
-        this.activeRunId = null
         this.setState('success')
         this.listeners.onTrace?.(msg.trace ?? null, msg.runId)
+
+        // Ensure captured stdout from harness is displayed if not already received
+        if (!this.hasReceivedOutputForRun && msg.stdout && msg.stdout.trim().length > 0) {
+          const lines = msg.stdout.split('\n')
+          if (lines.length > 1 && lines[lines.length - 1] === '') {
+            lines.pop()
+          }
+          for (const line of lines) {
+            this.addConsoleEntry({
+              type: 'stdout',
+              text: line,
+              runId: msg.runId,
+            })
+          }
+          this.hasReceivedOutputForRun = true
+        }
+
+        // Phase 4: Successful code with no print must show a clear no-output state, not a failure
+        if (!this.hasReceivedOutputForRun) {
+          this.addConsoleEntry({
+            type: 'info',
+            text: '(Program completed with no printed output)',
+            runId: msg.runId,
+          })
+        }
+
         this.addConsoleEntry({
           type: 'system',
           text: `\n[Process completed successfully in ${msg.durationMs}ms]`,
+          runId: msg.runId,
         })
         break
 
@@ -248,6 +277,7 @@ export class PyodideService {
     this.activeRunId = runId
     this.lineCount = 0
     this.limitReached = false
+    this.hasReceivedOutputForRun = false
 
     this.setState('running')
 

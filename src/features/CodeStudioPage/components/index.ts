@@ -3,5 +3,5 @@ export { PredictionPanel } from './PredictionPanel'
 export { DebuggingCoachPanel } from './DebuggingCoachPanel'
 export { TestYourFixPanel } from './TestYourFixPanel'
 export { AiMentorPanel } from './AiMentorPanel'
+export { CodeRefineWorkspace } from './CodeRefineWorkspace'
 export { CommandPaletteModal, type CommandItem } from './CommandPaletteModal'
-

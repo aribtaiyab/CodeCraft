@@ -6,8 +6,8 @@ import {
   BookOpen,
   Menu,
   X,
-  Cpu,
 } from 'lucide-react'
+import { BrandSymbol } from '../Brand/BrandSymbol'
 import styles from './Navigation.module.css'
 
 const navItems = [
@@ -46,7 +46,7 @@ export function Navigation() {
           {/* Logo */}
           <NavLink to="/" className={styles.nav__logo} onClick={closeMobile} aria-label="CodeCraft home">
             <div className={styles.nav__logoMark}>
-              <Cpu size={18} strokeWidth={1.75} />
+              <BrandSymbol size={20} />
             </div>
             <span className={styles.nav__logoText}>
               Code<span className={styles.nav__logoAccent}>Craft</span>

@@ -29,6 +29,16 @@
   color: #f4f0e8;
 }
 
+/* Scrollable page mode when CodeRefine workspace is open */
+.pageRefineMode {
+  height: auto !important;
+  min-height: calc(100vh - var(--studio-nav-offset));
+  min-height: calc(100dvh - var(--studio-nav-offset));
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+
 /* ============================================================================
    1. Toolbar (File/Environment, Editing, Execution)
    ============================================================================ */
@@ -243,6 +253,63 @@
 .toolBtn:hover {
   background: #282520;
   border-color: #454037;
+  color: #f4f0e8;
+}
+
+
+.refineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  height: 30px;
+  background: rgba(184, 137, 91, 0.12);
+  border: 1px solid rgba(184, 137, 91, 0.35);
+  border-radius: 6px;
+  color: #d8b58b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.refineBtnActive {
+  background: rgba(184, 137, 91, 0.28);
+  border-color: #b8895b;
+  color: #f4f0e8;
+  box-shadow: 0 0 10px rgba(184, 137, 91, 0.3);
+}
+
+.refineBtn:hover {
+  background: rgba(184, 137, 91, 0.22);
+  border-color: #b8895b;
+  color: #f4f0e8;
+  box-shadow: 0 2px 8px rgba(184, 137, 91, 0.2);
+}
+
+.refineBtnIcon {
+  color: #b8895b;
+}
+
+.undoRefineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  height: 30px;
+  background: #24221e;
+  border: 1px dashed rgba(184, 137, 91, 0.45);
+  border-radius: 6px;
+  color: #d8b58b;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.undoRefineBtn:hover {
+  background: #302c26;
+  border-color: #b8895b;
   color: #f4f0e8;
 }
 

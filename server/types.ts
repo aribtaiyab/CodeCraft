@@ -124,12 +124,92 @@ export interface GenerateMcqsResponse {
 }
 
 // ----------------------------------------------------------------------------
-// 5. Standard Error Response
+// 5. CodeRefine Endpoint Types
 // ----------------------------------------------------------------------------
+export type RefineGoal =
+  | 'readability'
+  | 'dry'
+  | 'structure'
+  | 'naming'
+  | 'simplify'
+  | 'custom'
+
+export interface RefineChangeItem {
+  id: string
+  originalSnippet: string
+  improvedSnippet: string
+  lineStart?: number
+  lineEnd?: number
+  whatChanged: string
+  whyChanged: string
+  howItWorks: string
+  benefit: string
+  tradeOff?: string
+}
+
+export interface RefineAnalysisResponse {
+  id: string
+  sourceHash: string
+  isStale: boolean
+  model: string
+  goal: RefineGoal
+  summary: string
+  improvedCode: string
+  changes: RefineChangeItem[]
+  benefits: string[]
+  tradeOffs: string[]
+  behaviourNotes?: string
+  verificationNotes?: string
+  progressiveHints?: string[]
+  isAlreadyClean?: boolean
+}
+
+export interface RefineRequest {
+  code: string
+  goal: RefineGoal
+  customGoalPrompt?: string
+  sourceHash: string
+}
+
+export interface RefineHintRequest {
+  code: string
+  goal: RefineGoal
+  hintLevel: number // 1, 2, or 3
+  customGoalPrompt?: string
+  sourceHash: string
+}
+
+export interface RefineHintResponse {
+  hintLevel: number
+  hint: string
+  focusArea?: string
+  nextAvailable: boolean
+}
+
+// ----------------------------------------------------------------------------
+// 6. Standard Error Response
+// ----------------------------------------------------------------------------
+export type ApiErrorCode =
+  | 'BAD_REQUEST'
+  | 'MISSING_API_KEY'
+  | 'AUTHENTICATION_ERROR'
+  | 'RATE_LIMITED'
+  | 'INSUFFICIENT_QUOTA'
+  | 'MODEL_UNAVAILABLE'
+  | 'TIMEOUT'
+  | 'NETWORK_ERROR'
+  | 'PROVIDER_ERROR'
+  | 'EMPTY_RESPONSE'
+  | 'MALFORMED_RESPONSE'
+  | 'VALIDATION_FAILED'
+  | 'GROQ_API_ERROR'
+  | 'INTERNAL_ERROR'
+
 export interface ApiErrorResponse {
   error: {
-    code: 'MISSING_API_KEY' | 'RATE_LIMITED' | 'BAD_REQUEST' | 'GROQ_API_ERROR' | 'TIMEOUT' | 'INTERNAL_ERROR'
+    code: ApiErrorCode
     message: string
+    retryable?: boolean
     details?: unknown
   }
 }

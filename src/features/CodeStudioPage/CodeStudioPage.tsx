@@ -26,6 +26,7 @@ import {
   Type,
   WrapText,
   Save,
+  Wand2,
 } from 'lucide-react'
 import { Badge, Tabs } from '../../components'
 import { usePyodide } from '../../services/pyodide'
@@ -35,6 +36,7 @@ import {
   DebuggingCoachPanel,
   TestYourFixPanel,
   AiMentorPanel,
+  CodeRefineWorkspace,
   CommandPaletteModal,
   type CommandItem,
 } from './components'
@@ -159,6 +161,10 @@ export function CodeStudioPage() {
   // Command palette modal state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
 
+  // CodeRefine interactive workspace state
+  const [isCodeRefineOpen, setIsCodeRefineOpen] = useState(false)
+  const [refineUndoSnapshot, setRefineUndoSnapshot] = useState<string | null>(null)
+
   // Debugging Coach & Test Results State
   const [diagnosis, setDiagnosis] = useState<BugDiagnosis | null>(null)
   const [testResults, setTestResults] = useState<TestAssertionResult[] | null>(null)
@@ -171,6 +177,15 @@ export function CodeStudioPage() {
   const editorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null)
   const decorationsCollectionRef = useRef<import('monaco-editor').editor.IEditorDecorationsCollection | null>(null)
+
+  // Single Source of Truth & Execution Synchronization Refs
+  const codeRef = useRef<string>(code)
+  useEffect(() => {
+    codeRef.current = code
+  }, [code])
+
+  const handleRunRef = useRef<() => void>(() => {})
+  const handleSaveRef = useRef<() => void>(() => {})
 
   // Pyodide Execution & Tracing Hook
   const {
@@ -445,7 +460,9 @@ export function CodeStudioPage() {
   }
 
   const handleCodeChange = (newCode: string | undefined) => {
-    setCode(newCode ?? '')
+    const val = newCode ?? ''
+    codeRef.current = val
+    setCode(val)
     markCodeChanged()
   }
 
@@ -460,7 +477,45 @@ export function CodeStudioPage() {
     }
     setDiagnosis(null)
     setTestResults(null)
-    runCode(code, { trace: true })
+
+    // Step 5: Reliably obtain the latest editor content without silently overriding empty code
+    let codeToRun = ''
+    let isEditorReadSuccessful = false
+    try {
+      if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
+        const liveVal = editorRef.current.getValue()
+        if (typeof liveVal === 'string') {
+          codeToRun = liveVal
+          isEditorReadSuccessful = true
+        }
+      }
+    } catch {
+      isEditorReadSuccessful = false
+    }
+
+    // Fallback to codeRef or state only if editor instance was unreachable
+    if (!isEditorReadSuccessful) {
+      codeToRun = codeRef.current ?? code
+    }
+
+    // Step 1: Verification log immediately before runCode
+    const execId = `exec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    console.log('[CodeStudio EXECUTION_DEBUG]', {
+      execId,
+      editorVal: editorRef.current?.getValue(),
+      codeRefVal: codeRef.current,
+      reactCodeState: code,
+      codeToRun,
+      codeToRunLength: codeToRun.length,
+    })
+
+    // Keep React state and ref synchronized with the executed code
+    if (codeToRun !== code) {
+      setCode(codeToRun)
+      codeRef.current = codeToRun
+    }
+
+    runCode(codeToRun, { trace: true })
   }, [language, code, runCode])
 
   const handleStop = useCallback(() => {
@@ -469,14 +524,16 @@ export function CodeStudioPage() {
   }, [stopExecution])
 
   const handleCopyCode = useCallback(async () => {
-    await navigator.clipboard.writeText(code)
+    const val = editorRef.current?.getValue() ?? codeRef.current ?? code
+    await navigator.clipboard.writeText(val)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }, [code])
 
   const handleSave = useCallback(() => {
+    const val = editorRef.current?.getValue() ?? codeRef.current ?? code
     try {
-      localStorage.setItem('codecraft_studio_saved_code', code)
+      localStorage.setItem('codecraft_studio_saved_code', val)
       setSaveToast(true)
       setTimeout(() => setSaveToast(false), 2200)
     } catch {
@@ -484,16 +541,87 @@ export function CodeStudioPage() {
     }
   }, [code])
 
+  useEffect(() => {
+    handleRunRef.current = handleRun
+  }, [handleRun])
+
+  useEffect(() => {
+    handleSaveRef.current = handleSave
+  }, [handleSave])
+
+  const handleAcceptRefine = useCallback((newCode: string) => {
+    const currentCode = editorRef.current?.getValue() ?? codeRef.current ?? code
+    setRefineUndoSnapshot(currentCode)
+    codeRef.current = newCode
+    setCode(newCode)
+    if (editorRef.current && editorRef.current.getValue() !== newCode) {
+      editorRef.current.setValue(newCode)
+    }
+    try {
+      localStorage.setItem('codecraft_studio_saved_code', newCode)
+    } catch {
+      // Storage fallback
+    }
+    setSaveToast(true)
+    setTimeout(() => setSaveToast(false), 2200)
+    setIsCodeRefineOpen(false)
+    setTimeout(() => {
+      if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
+        if (editorRef.current.getValue() !== newCode) {
+          editorRef.current.setValue(newCode)
+        }
+        editorRef.current.layout()
+        editorRef.current.focus()
+      }
+    }, 50)
+  }, [code])
+
+  const handleUndoRefine = useCallback(() => {
+    if (refineUndoSnapshot !== null) {
+      const restored = refineUndoSnapshot
+      codeRef.current = restored
+      setCode(restored)
+      if (editorRef.current && editorRef.current.getValue() !== restored) {
+        editorRef.current.setValue(restored)
+      }
+      try {
+        localStorage.setItem('codecraft_studio_saved_code', restored)
+      } catch {
+        // Storage fallback
+      }
+      setRefineUndoSnapshot(null)
+      setSaveToast(true)
+      setTimeout(() => setSaveToast(false), 2200)
+      setTimeout(() => {
+        if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
+          if (editorRef.current.getValue() !== restored) {
+            editorRef.current.setValue(restored)
+          }
+          editorRef.current.layout()
+          editorRef.current.focus()
+        }
+      }, 50)
+    }
+  }, [refineUndoSnapshot])
+
   const handleReset = useCallback(() => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
-    setCode(STARTER_CODE[language])
+    const starter = STARTER_CODE[language]
+    codeRef.current = starter
+    setCode(starter)
+    if (editorRef.current && editorRef.current.getValue() !== starter) {
+      editorRef.current.setValue(starter)
+    }
     decorationsCollectionRef.current?.clear()
     setDiagnosis(null)
     setTestResults(null)
     if (language === 'python') {
       resetEngine()
     }
+    setTimeout(() => {
+      editorRef.current?.focus()
+    }, 50)
   }, [language, resetEngine])
 
   const toggleEditorMaximize = useCallback(() => {
@@ -537,6 +665,11 @@ export function CodeStudioPage() {
 
     editorRef.current = ed
     monacoRef.current = m
+
+    const initialVal = codeRef.current || code
+    if (ed.getValue() !== initialVal) {
+      ed.setValue(initialVal)
+    }
 
     m.editor.defineTheme('codecraft', {
       base: 'vs-dark',
@@ -611,10 +744,10 @@ export function CodeStudioPage() {
 
     // Keyboard Shortcuts inside Monaco
     ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.Enter, () => {
-      handleRun()
+      handleRunRef.current()
     })
     ed.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.KeyS, () => {
-      handleSave()
+      handleSaveRef.current()
     })
     ed.addCommand(m.KeyMod.CtrlCmd | m.KeyMod.Shift | m.KeyCode.KeyP, () => {
       setIsCommandPaletteOpen(true)
@@ -635,10 +768,10 @@ export function CodeStudioPage() {
         setIsCommandPaletteOpen(true)
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault()
-        handleSave()
+        handleSaveRef.current()
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault()
-        handleRun()
+        handleRunRef.current()
       }
     }
     window.addEventListener('keydown', handleGlobalKeyDown)
@@ -654,7 +787,7 @@ export function CodeStudioPage() {
       shortcut: 'Ctrl+Enter',
       category: 'execution',
       icon: <Play size={16} />,
-      action: handleRun,
+      action: () => handleRunRef.current(),
     },
     {
       id: 'stop-code',
@@ -857,7 +990,8 @@ export function CodeStudioPage() {
   const isEngineLoading = state === 'loading' || state === 'uninitialized'
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${isCodeRefineOpen ? styles.pageRefineMode : ''}`}>
+        {/* Global sticky/floating background or layout preserved */}
       {/* ---- Toolbar with Organized File/Environment, Editing, and Execution Sections ---- */}
       <div className={styles.topBar}>
         {/* 1. File / Environment Controls */}
@@ -918,6 +1052,45 @@ export function CodeStudioPage() {
               </div>
             )}
           </div>
+
+          {/* CodeRefine Signature Feature Button (Upper-Left Discoverability) */}
+          <button
+            id="open-coderefine-btn"
+            className={`${styles.refineBtn} ${isCodeRefineOpen ? styles.refineBtnActive : ''}`}
+            onClick={() => {
+              if (!isCodeRefineOpen) {
+                const current = editorRef.current?.getValue() ?? codeRef.current ?? code
+                codeRef.current = current
+                setCode(current)
+                setIsCodeRefineOpen(true)
+              } else {
+                setIsCodeRefineOpen(false)
+                setTimeout(() => {
+                  editorRef.current?.layout()
+                  editorRef.current?.focus()
+                }, 50)
+              }
+            }}
+            title="CodeRefine · Write better. Understand why."
+            aria-label="Toggle CodeRefine Workspace"
+          >
+            <Wand2 size={13} className={styles.refineBtnIcon} />
+            <span>CodeRefine</span>
+          </button>
+
+          {/* Undo Refine Button if a snapshot exists */}
+          {refineUndoSnapshot !== null && (
+            <button
+              id="undo-coderefine-btn"
+              className={styles.undoRefineBtn}
+              onClick={handleUndoRefine}
+              title="Undo CodeRefine changes and restore previous code"
+              aria-label="Undo CodeRefine"
+            >
+              <RotateCcw size={12} />
+              <span>Undo Refine</span>
+            </button>
+          )}
         </div>
 
         {/* 2. Editing & Studio Controls */}
@@ -944,6 +1117,7 @@ export function CodeStudioPage() {
               A+
             </button>
           </div>
+
 
           <button
             className={styles.toolBtn}
@@ -1005,7 +1179,7 @@ export function CodeStudioPage() {
           <button
             id="run-code-btn"
             className={styles.btnRun}
-            onClick={handleRun}
+            onClick={() => handleRunRef.current()}
             disabled={isRunning || isEngineLoading}
             title="Run Code & Trace (Ctrl+Enter)"
           >
@@ -1063,8 +1237,29 @@ export function CodeStudioPage() {
         </div>
       )}
 
+      {/* ---- CodeRefine Workspace (Mounted conditionally, keeping Studio Editor alive) ---- */}
+      {isCodeRefineOpen && (
+        <CodeRefineWorkspace
+          currentStudioCode={editorRef.current?.getValue() ?? codeRef.current ?? code}
+          onAcceptChanges={handleAcceptRefine}
+          onUndoAccepted={handleUndoRefine}
+          canUndo={!!refineUndoSnapshot}
+          onClose={() => {
+            setIsCodeRefineOpen(false)
+            setTimeout(() => {
+              editorRef.current?.layout()
+              editorRef.current?.focus()
+            }, 50)
+          }}
+          fontSize={fontSize}
+        />
+      )}
+
       {/* ---- Split Workspace Layout with Draggable Divider ---- */}
-      <div className={`${styles.split} ${isDragging ? styles.splitDragging : ''}`}>
+      <div
+        className={`${styles.split} ${isDragging ? styles.splitDragging : ''}`}
+        style={isCodeRefineOpen ? { display: 'none' } : undefined}
+      >
         {/* 1. Code Editor Pane */}
         <div className={styles.editorPane} aria-label="Code editor">
           <Editor

@@ -231,5 +231,72 @@ describe('Frontend AiService Client', () => {
     await expect(aiService.generateMcqs(longCode, 2)).rejects.toThrow('50,000 character limit')
     expect(fetchSpy).not.toHaveBeenCalled()
   })
-})
+  it('normalizes raw Groq JSON validation errors to clean, actionable advice', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: {
+            code: 'GROQ_API_ERROR',
+            message: "Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+          },
+        }),
+      })
+    )
 
+    await expect(aiService.explainCode('print(1)')).rejects.toThrow(
+      'The AI model could not format its response properly. Please click Retry to generate again.'
+    )
+  })
+
+  it('normalizes 429 rate limit errors with friendly message and retryable flag', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          error: {
+            code: 'RATE_LIMITED',
+            message: 'Too many requests.',
+            retryable: true,
+          },
+        }),
+      })
+    )
+
+    try {
+      await aiService.explainCode('print(1)')
+      expect.fail('Should have thrown an error')
+    } catch (err: unknown) {
+      expect((err as Error).message).toContain('high traffic')
+      expect((err as { retryable?: boolean }).retryable).toBe(true)
+    }
+  })
+
+  it('aborts prior pending explain request when a new request is triggered concurrently', async () => {
+    let abortSignalObserved = false
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((_url, init) => {
+        const signal = init.signal as AbortSignal
+        signal.addEventListener('abort', () => {
+          abortSignalObserved = true
+        })
+        return new Promise(() => {}) // never resolves to keep first request pending
+      })
+    )
+
+    // Trigger first request (do not await)
+    aiService.explainCode('first = 1')
+
+    // Trigger second request (will abort the first)
+    aiService.explainCode('second = 2')
+
+    expect(abortSignalObserved).toBe(true)
+  })
+
+})

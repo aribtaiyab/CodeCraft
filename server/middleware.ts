@@ -1,9 +1,9 @@
 // ============================================================================
-// CodeCraft Backend — Security Middleware, Rate Limiting & Validation
+// CodeCraft Backend — Security Middleware, Rate Limiting & Error Sanitization
 // ============================================================================
 
 import type { Request, Response, NextFunction } from 'express'
-import type { ApiErrorResponse } from './types.ts'
+import type { ApiErrorResponse, ApiErrorCode } from './types.ts'
 
 // In-memory rate limiter tracker
 interface RateLimitRecord {
@@ -35,6 +35,7 @@ export function rateLimiter(req: Request, res: Response, next: NextFunction): vo
       error: {
         code: 'RATE_LIMITED',
         message: `Too many AI requests. Please slow down and try again in ${retryAfterSec}s.`,
+        retryable: true,
       },
     }
     res.status(429).json(errPayload)
@@ -55,6 +56,7 @@ export function validateCodePayload(req: Request, res: Response, next: NextFunct
       error: {
         code: 'BAD_REQUEST',
         message: 'Request body must be a valid JSON object.',
+        retryable: false,
       },
     }
     res.status(400).json(errPayload)
@@ -66,18 +68,20 @@ export function validateCodePayload(req: Request, res: Response, next: NextFunct
       error: {
         code: 'BAD_REQUEST',
         message: "Missing or invalid 'code' string field in request body.",
+        retryable: false,
       },
     }
     res.status(400).json(errPayload)
     return
   }
 
-  // 100KB code length cap
+  // 100KB code length cap (50,000 characters)
   if (body.code.length > 50000) {
     const errPayload: ApiErrorResponse = {
       error: {
         code: 'BAD_REQUEST',
         message: 'Submitted code exceeds the 50,000 character limit.',
+        retryable: false,
       },
     }
     res.status(400).json(errPayload)
@@ -88,10 +92,10 @@ export function validateCodePayload(req: Request, res: Response, next: NextFunct
 }
 
 /**
- * Global Error Handler: Prevents leaking stack traces or credentials
+ * Global Error Handler: Prevents leaking stack traces, API keys, or raw provider diagnostics
  */
 export function errorHandler(
-  err: Error & { code?: string; status?: number; type?: string },
+  err: Error & { code?: string; status?: number; type?: string; retryable?: boolean; details?: unknown },
   _req: Request,
   res: Response,
   _next: NextFunction
@@ -102,19 +106,39 @@ export function errorHandler(
       error: {
         code: 'BAD_REQUEST',
         message: 'Request payload exceeds the 100KB size limit.',
+        retryable: false,
       },
     }
     res.status(413).json(errPayload)
     return
   }
 
-  const status = err.status || (err.code === 'MISSING_API_KEY' ? 401 : err.code === 'RATE_LIMITED' ? 429 : 500)
-  const code = (err.code || 'INTERNAL_ERROR') as ApiErrorResponse['error']['code']
+  const status =
+    err.status ||
+    (err.code === 'MISSING_API_KEY' || err.code === 'AUTHENTICATION_ERROR'
+      ? 401
+      : err.code === 'RATE_LIMITED'
+      ? 429
+      : err.code === 'BAD_REQUEST'
+      ? 400
+      : err.code === 'TIMEOUT'
+      ? 504
+      : err.code === 'NETWORK_ERROR'
+      ? 503
+      : 500)
+
+  const code = (err.code || 'INTERNAL_ERROR') as ApiErrorCode
+
+  // Server-side diagnostic log only; never expose details or raw stack traces to the client
+  if (status >= 500) {
+    console.error(`[AI Error ${status}] [${code}]:`, err.message)
+  }
 
   const errResponse: ApiErrorResponse = {
     error: {
       code,
       message: err.message || 'An unexpected server error occurred.',
+      retryable: err.retryable ?? (status === 429 || status >= 500),
     },
   }
 

@@ -101,14 +101,32 @@ def _run_with_trace(user_code_str):
 
     sys.settrace(tracer)
     exc_to_raise = None
+    captured_stdout = ""
     try:
+        user_globals = {
+            '__name__': '__main__',
+            '__doc__': None,
+            '__package__': None,
+            '__file__': '<codecraft_user_code>',
+        }
         compiled = compile(user_code_str, '<codecraft_user_code>', 'exec')
-        exec(compiled, {})
+        exec(compiled, user_globals)
     except Exception as e:
         exc_to_raise = e
     finally:
         sys.settrace(None)
+        if hasattr(proxy, 'flush'):
+            try:
+                proxy.flush()
+            except Exception:
+                pass
+        captured_stdout = proxy.getvalue()
         sys.stdout = orig_stdout
+        if hasattr(orig_stdout, 'flush'):
+            try:
+                orig_stdout.flush()
+            except Exception:
+                pass
 
     trace_json = json.dumps({
         'steps': trace_events,
@@ -117,9 +135,7 @@ def _run_with_trace(user_code_str):
         'supported': True
     })
 
-    if exc_to_raise is not None:
-        return trace_json, exc_to_raise
-    return trace_json, None
+    return trace_json, exc_to_raise, captured_stdout
 `
 
 async function initPyodide(
@@ -267,15 +283,17 @@ async function runCode(code: string, runId: string, trace = true) {
   let capturedTrace: TraceResult | undefined
 
   try {
+    let capturedStdout = ''
     if (trace) {
       // Execute through the Python trace harness
       pyodide.globals.set('__cc_user_code', code)
       const res = await pyodide.runPythonAsync(
-        'res_json, err_obj = _run_with_trace(__cc_user_code)\n(res_json, err_obj)'
+        'res_json, err_obj, cap_stdout = _run_with_trace(__cc_user_code)\n(res_json, err_obj, cap_stdout)'
       )
 
       const traceJson = res.get(0) as string
       const errObj = res.get(1)
+      capturedStdout = (res.get(2) as string) || ''
 
       if (traceJson) {
         try {
@@ -293,6 +311,13 @@ async function runCode(code: string, runId: string, trace = true) {
       await pyodide.runPythonAsync(code)
     }
 
+    // Flush any pending stdout/stderr in Pyodide/Emscripten before signaling success
+    try {
+      await pyodide.runPythonAsync('import sys; sys.stdout.flush(); sys.stderr.flush()')
+    } catch {
+      // Ignore flush errors
+    }
+
     const durationMs = Math.round(performance.now() - startTime)
 
     self.postMessage({
@@ -300,6 +325,7 @@ async function runCode(code: string, runId: string, trace = true) {
       runId,
       durationMs,
       trace: capturedTrace,
+      stdout: capturedStdout,
     } satisfies WorkerToMainMessage)
   } catch (err: unknown) {
     const durationMs = Math.round(performance.now() - startTime)

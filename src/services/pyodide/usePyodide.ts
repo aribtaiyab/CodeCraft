@@ -97,6 +97,7 @@ export function usePyodide(options: UsePyodideOptions = {}) {
       if (!serviceRef.current) return
       stdoutBufferRef.current = []
       setIsStale(false)
+      setOutput([]) // Clear previous output for fresh execution
       serviceRef.current.runCode(code, {
         timeoutMs,
         trace: runOptions.trace !== false,

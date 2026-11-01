@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import heroBg from '../../assets/hero-bg.jpg'
+import { BrandSymbol } from '../../components/Brand/BrandSymbol'
 import styles from './LandingPage.module.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -540,7 +541,7 @@ export function LandingPage() {
           <div className={styles.footerBrandCol}>
             <div className={styles.footerLogo}>
               <div className={styles.footerLogoMark}>
-                <Cpu size={15} strokeWidth={1.75} />
+                <BrandSymbol size={18} />
               </div>
               <span className={styles.footerLogoText}>
                 Code<span className={styles.footerLogoAccent}>Craft</span>

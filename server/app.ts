@@ -15,6 +15,8 @@ import type {
   ExplainRequest,
   AskRequest,
   GenerateMcqsRequest,
+  RefineRequest,
+  RefineHintRequest,
   ApiErrorResponse,
 } from './types.ts'
 
@@ -32,6 +34,13 @@ export function createApp(groqClientInstance?: GroqClient): Express {
   const allowedOrigins = [...defaultOrigins, ...config.allowedOrigins]
 
   // CORS configured with local defaults and optional environment origins
+  // Cross-Origin Isolation headers for SharedArrayBuffer & Pyodide execution
+  app.use((_req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
+    next()
+  })
+
   app.use(
     cors({
       origin: (origin, callback) => {
@@ -127,6 +136,52 @@ export function createApp(groqClientInstance?: GroqClient): Express {
           ...rawResult,
           questions: verified.questions,
         })
+      } catch (err) {
+        next(err)
+      }
+    }
+  )
+
+
+  // --------------------------------------------------------------------------
+  // 5. CodeRefine — Code Analysis & Refinement
+  // --------------------------------------------------------------------------
+  app.post(
+    '/api/ai/refine',
+    rateLimiter,
+    validateCodePayload,
+    async (req, res, next) => {
+      try {
+        const payload = req.body as RefineRequest
+        if (!payload.goal) {
+          payload.goal = 'readability'
+        }
+        const result = await client.refineCode(payload)
+        res.json(result)
+      } catch (err) {
+        next(err)
+      }
+    }
+  )
+
+  // --------------------------------------------------------------------------
+  // 6. CodeRefine — Progressive Hint for Manual Mode
+  // --------------------------------------------------------------------------
+  app.post(
+    '/api/ai/refine-hint',
+    rateLimiter,
+    validateCodePayload,
+    async (req, res, next) => {
+      try {
+        const payload = req.body as RefineHintRequest
+        if (!payload.goal) {
+          payload.goal = 'readability'
+        }
+        if (!payload.hintLevel || payload.hintLevel < 1) {
+          payload.hintLevel = 1
+        }
+        const result = await client.getRefineHint(payload)
+        res.json(result)
       } catch (err) {
         next(err)
       }

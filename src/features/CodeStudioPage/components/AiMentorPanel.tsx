@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Layers,
+  RotateCcw,
 } from 'lucide-react'
 import {
   aiService,
@@ -64,6 +65,7 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
   const [isAsking, setIsAsking] = useState(false)
   const [askError, setAskError] = useState<string | null>(null)
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([])
+  const [lastAskedQuestion, setLastAskedQuestion] = useState<string | null>(null)
 
   // Quiz State
   const [mcqData, setMcqData] = useState<GenerateMcqsResponse | null>(null)
@@ -118,6 +120,7 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
       timestamp: createTimestamp(),
     }
 
+    setLastAskedQuestion(q)
     setChatMessages((prev) => [...prev, userMsg])
     setQuestionInput('')
     setIsAsking(true)
@@ -280,9 +283,21 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
             </div>
 
             {explainError && (
-              <div className={styles.staleBanner} style={{ color: '#E06C75' }}>
-                <AlertTriangle size={14} />
-                <span>{explainError}</span>
+              <div className={styles.staleBanner} style={{ color: '#E06C75', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={14} />
+                  <span>{explainError}</span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  onClick={() => handleExplain(selectionRange)}
+                  disabled={isExplaining}
+                  style={{ marginLeft: '12px', padding: '4px 10px', fontSize: '11px', flexShrink: 0 }}
+                >
+                  <RotateCcw size={12} />
+                  Retry
+                </button>
               </div>
             )}
 
@@ -494,9 +509,23 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
               ))}
 
               {askError && (
-                <div className={styles.staleBanner} style={{ color: '#E06C75' }}>
-                  <AlertTriangle size={14} />
-                  <span>{askError}</span>
+                <div className={styles.staleBanner} style={{ color: '#E06C75', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertTriangle size={14} />
+                    <span>{askError}</span>
+                  </div>
+                  {lastAskedQuestion && (
+                    <button
+                      type="button"
+                      className={styles.actionBtn}
+                      onClick={() => handleAsk(lastAskedQuestion)}
+                      disabled={isAsking}
+                      style={{ marginLeft: '12px', padding: '4px 10px', fontSize: '11px', flexShrink: 0 }}
+                    >
+                      <RotateCcw size={12} />
+                      Retry
+                    </button>
+                  )}
                 </div>
               )}
 

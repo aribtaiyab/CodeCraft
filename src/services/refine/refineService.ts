@@ -7,6 +7,7 @@ import type {
   RefineAnalysisResponse,
   RefineHintResponse,
 } from './types'
+import { getApiUrl } from '../api/apiClient'
 
 export function computeCodeHash(code: string): string {
   let hash = 0
@@ -80,7 +81,7 @@ class RefineService {
     const sourceHash = computeCodeHash(options.code)
 
     try {
-      const res = await fetch('/api/ai/refine', {
+      const res = await fetch(getApiUrl('/api/ai/refine'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +126,7 @@ class RefineService {
     const sourceHash = computeCodeHash(options.code)
 
     try {
-      const res = await fetch('/api/ai/refine-hint', {
+      const res = await fetch(getApiUrl('/api/ai/refine-hint'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

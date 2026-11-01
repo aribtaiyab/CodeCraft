@@ -15,6 +15,7 @@ import {
   getServedQuestionFingerprints,
   recordServedQuestionFingerprints,
 } from './attemptStorage'
+import { getApiUrl } from '../api/apiClient'
 
 export interface GenerationResult {
   assessment: AssessmentDefinition
@@ -217,9 +218,7 @@ async function fetchAiGeneratedQuestions(
   try {
     const starterSample = getTopicStarterCode(config.topic)
 
-    // Resilient endpoint resolution: use relative /api in browser/Vite proxy, or configurable base
-    const apiBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || ''
-    const endpoint = `${apiBase}/api/ai/generate-mcqs`
+    const endpoint = getApiUrl('/api/ai/generate-mcqs')
 
     const res = await fetch(endpoint, {
       method: 'POST',

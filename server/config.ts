@@ -29,7 +29,7 @@ export const config: ServerConfig = {
   maxTokens: parseInt(process.env.GROQ_MAX_TOKENS || '4096', 10), // 4096 tokens for complete generation
   allowedOrigins: (process.env.ALLOWED_ORIGINS || '')
     .split(',')
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/\/+$/, ''))
     .filter(Boolean),
 }
 

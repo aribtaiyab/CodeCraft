@@ -10,6 +10,7 @@ import type {
   LineRange,
   ChatMessage,
 } from './types.ts'
+import { getApiUrl } from '../api/apiClient'
 
 export function computeCodeHash(code: string): string {
   let hash = 0
@@ -66,7 +67,7 @@ class AiService {
 
   public async checkHealth(): Promise<AiHealthStatus> {
     try {
-      const res = await fetch('/api/ai/health', {
+      const res = await fetch(getApiUrl('/api/ai/health'), {
         headers: { Accept: 'application/json' },
       })
       if (!res.ok) {
@@ -103,7 +104,7 @@ class AiService {
     const sourceHash = computeCodeHash(code)
 
     try {
-      const res = await fetch('/api/ai/explain', {
+      const res = await fetch(getApiUrl('/api/ai/explain'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -154,7 +155,7 @@ class AiService {
     const sourceHash = computeCodeHash(options.code)
 
     try {
-      const res = await fetch('/api/ai/ask', {
+      const res = await fetch(getApiUrl('/api/ai/ask'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -205,7 +206,7 @@ class AiService {
     const sourceHash = computeCodeHash(code)
 
     try {
-      const res = await fetch('/api/ai/generate-mcqs', {
+      const res = await fetch(getApiUrl('/api/ai/generate-mcqs'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

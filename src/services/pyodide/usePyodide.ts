@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { PyodideService } from './pyodideService'
+import { PyodideService, DEFAULT_TIMEOUT_MS } from './pyodideService'
 import { comparePrediction } from './predictionUtils'
 import type {
   ExecutionState,
@@ -25,7 +25,7 @@ export function usePyodide(options: UsePyodideOptions = {}) {
     pythonVersion: string
   } | null>(null)
   const [timeoutMs, setTimeoutMs] = useState<number>(
-    options.defaultTimeoutMs || 15000
+    options.defaultTimeoutMs ?? DEFAULT_TIMEOUT_MS
   )
 
   // Phase 3: Trace and Stepper State

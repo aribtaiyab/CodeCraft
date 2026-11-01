@@ -17,7 +17,20 @@ export interface ConceptDetail {
   name: string
   meaning: string
   codeUsage: string
+  whyUsed?: string
   example?: string
+}
+
+export interface WhyConceptItem {
+  concept: string
+  benefit: string
+}
+
+export interface InputOutputDetail {
+  input?: string
+  processing?: string
+  output?: string
+  explanation?: string
 }
 
 export interface ExpectedOutput {
@@ -30,13 +43,17 @@ export interface ExplainResponse {
   sourceHash: string
   isStale: boolean
   model: string
-  summary: string
-  detailedExplanation: string
-  lineExplanations: LineExplanation[]
+  summary: string // Section 1: What does this code do?
+  howItWorks?: string[] // Section 2: How does it work?
+  mainIdeaSteps?: string[] // Backward compatibility
+  conceptDetails?: ConceptDetail[] // Section 3: Important keywords and concepts
   keyConcepts: string[]
-  conceptDetails?: ConceptDetail[]
-  mainIdeaSteps?: string[]
-  expectedOutput?: ExpectedOutput
+  whyConceptsUsed?: WhyConceptItem[] // Section 4: Why are these concepts used?
+  lineExplanations: LineExplanation[] // Section 5: Line-by-line explanation
+  inputOutput?: InputOutputDetail // Section 6: Input and output
+  expectedOutput?: ExpectedOutput // Backward compatibility
+  takeaway?: string // Section 7: Remember this
+  detailedExplanation: string
   isSelectionOnly: boolean
   selectedRange?: LineRange
 }

@@ -8,6 +8,7 @@ import Editor from '@monaco-editor/react'
 import {
   Sparkles,
   Zap,
+  Minimize2,
   ArrowLeft,
   Play,
   RotateCcw,
@@ -101,6 +102,66 @@ function computeLineDiff(original: string, improved: string): SimpleDiffLine[] {
   return diff
 }
 
+const defineCodecraftMonacoTheme = (monaco: Parameters<NonNullable<React.ComponentProps<typeof Editor>['beforeMount']>>[0]) => {
+  monaco.editor.defineTheme('codecraft', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '857E71', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'B8895B', fontStyle: 'bold' },
+      { token: 'keyword.control', foreground: 'B8895B', fontStyle: 'bold' },
+      { token: 'keyword.operator', foreground: 'D8B58B' },
+      { token: 'string', foreground: '8FA678' },
+      { token: 'string.escape', foreground: 'D8B58B' },
+      { token: 'number', foreground: 'D4A876' },
+      { token: 'type', foreground: 'E0C09E', fontStyle: 'bold' },
+      { token: 'function', foreground: 'F4F0E8' },
+      { token: 'variable', foreground: 'D5CFC5' },
+      { token: 'variable.parameter', foreground: 'C5BDB1' },
+      { token: 'delimiter', foreground: 'B9B2A7' },
+      { token: 'operator', foreground: 'B8895B' },
+      { token: 'identifier', foreground: 'F4F0E8' },
+    ],
+    colors: {
+      'editor.background':                  '#191815',
+      'editor.foreground':                  '#F4F0E8',
+      'editor.lineHighlightBackground':     '#24221E99',
+      'editor.lineHighlightBorder':         '#302C26',
+      'editor.selectionBackground':         '#B8895B38',
+      'editor.selectionHighlightBackground':'#B8895B20',
+      'editor.inactiveSelectionBackground': '#2D2924',
+      'editorLineNumber.foreground':        '#6B6357',
+      'editorLineNumber.activeForeground':  '#D8B58B',
+      'editorCursor.foreground':            '#D8B58B',
+      'editor.findMatchBackground':         '#B8895B55',
+      'editor.findMatchHighlightBackground':'#B8895B28',
+      'editorIndentGuide.background1':      '#26231E',
+      'editorIndentGuide.activeBackground1':'#454037',
+      'editorBracketMatch.background':      '#B8895B25',
+      'editorBracketMatch.border':          '#B8895B88',
+      'scrollbarSlider.background':         '#302C2688',
+      'scrollbarSlider.hoverBackground':    '#454037CC',
+      'scrollbarSlider.activeBackground':   '#B8895B66',
+      'editorWidget.background':            '#24221E',
+      'editorWidget.border':                '#454037',
+      'editorSuggestWidget.background':     '#24221E',
+      'editorSuggestWidget.border':         '#454037',
+      'editorSuggestWidget.foreground':     '#F4F0E8',
+      'editorSuggestWidget.selectedBackground': '#302C26',
+      'editorSuggestWidget.highlightForeground': '#D8B58B',
+      'editorHoverWidget.background':       '#24221E',
+      'editorHoverWidget.border':           '#454037',
+      'input.background':                   '#191815',
+      'input.foreground':                   '#F4F0E8',
+      'input.border':                       '#454037',
+      'focusBorder':                        '#B8895B',
+      'list.activeSelectionBackground':     '#302C26',
+      'list.activeSelectionForeground':     '#F4F0E8',
+      'list.hoverBackground':               '#2A2722',
+    },
+  })
+}
+
 export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
   currentStudioCode,
   onAcceptChanges,
@@ -144,6 +205,21 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
 
   // 9. Confirmation Modal for Accept
   const [showAcceptModal, setShowAcceptModal] = useState<boolean>(false)
+
+  // 10. Copy feedback state
+  const [copiedImproved, setCopiedImproved] = useState<boolean>(false)
+
+  const handleCopyImprovedCode = async () => {
+    if (!improvedCode) return
+    try {
+      await navigator.clipboard.writeText(improvedCode)
+      setCopiedImproved(true)
+      setTimeout(() => setCopiedImproved(false), 2000)
+    } catch {
+      // Fallback if clipboard API is restricted
+      setCopiedImproved(false)
+    }
+  }
 
   // Use current studio code as source
   const handleUseStudioCode = () => {
@@ -323,113 +399,136 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
       <section className={styles.workflowCard} aria-label="Refine Setup">
         {/* Source Selector Toolbar */}
         <div className={styles.sourceBar}>
-          <span className={styles.sourceLabel}>Working on:</span>
-          <button
-            type="button"
-            className={`${styles.sourceBtn} ${sourceType === 'studio' ? styles.sourceBtnActive : ''}`}
-            onClick={handleUseStudioCode}
-            title="Load code currently in the Code Studio main editor"
-          >
-            <Copy size={12} />
-            Current Studio Code
-          </button>
+          <div className={styles.sourceControlsRow}>
+            <span className={styles.sourceLabel}>Working on:</span>
+            <button
+              type="button"
+              className={`${styles.sourceBtn} ${sourceType === 'studio' ? styles.sourceBtnActive : ''}`}
+              onClick={handleUseStudioCode}
+              title="Load code currently in the Code Studio main editor"
+            >
+              <Copy size={12} />
+              Current Studio Code
+            </button>
 
-          <select
-            className={styles.exampleSelect}
-            value={sourceType === 'example' ? '' : ''}
-            onChange={(e) => {
-              if (e.target.value) {
-                handleLoadExample(e.target.value)
-              }
-            }}
-            aria-label="Load Curated Python Example"
-          >
-            <option value="" disabled>
-              Load Curated Example...
-            </option>
-            {CURATED_REFINE_EXAMPLES.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.title}
+            <select
+              className={styles.exampleSelect}
+              value={sourceType === 'example' ? '' : ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleLoadExample(e.target.value)
+                }
+              }}
+              aria-label="Load Curated Python Example"
+            >
+              <option value="" disabled>
+                Load Curated Example...
               </option>
-            ))}
-          </select>
+              {CURATED_REFINE_EXAMPLES.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.title}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <span className={styles.sourceBadge} title="Active source being refined">
             Source: {sourceType === 'studio' ? 'Current Studio Code' : sourceName}
           </span>
         </div>
 
-        {/* 3-Step Simplified Workflow Grid */}
-        <div className={styles.workflowGrid}>
-          {/* STEP 1: CHOOSE IMPROVEMENT GOAL */}
-          <div className={styles.stepBlock}>
-            <div className={styles.stepHeader}>
-              <span className={styles.stepBadge}>1</span>
-              <span className={styles.stepTitle}>Choose Improvement Goal</span>
-            </div>
-
-            <div className={styles.twoGoalsGrid} role="radiogroup" aria-label="Improvement Goal">
-              {/* Option 1: Performance Optimization */}
-              <button
-                type="button"
-                role="radio"
-                aria-checked={selectedGoal === 'performance'}
-                className={`${styles.goalCard} ${selectedGoal === 'performance' ? styles.goalCardActive : ''}`}
-                onClick={() => setSelectedGoal('performance')}
-                title="Performance Optimization: Focus on execution efficiency, identify inefficient operations, and avoid unnecessary computations."
-              >
-                <div className={styles.goalCardTop}>
-                  <div className={styles.goalCardIconBox}>
-                    <Zap size={14} className={styles.goalCardIcon} />
-                  </div>
-                  <span className={styles.goalCardTitle}>Performance Optimization</span>
-                  {selectedGoal === 'performance' && (
-                    <span className={styles.activeCheck} aria-hidden="true">
-                      <Check size={13} strokeWidth={2.5} />
-                    </span>
-                  )}
-                </div>
-                <p className={styles.goalCardDesc}>
-                  Make code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful.
-                </p>
-              </button>
-
-              {/* Option 2: Easy to Understand */}
-              <button
-                type="button"
-                role="radio"
-                aria-checked={selectedGoal === 'easy_to_understand'}
-                className={`${styles.goalCard} ${selectedGoal === 'easy_to_understand' ? styles.goalCardActive : ''}`}
-                onClick={() => setSelectedGoal('easy_to_understand')}
-                title="Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand."
-              >
-                <div className={styles.goalCardTop}>
-                  <div className={styles.goalCardIconBox}>
-                    <Sparkles size={14} className={styles.goalCardIcon} />
-                  </div>
-                  <span className={styles.goalCardTitle}>Easy to Understand</span>
-                  {selectedGoal === 'easy_to_understand' && (
-                    <span className={styles.activeCheck} aria-hidden="true">
-                      <Check size={13} strokeWidth={2.5} />
-                    </span>
-                  )}
-                </div>
-                <p className={styles.goalCardDesc}>
-                  Make code cleaner, simpler and easier for beginners to understand with descriptive names and clean logic.
-                </p>
-              </button>
-            </div>
+        {/* STEP 1: CHOOSE IMPROVEMENT GOAL (3 Equal Compact Cards) */}
+        <div className={styles.goalSection}>
+          <div className={styles.stepHeader}>
+            <span className={styles.stepBadge}>1</span>
+            <span className={styles.stepTitle}>Choose Improvement Goal</span>
           </div>
 
-          <div className={styles.workflowDivider} aria-hidden="true" />
+          <div className={styles.threeGoalsGrid} role="radiogroup" aria-label="Improvement Goal">
+            {/* Option 1: Performance Optimization */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selectedGoal === 'performance'}
+              className={`${styles.goalCard} ${selectedGoal === 'performance' ? styles.goalCardActive : ''}`}
+              onClick={() => setSelectedGoal('performance')}
+              title="Performance Optimization: Focus on execution efficiency, identify inefficient operations, and avoid unnecessary computations."
+            >
+              <div className={styles.goalCardTop}>
+                <div className={styles.goalCardIconBox}>
+                  <Zap size={14} className={styles.goalCardIcon} />
+                </div>
+                <span className={styles.goalCardTitle}>Performance Optimization</span>
+                {selectedGoal === 'performance' && (
+                  <span className={styles.activeCheck} aria-hidden="true">
+                    <Check size={12} strokeWidth={2.5} />
+                  </span>
+                )}
+              </div>
+              <p className={styles.goalCardDesc}>
+                Make code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful.
+              </p>
+            </button>
 
-          {/* STEP 2: CHOOSE WORKING MODE */}
-          <div className={styles.stepBlock}>
+            {/* Option 2: Easy to Understand */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selectedGoal === 'easy_to_understand'}
+              className={`${styles.goalCard} ${selectedGoal === 'easy_to_understand' ? styles.goalCardActive : ''}`}
+              onClick={() => setSelectedGoal('easy_to_understand')}
+              title="Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand."
+            >
+              <div className={styles.goalCardTop}>
+                <div className={styles.goalCardIconBox}>
+                  <Sparkles size={14} className={styles.goalCardIcon} />
+                </div>
+                <span className={styles.goalCardTitle}>Easy to Understand</span>
+                {selectedGoal === 'easy_to_understand' && (
+                  <span className={styles.activeCheck} aria-hidden="true">
+                    <Check size={12} strokeWidth={2.5} />
+                  </span>
+                )}
+              </div>
+              <p className={styles.goalCardDesc}>
+                Make code cleaner, simpler and easier for beginners to understand with descriptive names and clean logic.
+              </p>
+            </button>
+
+            {/* Option 3: Shortest Code */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selectedGoal === 'shortest_code'}
+              className={`${styles.goalCard} ${selectedGoal === 'shortest_code' ? styles.goalCardActive : ''}`}
+              onClick={() => setSelectedGoal('shortest_code')}
+              title="Shortest Code: Simplify your code and find a shorter way to achieve the same result without unnecessary lines or repetition."
+            >
+              <div className={styles.goalCardTop}>
+                <div className={styles.goalCardIconBox}>
+                  <Minimize2 size={14} className={styles.goalCardIcon} />
+                </div>
+                <span className={styles.goalCardTitle}>Shortest Code</span>
+                {selectedGoal === 'shortest_code' && (
+                  <span className={styles.activeCheck} aria-hidden="true">
+                    <Check size={12} strokeWidth={2.5} />
+                  </span>
+                )}
+              </div>
+              <p className={styles.goalCardDesc}>
+                Simplify your code and find a shorter way to achieve the same result. Remove unnecessary lines and intermediate steps safely.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* STEP 2 & 3: Mode Selection and Primary Action in Balanced Horizontal Flow */}
+        <div className={styles.controlRow}>
+          <div className={styles.modeControlArea}>
             <div className={styles.stepHeader}>
               <span className={styles.stepBadge}>2</span>
-              <span className={styles.stepTitle}>Choose Working Mode</span>
+              <span className={styles.stepTitle}>Choose Mode</span>
             </div>
-
             <div className={styles.modeSegmented} role="radiogroup" aria-label="Improvement mode">
               <button
                 type="button"
@@ -454,64 +553,57 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
                 <span>Manual Practice</span>
               </button>
             </div>
-
-            <p className={styles.modeExplainer}>
+            <span className={styles.modeExplainer}>
               {mode === 'ai'
-                ? 'AI generates an improved version and explains meaningful changes.'
-                : 'Improve your own code with progressive hints without seeing the answer.'}
-            </p>
+                ? 'AI generates an improved version and explains changes.'
+                : 'Improve code yourself with progressive hints.'}
+            </span>
           </div>
 
-          <div className={styles.workflowDivider} aria-hidden="true" />
-
-          {/* STEP 3: IMPROVE YOUR CODE */}
-          <div className={styles.stepBlock}>
+          <div className={styles.actionControlArea}>
             <div className={styles.stepHeader}>
               <span className={styles.stepBadge}>3</span>
               <span className={styles.stepTitle}>Improve Code</span>
             </div>
-
-            <div className={styles.step3ActionRow}>
-              {mode === 'ai' ? (
-                <button
-                  type="button"
-                  className={styles.improveBtnPrimary}
-                  onClick={handleRefineCode}
-                  disabled={isRefining || !originalCode.trim()}
-                >
-                  {isRefining ? (
-                    <>
-                      <span className={styles.spinnerIcon} aria-hidden="true" />
-                      <span>Refining Code...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={14} />
-                      <span>{analysis ? 'Regenerate Improvement' : 'Improve Code'}</span>
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.hintBtnPrimary}
-                  onClick={handleRequestNextHint}
-                  disabled={isLoadingHint || hintLevel >= 3}
-                >
-                  {isLoadingHint ? (
-                    <>
-                      <span className={styles.spinnerIcon} aria-hidden="true" />
-                      <span>Generating Hint...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lightbulb size={14} />
-                      <span>{hintLevel === 0 ? 'Get Progressive Hint' : `Next Hint (${hintLevel}/3)`}</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+            {mode === 'ai' ? (
+              <button
+                type="button"
+                className={styles.improveBtnPrimary}
+                onClick={handleRefineCode}
+                disabled={isRefining || !originalCode.trim()}
+              >
+                {isRefining ? (
+                  <>
+                    <span className={styles.spinnerIcon} aria-hidden="true" />
+                    <span>Refining Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    <span>{analysis ? 'Re-analyze & Improve' : 'Improve Code with AI'}</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.hintBtnPrimary}
+                onClick={handleRequestNextHint}
+                disabled={isLoadingHint || hintLevel >= 3}
+              >
+                {isLoadingHint ? (
+                  <>
+                    <span className={styles.spinnerIcon} aria-hidden="true" />
+                    <span>Generating Hint...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb size={14} />
+                    <span>{hintLevel === 0 ? 'Practice Improving' : `Next Hint (${hintLevel}/3)`}</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -577,6 +669,7 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
               height="100%"
               language="python"
               theme="codecraft"
+              beforeMount={defineCodecraftMonacoTheme}
               value={originalCode}
               options={{
                 readOnly: true,
@@ -589,7 +682,12 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
                 automaticLayout: true,
                 renderWhitespace: 'selection',
                 folding: true,
-                padding: { top: 12, bottom: 12 },
+                padding: { top: 10, bottom: 10 },
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  alwaysConsumeMouseWheel: false,
+                },
               }}
             />
           </div>
@@ -615,6 +713,7 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
               height="100%"
               language="python"
               theme="codecraft"
+              beforeMount={defineCodecraftMonacoTheme}
               value={improvedCode}
               onChange={(newVal) => setImprovedCode(newVal || '')}
               onMount={(ed) => {
@@ -631,7 +730,12 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
                 automaticLayout: true,
                 renderWhitespace: 'selection',
                 folding: true,
-                padding: { top: 12, bottom: 12 },
+                padding: { top: 10, bottom: 10 },
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  alwaysConsumeMouseWheel: false,
+                },
               }}
             />
           </div>
@@ -643,6 +747,17 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
          -------------------------------------------------------------------- */}
       <section className={styles.actionBar} aria-label="Action Controls">
         <div className={styles.actionGroupPrimary}>
+          <button
+            type="button"
+            className={styles.actionBtnAccept}
+            onClick={() => setShowAcceptModal(true)}
+            disabled={!hasChanges && !analysis}
+            title="Accept improved code into main Code Studio editor"
+          >
+            <Check size={14} />
+            <span>Accept Changes</span>
+          </button>
+
           <button
             type="button"
             className={styles.actionBtnPrimary}
@@ -657,7 +772,7 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
             ) : (
               <>
                 <Sparkles size={13} />
-                <span>{analysis ? 'Regenerate' : 'Improve Code'}</span>
+                <span>{analysis ? 'Re-analyze' : 'Improve Code'}</span>
               </>
             )}
           </button>
@@ -672,20 +787,20 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
             <ShieldCheck size={13} />
             <span>{isVerifying ? 'Running Tests...' : 'Run Behaviour Tests'}</span>
           </button>
-
-          <button
-            type="button"
-            className={styles.actionBtnAccept}
-            onClick={() => setShowAcceptModal(true)}
-            disabled={!hasChanges && !analysis}
-            title="Accept improved code into main Code Studio editor"
-          >
-            <Check size={14} />
-            <span>Accept Changes</span>
-          </button>
         </div>
 
         <div className={styles.actionGroupSecondary}>
+          <button
+            type="button"
+            className={styles.actionBtnSecondary}
+            onClick={handleCopyImprovedCode}
+            disabled={!improvedCode}
+            title="Copy improved code to clipboard"
+          >
+            {copiedImproved ? <Check size={13} color="#7EC786" /> : <Copy size={13} />}
+            <span>{copiedImproved ? 'Copied' : 'Copy Improved Code'}</span>
+          </button>
+
           <button
             type="button"
             className={styles.actionBtnSecondary}

@@ -207,9 +207,9 @@ describe('CodeRefine Backend Engine & Groq Integration', () => {
   })
 
   // --------------------------------------------------------------------------
-  // 5. Verification of the Two Distinct Goals (Performance vs Easy to Understand)
+  // 5. Verification of the Three Distinct Goals (Performance, Easy to Understand, Shortest Code)
   // --------------------------------------------------------------------------
-  it('differentiates prompt behaviour between Performance Optimization and Easy to Understand in AI Assistance mode', async () => {
+  it('differentiates prompt behaviour between Performance, Easy to Understand, and Shortest Code in AI Assistance mode', async () => {
     let capturedSystemPrompt = ''
     const mockFetch = vi.fn().mockImplementation((_url, init) => {
       const parsedBody = JSON.parse(init.body)
@@ -248,9 +248,20 @@ describe('CodeRefine Backend Engine & Groq Integration', () => {
     expect(capturedSystemPrompt).toContain('EASY_TO_UNDERSTAND')
     expect(capturedSystemPrompt).toContain('Make code cleaner, simpler, and easier for beginners to understand')
     expect(capturedSystemPrompt).toContain('beginner-friendly language')
+
+    // Test Goal 3: Shortest Code in AI Assistance
+    await client.refineCode({
+      code: sampleCode,
+      goal: 'shortest_code',
+      sourceHash: 'short_hash',
+    })
+    expect(capturedSystemPrompt).toContain('SHORTEST_CODE')
+    expect(capturedSystemPrompt).toContain('Specific Requirements for Shortest Code')
+    expect(capturedSystemPrompt).toContain('concise, idiomatic Python way to achieve the exact same result')
+    expect(capturedSystemPrompt).toContain('Shorter code does not automatically mean faster code')
   })
 
-  it('differentiates prompt guidance between Performance Optimization and Easy to Understand in Manual Practice mode', async () => {
+  it('differentiates prompt guidance between Performance, Easy to Understand, and Shortest Code in Manual Practice mode', async () => {
     let capturedSystemPrompt = ''
     const mockFetch = vi.fn().mockImplementation((_url, init) => {
       const parsedBody = JSON.parse(init.body)
@@ -291,5 +302,16 @@ describe('CodeRefine Backend Engine & Groq Integration', () => {
     expect(easyHint.hintLevel).toBe(2)
     expect(capturedSystemPrompt).toContain('EASY_TO_UNDERSTAND')
     expect(capturedSystemPrompt).toContain('variable names, complicated conditionals')
+
+    // Test Goal 3 in Manual Practice (Hint Level 1)
+    const shortHint = await client.getRefineHint({
+      code: sampleCode,
+      goal: 'shortest_code',
+      hintLevel: 1,
+      sourceHash: 'short_hash',
+    })
+    expect(shortHint.hintLevel).toBe(1)
+    expect(capturedSystemPrompt).toContain('SHORTEST_CODE')
+    expect(capturedSystemPrompt).toContain('unnecessary intermediate steps')
   })
 })

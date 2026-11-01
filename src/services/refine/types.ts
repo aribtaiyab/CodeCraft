@@ -6,6 +6,7 @@
 export type RefineGoal =
   | 'performance'
   | 'easy_to_understand'
+  | 'shortest_code'
   | 'readability'
   | 'dry'
   | 'structure'

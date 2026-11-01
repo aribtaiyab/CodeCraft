@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { PyodideService } from '../pyodideService'
+import { PyodideService, DEFAULT_TIMEOUT_MS } from '../pyodideService'
 import type { ConsoleEntry, ExecutionState, WorkerToMainMessage } from '../types'
 
 describe('PyodideService Protocol and State Management', () => {
@@ -316,6 +316,34 @@ describe('PyodideService Protocol and State Management', () => {
 
     expect(mockWorker.terminate).toHaveBeenCalled()
     expect(service.getState()).toBe('stopped')
+
+    vi.useRealTimers()
+    service.dispose()
+  })
+
+  it('enforces default 30-second timeout (30000ms) when timeoutMs is not explicitly specified', () => {
+    vi.useFakeTimers()
+    const entries: ConsoleEntry[] = []
+    const service = new PyodideService({
+      onConsoleEntry: (e) => entries.push(e),
+    })
+    simulateReady()
+
+    expect(DEFAULT_TIMEOUT_MS).toBe(30000)
+
+    service.runCode('while True: pass')
+    expect(service.getState()).toBe('running')
+
+    // At 29.9s, still running
+    vi.advanceTimersByTime(29900)
+    expect(mockWorker.terminate).not.toHaveBeenCalled()
+    expect(service.getState()).toBe('running')
+
+    // Advance past 30 seconds
+    vi.advanceTimersByTime(200)
+    expect(mockWorker.terminate).toHaveBeenCalled()
+    expect(service.getState()).toBe('stopped')
+    expect(entries.some((e) => e.type === 'error' && e.text.includes('Execution timed out after 30 seconds'))).toBe(true)
 
     vi.useRealTimers()
     service.dispose()

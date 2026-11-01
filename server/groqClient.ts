@@ -329,6 +329,12 @@ export class GroqClient {
 
         // 4. Rate Limits
         if (res.status === 429) {
+          if (!isRetry) {
+            console.warn('[GroqClient] Rate limit 429 encountered. Waiting 3.5s before retrying...')
+            await new Promise((resolve) => setTimeout(resolve, 3500))
+            return this.callGroqChat(messages, responseFormat, true)
+          }
+
           throw createAppError(
             'Rate limit reached on Groq AI service. Please wait a moment and try again.',
             'RATE_LIMITED',
@@ -464,23 +470,59 @@ Full program:
 ${req.code}
 \`\`\``
 
-      systemPrompt = `You are CodeCraft's Expert Computer Science Teacher.
+      systemPrompt = `You are CodeCraft's Beginner-Friendly Programming Teacher.
 The student selected specific lines (${startLine} to ${endLine}) in their Python code.
-Explain these lines clearly, how they interact with surrounding code, and which concepts they demonstrate.
+Explain these lines clearly in extremely simple English, how they interact with surrounding code, and which concepts they demonstrate.
 
-Rules:
-1. Explain what happens, why, and how variables/functions are affected.
-2. Provide line-by-line breakdown for the selected lines.
-3. Return ONLY a valid JSON object starting with { and ending with }.
+PEDAGOGICAL TEACHING RULES:
+1. EXTREMELY SIMPLE ENGLISH: Use plain words, short sentences, and everyday analogies. Explain technical words immediately when introduced. Never assume prior knowledge.
+2. EXPLAIN WHY AS WELL AS WHAT: Explain both what happens and WHY the programmer wrote it this way.
+3. GROUNDED IN CODE: Ground every explanation strictly in the submitted lines. Never invent lines or hallucinate behavior.
+4. HONEST ABOUT ERRORS: If the selected code has an error, identify it honestly and kindly, and explain how to fix it.
+5. NO REPETITION & NO JARGON OVERLOAD: Identify only keywords/concepts ACTUALLY present in this selection.
+6. COMPACT & FOCUSED: Detailed enough to teach, but concise so beginners are not overwhelmed.
+
+Follow this 7-part structure adapted for the selected lines:
+SECTION 1: WHAT DO THESE LINES DO? — 2 to 4 simple sentences explaining overall purpose.
+SECTION 2: HOW DO THEY WORK? — Small ordered steps showing how they execute.
+SECTION 3: IMPORTANT KEYWORDS AND CONCEPTS — Relevant keywords/concepts in this selection (e.g., def, return, yield, loops, lists) with simple English meaning and where used.
+SECTION 4: WHY ARE THESE CONCEPTS USED? — Why the programmer chose them and their practical benefits.
+SECTION 5: LINE-BY-LINE EXPLANATION — Breakdown of selected lines ${startLine} to ${endLine} in original order. Explain what each line does and why it is needed. Preserve original code.
+SECTION 6: INPUT AND OUTPUT — Input values entering these lines, how they are processed, and output produced.
+SECTION 7: REMEMBER THIS — Finish with ONE short, useful takeaway rule for beginners.
+
+Return ONLY a valid JSON object starting with { and ending with }.
 
 Required JSON Schema:
 {
-  "summary": "1-2 sentence overview of what the selected lines do",
-  "detailedExplanation": "Clear, step-by-step contextual explanation.",
-  "lineExplanations": [
-    { "line": ${startLine}, "code": "line code", "explanation": "clear explanation" }
+  "summary": "2 to 4 simple sentences explaining what the selected lines do",
+  "howItWorks": [
+    "1. First step in the execution process...",
+    "2. Next step..."
   ],
-  "keyConcepts": ["Concept 1", "Concept 2"]
+  "conceptDetails": [
+    {
+      "name": "Keyword or concept name",
+      "meaning": "Extremely simple plain English definition",
+      "codeUsage": "How it is used in the selected lines"
+    }
+  ],
+  "whyConceptsUsed": [
+    {
+      "concept": "Concept name",
+      "benefit": "Why this was chosen and its practical benefit"
+    }
+  ],
+  "lineExplanations": [
+    { "line": ${startLine}, "code": "exact code", "explanation": "What this line does and why it is needed" }
+  ],
+  "inputOutput": {
+    "input": "Values or arguments entering these lines (or 'None - self-contained')",
+    "processing": "How the input is transformed or evaluated",
+    "output": "Result, printed text, or return value",
+    "explanation": "Why this output is produced"
+  },
+  "takeaway": "One short, practical, memorable takeaway rule for beginners."
 }`
     } else {
       targetCodeDescription = `Full Python program:
@@ -488,41 +530,59 @@ Required JSON Schema:
 ${req.code}
 \`\`\``
 
-      systemPrompt = `You are CodeCraft's Expert Computer Science Teacher.
-Teach Python with pedagogical excellence: explain WHAT happens, HOW it works, and WHY it is written this way.
+      systemPrompt = `You are CodeCraft's Beginner-Friendly Programming Teacher.
+Your mission is to explain Python code in extremely simple, friendly English while teaching correct technical concepts.
 
-Structure your response clearly and concisely:
-A) WHAT IT DOES: 2-3 sentence high-level overview.
-B) EXECUTION STEPS: Numbered logical steps in order of execution.
-C) CONCEPTS USED: Key programming concepts actually demonstrated in this code.
-D) LINE-BY-LINE BREAKDOWN: Line number, code, and 1-2 sentence explanation for meaningful lines.
-E) FINAL OUTPUT: Expected terminal output and a short reason why.
+PEDAGOGICAL TEACHING RULES:
+1. EXTREMELY SIMPLE ENGLISH: Use plain words, short sentences, and everyday analogies. Explain technical words immediately when introduced (e.g. "A function is like a recipe with a name that you can reuse"). Never assume prior knowledge.
+2. EXPLAIN WHY AS WELL AS WHAT: Don't just say what a line does—explain WHY it is written this way and the practical benefit.
+3. GROUNDED IN CODE: Ground every explanation strictly in the submitted code. Never invent code lines or hallucinate behavior.
+4. HONEST ABOUT ERRORS: If the code contains a syntax error, bug, or exception, identify it honestly and kindly, explain why it happens, and how to fix it.
+5. NO REPETITION & NO JARGON OVERLOAD: Avoid repeating sentences across sections. Identify ONLY the keywords and concepts that are ACTUALLY present in the submitted code (e.g. def, return, yield, loops, lists, dicts, classes). Do not list irrelevant keywords.
+6. COMPACT & FOCUSED: Detailed enough to teach, but concise and clear so beginners do not feel overwhelmed.
+
+Follow this EXACT 7-part pedagogical structure:
+SECTION 1: WHAT DOES THIS CODE DO? — 2 to 4 simple sentences explaining overall purpose in plain English.
+SECTION 2: HOW DOES IT WORK? — The overall process broken down into small, numbered ordered steps.
+SECTION 3: IMPORTANT KEYWORDS AND CONCEPTS — Explain only the keywords/concepts present in this code (e.g., def, return, yield, loops, lists, dictionaries, classes, etc.) in simple English, with meaning and where used.
+SECTION 4: WHY ARE THESE CONCEPTS USED? — Explain why the programmer chose these specific concepts and their practical advantages (e.g., why a generator with yield saves memory vs building an entire list, or why a function prevents repetition).
+SECTION 5: LINE-BY-LINE EXPLANATION — Walk through the actual code in original line order. For each meaningful line or small related group, explain what it does and why it is needed. Preserve original code text. Never invent lines.
+SECTION 6: INPUT AND OUTPUT — When applicable, explain accepted input, how processing transforms it, and the exact output produced with a small correct example. Never invent output.
+SECTION 7: REMEMBER THIS — Finish with ONE short, memorable, practical takeaway rule for beginners.
 
 Return ONLY a valid JSON object starting with { and ending with }.
 
 Required JSON Schema:
 {
-  "summary": "2-3 sentence overview of what the program accomplishes",
-  "mainIdeaSteps": [
-    "1. First step in execution order...",
-    "2. Next step explaining what happens..."
+  "summary": "2 to 4 simple sentences explaining overall purpose in plain English",
+  "howItWorks": [
+    "1. First step in the execution process...",
+    "2. Next step explaining what happens...",
+    "3. Next step..."
   ],
   "conceptDetails": [
     {
-      "name": "Concept Name",
-      "meaning": "Simple plain English definition",
-      "codeUsage": "How it is used in this code"
+      "name": "Keyword or concept name (e.g. def, return, yield, for loop)",
+      "meaning": "Extremely simple plain English definition",
+      "codeUsage": "Where and how it is used in the submitted code"
     }
   ],
-  "keyConcepts": ["Concept 1", "Concept 2"],
-  "lineExplanations": [
-    { "line": 1, "code": "code snippet", "explanation": "what this line does" }
+  "whyConceptsUsed": [
+    {
+      "concept": "Concept or keyword name",
+      "benefit": "Why the programmer chose this and its practical advantage"
+    }
   ],
-  "detailedExplanation": "Synthesized 1-2 paragraph overview connecting the execution logic together.",
-  "expectedOutput": {
-    "output": "Expected terminal output",
+  "lineExplanations": [
+    { "line": 1, "code": "exact code line", "explanation": "What this line does and why it is needed" }
+  ],
+  "inputOutput": {
+    "input": "Input passed or accepted (or 'None - self-contained script')",
+    "processing": "How the input is transformed or evaluated step-by-step",
+    "output": "Exact output produced or returned",
     "explanation": "Why this output is produced"
-  }
+  },
+  "takeaway": "One short, practical, memorable takeaway rule for beginners."
 }`
     }
 
@@ -539,9 +599,13 @@ Required JSON Schema:
       detailedExplanation?: string
       lineExplanations?: Array<{ line: number; code?: string; explanation: string }>
       keyConcepts?: string[]
-      conceptDetails?: Array<{ name: string; meaning: string; codeUsage: string; example?: string }>
+      conceptDetails?: Array<{ name: string; meaning: string; codeUsage: string; whyUsed?: string; example?: string }>
+      howItWorks?: string[]
       mainIdeaSteps?: string[]
+      whyConceptsUsed?: Array<{ concept: string; benefit: string }>
+      inputOutput?: { input?: string; processing?: string; output?: string; explanation?: string }
       expectedOutput?: { output: string; explanation: string }
+      takeaway?: string
     }>(rawOutput)
 
     if (!parsed || typeof parsed !== 'object') {
@@ -566,10 +630,48 @@ Required JSON Schema:
         : (parsed.conceptDetails || []).map((c) => c.name)
 
     const summary = parsed.summary || 'Code analysis complete.'
+
+    const howItWorks =
+      parsed.howItWorks && parsed.howItWorks.length > 0
+        ? parsed.howItWorks
+        : parsed.mainIdeaSteps || []
+
+    const mainIdeaSteps = howItWorks.length > 0 ? howItWorks : (parsed.mainIdeaSteps || [])
+
+    const whyConceptsUsed =
+      parsed.whyConceptsUsed && parsed.whyConceptsUsed.length > 0
+        ? parsed.whyConceptsUsed
+        : (parsed.conceptDetails || [])
+            .filter((c) => c.whyUsed)
+            .map((c) => ({ concept: c.name, benefit: c.whyUsed! }))
+
+    const inputOutput = parsed.inputOutput
+      ? {
+          input: parsed.inputOutput.input ? String(parsed.inputOutput.input) : undefined,
+          processing: parsed.inputOutput.processing ? String(parsed.inputOutput.processing) : undefined,
+          output: String(parsed.inputOutput.output ?? ''),
+          explanation: String(parsed.inputOutput.explanation ?? ''),
+        }
+      : parsed.expectedOutput
+      ? {
+          output: String(parsed.expectedOutput.output ?? ''),
+          explanation: String(parsed.expectedOutput.explanation ?? ''),
+        }
+      : undefined
+
+    const expectedOutput = inputOutput
+      ? {
+          output: inputOutput.output || '',
+          explanation: inputOutput.explanation || '',
+        }
+      : parsed.expectedOutput
+
+    const takeaway = parsed.takeaway || ''
+
     const detailedExplanation =
       parsed.detailedExplanation ||
-      (parsed.mainIdeaSteps && parsed.mainIdeaSteps.length > 0
-        ? parsed.mainIdeaSteps.join('\n')
+      (howItWorks.length > 0
+        ? howItWorks.join('\n')
         : summary)
 
     return {
@@ -582,13 +684,12 @@ Required JSON Schema:
       lineExplanations: formattedLines,
       keyConcepts,
       conceptDetails: parsed.conceptDetails,
-      mainIdeaSteps: parsed.mainIdeaSteps,
-      expectedOutput: parsed.expectedOutput
-        ? {
-            output: String(parsed.expectedOutput.output ?? ''),
-            explanation: String(parsed.expectedOutput.explanation ?? ''),
-          }
-        : undefined,
+      howItWorks,
+      mainIdeaSteps,
+      whyConceptsUsed,
+      inputOutput,
+      expectedOutput,
+      takeaway,
       isSelectionOnly: !!isSelectionOnly,
       selectedRange: isSelectionOnly ? req.selection : undefined,
     }
@@ -778,6 +879,8 @@ Required JSON Schema:
         'Performance Optimization: Make the code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful. Focus on execution efficiency, identify inefficient operations, avoid unnecessary computations, explain performance changes honestly, never claim code is faster without evidence, and preserve original behaviour.',
       easy_to_understand:
         'Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand. Improve variable naming, simplify complicated logic, organize functions, remove unnecessary repetition, improve readability, and explain changes in beginner-friendly language.',
+      shortest_code:
+        'Shortest Code: Simplify your code and find a shorter way to achieve the same result. Identify unnecessary lines and repeated logic, simplify where safe, use concise Python syntax appropriately, remove unnecessary intermediate steps, preserve program behaviour, input/output, validation and error handling, and explain changes and readability trade-offs. Shorter code does not automatically mean faster code. Do not force changes if code is already concise.',
       readability:
         'Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand.',
       dry: "Easy to Understand: Eliminate duplicate code or repeated logic (Don't Repeat Yourself).",
@@ -793,6 +896,7 @@ Required JSON Schema:
 
     const goalDesc = goalDescriptions[goal] || goalDescriptions.easy_to_understand
     const isPerformance = goal === 'performance'
+    const isShortestCode = goal === 'shortest_code'
 
     const systemPrompt = `You are CodeCraft's Expert Python Architect & CodeRefine Mentor.
 Tagline: "Write better. Understand why."
@@ -809,6 +913,14 @@ ${
 3. Improve algorithmic efficiency where meaningful (e.g. using sets or dicts for O(1) membership lookups instead of O(N) list scans, generator expressions, or efficient built-ins).
 4. Explain performance changes accurately and honestly. NEVER claim code is faster without concrete algorithmic or complexity evidence.
 5. Fully preserve original program behaviour and identical outputs.`
+    : isShortestCode
+    ? `Specific Requirements for Shortest Code:
+1. Simplify the code and find the most concise, idiomatic Python way to achieve the exact same result.
+2. Identify unnecessary lines, redundant intermediate variables, repeated logic, or verbose imperative loops that can be replaced with concise Python expressions (e.g. list/dict/set comprehensions, built-ins like sum(), any(), all(), min(), max(), enumerate(), zip(), tuple unpacking, or ternary conditionals).
+3. Simplify where safe, but preserve program behaviour, exact input/output, validation, and error handling completely.
+4. Never force changes or write cryptic, unreadable "code golf" one-liners if the code is already concise. If the code is already concise and optimal in length, set "isAlreadyClean": true and explain honestly why further shortening is unnecessary or harmful.
+5. Honestly explain the changes and readability trade-offs (e.g. whether brevity helps or harms beginner readability or debugging). Clearly explain that shorter code does not automatically mean faster code.
+6. Fully preserve original program behaviour and identical outputs.`
     : `Specific Requirements for Easy to Understand:
 1. Make code cleaner, simpler, and easier for beginners to understand.
 2. Improve variable and function naming to be descriptive, intention-revealing, and PEP 8 compliant.
@@ -955,6 +1067,7 @@ Analyze this code, generate the improved version, and provide the structured exp
     const hintLevel = Math.min(Math.max(req.hintLevel || 1, 1), 3)
     const goal = req.goal || 'easy_to_understand'
     const isPerformance = goal === 'performance'
+    const isShortestCode = goal === 'shortest_code'
 
     const levelDescriptions = {
       1: 'Level 1 (Subtle nudge): Point out where the opportunity lies without revealing the technique.',
@@ -964,10 +1077,18 @@ Analyze this code, generate the improved version, and provide the structured exp
 
     const hintFocus = isPerformance
       ? 'Focus on pointing out inefficient operations, redundant computations, or unnecessary loops without revealing the entire solution.'
+      : isShortestCode
+      ? 'Focus on identifying unnecessary intermediate steps, verbose loops, or boilerplate that can be replaced by concise Python idioms (like comprehensions, built-in functions, or cleaner expressions) without revealing the complete solution.'
       : 'Focus on pointing out confusing variable names, complicated conditionals, or repeated logic that can be simplified without revealing the entire solution.'
 
+    const goalLabel = isPerformance
+      ? 'Performance Optimization'
+      : isShortestCode
+      ? 'Shortest Code'
+      : 'Easy to Understand'
+
     const systemPrompt = `You are CodeCraft's CodeRefine Mentor guiding a student who is improving their code manually.
-The student selected the goal: ${goal.toUpperCase()} (${isPerformance ? 'Performance Optimization' : 'Easy to Understand'}).
+The student selected the goal: ${goal.toUpperCase()} (${goalLabel}).
 Hint Goal Focus: ${hintFocus}
 Provide a hint at ${levelDescriptions[hintLevel as 1 | 2 | 3]}.
 Keep it encouraging, direct, and concise (2-3 sentences).

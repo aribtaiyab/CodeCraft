@@ -374,4 +374,32 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
     lastCall = mockWorker.postMessage.mock.calls.filter((c) => (c[0] as { type: string }).type === 'RUN').pop()
     expect((lastCall![0] as { code: string }).code).toBe(refineV2)
   })
+
+  // Case 12: Default Python starter code execution
+  it('Case 12: executes default starter Python code and prints exactly Hello World', () => {
+    const entries: ConsoleEntry[] = []
+    const service = new PyodideService({
+      onConsoleEntry: (e) => entries.push(e),
+    })
+    simulateReady()
+
+    const defaultPythonCode = '# Write your Python code here\nprint("Hello World")'
+    service.runCode(defaultPythonCode)
+    const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
+    expect((runCall![0] as { code: string }).code).toBe(defaultPythonCode)
+
+    mockWorker.onmessage?.({
+      data: { type: 'STDOUT', text: 'Hello World', runId },
+    } as MessageEvent<WorkerToMainMessage>)
+
+    mockWorker.onmessage?.({
+      data: { type: 'EXECUTION_SUCCESS', runId, durationMs: 10, stdout: 'Hello World\n' },
+    } as MessageEvent<WorkerToMainMessage>)
+
+    const stdoutEntries = entries.filter((e) => e.type === 'stdout')
+    expect(stdoutEntries.length).toBe(1)
+    expect(stdoutEntries[0].text).toBe('Hello World')
+  })
 })

@@ -34,8 +34,8 @@
   height: auto !important;
   min-height: calc(100vh - var(--studio-nav-offset));
   min-height: calc(100dvh - var(--studio-nav-offset));
-  overflow-y: auto !important;
-  overflow-x: hidden;
+  overflow: visible !important;
+  background: #191815 !important;
 }
 
 
@@ -47,9 +47,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 16px;
-  height: 48px;
+  gap: 10px;
+  padding: 0 12px;
+  height: 40px;
   background: #24221e;
   border-bottom: 1px solid #302c26;
   flex-shrink: 0;
@@ -59,7 +59,7 @@
 .topBar__group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* --- File & Environment Controls --- */
@@ -67,11 +67,13 @@
 .topBar__fileInfo {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 2px 8px;
+  height: 28px;
   background: #1b1a17;
   border: 1px solid #36322b;
   border-radius: 6px;
+  box-sizing: border-box;
 }
 
 .topBar__fileIcon {
@@ -80,7 +82,7 @@
 
 .topBar__fileName {
   font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #f4f0e8;
   letter-spacing: -0.01em;
@@ -108,17 +110,17 @@
 .langSelector__btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px;
+  gap: 6px;
+  padding: 0 8px;
   background: #1e1c18;
   border: 1px solid #36322b;
   border-radius: 6px;
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #b9b2a7;
   cursor: pointer;
-  height: 30px;
+  height: 28px;
   transition: all 0.15s ease;
 }
 
@@ -196,7 +198,7 @@
   border: 1px solid #36322b;
   border-radius: 6px;
   overflow: hidden;
-  height: 30px;
+  height: 28px;
 }
 
 .fontStepper__btn {
@@ -204,9 +206,9 @@
   border: none;
   color: #b9b2a7;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  padding: 0 7px;
+  padding: 0 6px;
   height: 100%;
   cursor: pointer;
   transition: all 0.12s ease;
@@ -224,10 +226,10 @@
 
 .fontStepper__val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #d8b58b;
-  padding: 0 4px;
-  min-width: 32px;
+  padding: 0 3px;
+  min-width: 28px;
   text-align: center;
   user-select: none;
   border-left: 1px solid #2d2924;
@@ -237,14 +239,14 @@
 .toolBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  height: 30px;
+  gap: 5px;
+  padding: 0 8px;
+  height: 28px;
   background: transparent;
   border: 1px solid #36322b;
   border-radius: 6px;
   color: #b9b2a7;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -260,14 +262,14 @@
 .refineBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 11px;
-  height: 30px;
+  gap: 5px;
+  padding: 0 9px;
+  height: 28px;
   background: rgba(184, 137, 91, 0.12);
   border: 1px solid rgba(184, 137, 91, 0.35);
   border-radius: 6px;
   color: #d8b58b;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -295,8 +297,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0 9px;
-  height: 30px;
+  padding: 0 8px;
+  height: 28px;
   background: #24221e;
   border: 1px dashed rgba(184, 137, 91, 0.45);
   border-radius: 6px;
@@ -320,14 +322,14 @@
 .commandPaletteTrigger {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  height: 30px;
+  gap: 6px;
+  padding: 0 8px;
+  height: 28px;
   background: #1b1a17;
   border: 1px solid #36322b;
   border-radius: 6px;
   color: #b9b2a7;
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -344,11 +346,11 @@
 
 .commandPaletteKbd {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 9.5px;
   color: #8c8477;
   background: #26231e;
   border: 1px solid #3a362e;
-  padding: 1px 5px;
+  padding: 1px 4px;
   border-radius: 3px;
 }
 
@@ -356,8 +358,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: transparent;
   border: 1px solid #36322b;
@@ -379,13 +381,13 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0 10px;
-  height: 30px;
+  padding: 0 9px;
+  height: 28px;
   background: rgba(224, 108, 117, 0.1);
   border: 1px solid rgba(224, 108, 117, 0.35);
   border-radius: 6px;
   color: #e06c75;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -406,18 +408,18 @@
 .btnRun {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 14px;
-  height: 32px;
+  gap: 6px;
+  padding: 0 12px;
+  height: 28px;
   background: #b8895b;
   border: 1px solid #d8b58b;
   border-radius: 6px;
   color: #191815;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(184, 137, 91, 0.25);
+  box-shadow: 0 2px 6px rgba(184, 137, 91, 0.25);
   transition: all 0.15s ease;
 }
 
@@ -425,7 +427,7 @@
   background: #c59666;
   border-color: #f4f0e8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(184, 137, 91, 0.35);
+  box-shadow: 0 3px 10px rgba(184, 137, 91, 0.35);
 }
 
 .btnRun:active:not(:disabled) {

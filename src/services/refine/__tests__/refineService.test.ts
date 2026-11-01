@@ -80,7 +80,7 @@ describe('CodeRefine Service & Verification Suite', () => {
     ).rejects.toThrow('Invalid Python syntax')
   })
 
-  it('supports the two primary goals: performance and easy_to_understand', async () => {
+  it('supports the three primary goals: performance, easy_to_understand, and shortest_code', async () => {
     let capturedBody = ''
     globalThis.fetch = vi.fn().mockImplementation((_url, init) => {
       capturedBody = init.body
@@ -103,9 +103,16 @@ describe('CodeRefine Service & Verification Suite', () => {
       goal: 'easy_to_understand',
     })
     expect(JSON.parse(capturedBody).goal).toBe('easy_to_understand')
+
+    // Test Shortest Code
+    await refineService.refineCode({
+      code: 'for x in range(10): pass',
+      goal: 'shortest_code',
+    })
+    expect(JSON.parse(capturedBody).goal).toBe('shortest_code')
   })
 
-  it('supports hints in manual mode for performance and easy_to_understand', async () => {
+  it('supports hints in manual mode for performance, easy_to_understand, and shortest_code', async () => {
     let capturedBody = ''
     globalThis.fetch = vi.fn().mockImplementation((_url, init) => {
       capturedBody = init.body
@@ -132,6 +139,15 @@ describe('CodeRefine Service & Verification Suite', () => {
     })
     expect(hint2.hint).toBe('Nudge')
     expect(JSON.parse(capturedBody).goal).toBe('easy_to_understand')
+
+    // Manual Hint for Shortest Code
+    const hint3 = await refineService.getHint({
+      code: 'for x in range(10): pass',
+      goal: 'shortest_code',
+      hintLevel: 1,
+    })
+    expect(hint3.hint).toBe('Nudge')
+    expect(JSON.parse(capturedBody).goal).toBe('shortest_code')
   })
 
   // --------------------------------------------------------------------------

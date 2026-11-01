@@ -17,7 +17,7 @@ export interface PyodideServiceListeners {
   onTrace?: (trace: TraceResult | null, runId: string) => void
 }
 
-const DEFAULT_TIMEOUT_MS = 15000
+export const DEFAULT_TIMEOUT_MS = 30000
 const MAX_OUTPUT_LINES = 2000
 const MAX_LINE_LENGTH = 10000
 

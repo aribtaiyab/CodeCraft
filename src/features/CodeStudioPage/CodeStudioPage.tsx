@@ -29,7 +29,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { Badge, Tabs } from '../../components'
-import { usePyodide } from '../../services/pyodide'
+import { usePyodide, DEFAULT_TIMEOUT_MS } from '../../services/pyodide'
 import {
   TraceVisualizer,
   PredictionPanel,
@@ -51,6 +51,8 @@ import { recordLearningEvent, classifyBugCategory } from '../../services/learnin
 import type { Language } from '../../types'
 import styles from './CodeStudioPage.module.css'
 
+import { CANONICAL_PYTHON_STARTER, isLegacyPythonStarter } from './starterCode'
+
 const LANGUAGE_OPTIONS: { value: Language; label: string; monacoLang: string }[] = [
   { value: 'python',     label: 'Python 3.12 (Pyodide)', monacoLang: 'python' },
   { value: 'javascript', label: 'JavaScript',            monacoLang: 'javascript' },
@@ -58,14 +60,7 @@ const LANGUAGE_OPTIONS: { value: Language; label: string; monacoLang: string }[]
 ]
 
 const STARTER_CODE: Record<Language, string> = {
-  python: `# Print a message
-print("Hello, World!")
-
-# Simple calculation
-a = 5
-b = 10
-print(a + b)
-`,
+  python: CANONICAL_PYTHON_STARTER,
   javascript: `// CodeCraft — JavaScript Studio
 // Note: Python is active with real execution, tracing, and debugging coach.
 // JavaScript & TypeScript runtime execution is planned for a future phase.
@@ -122,12 +117,33 @@ export function CodeStudioPage() {
   // URL exercise parameter loading or workspace auto-restore
   const [searchParams] = useSearchParams()
   const exerciseParam = searchParams.get('exerciseId')
-  const savedCode = localStorage.getItem('codecraft_studio_saved_code')
-  const initialCode = exerciseParam
-    ? DEBUGGING_EXERCISES.find((e) => e.id === exerciseParam)?.buggyCode || STARTER_CODE.python
-    : savedCode && !savedCode.includes('process_inventory')
-      ? savedCode
-      : STARTER_CODE.python
+
+  const [initialCode] = useState<string>(() => {
+    // 1. URL exercise parameter
+    if (exerciseParam) {
+      const exercise = DEBUGGING_EXERCISES.find((e) => e.id === exerciseParam)
+      if (exercise?.buggyCode) return exercise.buggyCode
+    }
+
+    // 2. Stored workspace code
+    try {
+      const saved = localStorage.getItem('codecraft_studio_saved_code')
+      if (saved) {
+        // If saved code is old sample/starter code, clean storage and return canonical starter
+        if (isLegacyPythonStarter(saved)) {
+          localStorage.setItem('codecraft_studio_saved_code', CANONICAL_PYTHON_STARTER)
+          return CANONICAL_PYTHON_STARTER
+        }
+        // Genuine user code: preserve untouched
+        return saved
+      }
+    } catch {
+      // Storage access fallback
+    }
+
+    // 3. Fresh workspace
+    return CANONICAL_PYTHON_STARTER
+  })
 
   const [language, setLanguage] = useState<Language>('python')
   const [code, setCode] = useState<string>(initialCode)
@@ -187,6 +203,20 @@ export function CodeStudioPage() {
   const handleRunRef = useRef<() => void>(() => {})
   const handleSaveRef = useRef<() => void>(() => {})
 
+  // Initial timeout resolution (persisted user preference or default 30s)
+  const [initialTimeout] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('codecraft_studio_timeout_ms')
+      if (saved) {
+        const parsed = Number(saved)
+        if (!isNaN(parsed) && parsed > 0) return parsed
+      }
+    } catch {
+      // Ignore storage read errors
+    }
+    return DEFAULT_TIMEOUT_MS
+  })
+
   // Pyodide Execution & Tracing Hook
   const {
     state,
@@ -212,7 +242,7 @@ export function CodeStudioPage() {
     setPrediction,
     predictionResult,
     clearPrediction,
-  } = usePyodide({ defaultTimeoutMs: 15000 })
+  } = usePyodide({ defaultTimeoutMs: initialTimeout })
 
   const currentLang = LANGUAGE_OPTIONS.find((l) => l.value === language)!
 
@@ -220,6 +250,15 @@ export function CodeStudioPage() {
   useEffect(() => {
     localStorage.setItem('codecraft_studio_font_size', String(fontSize))
   }, [fontSize])
+
+  // Save timeout preference
+  useEffect(() => {
+    try {
+      localStorage.setItem('codecraft_studio_timeout_ms', String(timeoutMs))
+    } catch {
+      // Ignore storage write errors
+    }
+  }, [timeoutMs])
 
   // Resize listener for Monaco
   useEffect(() => {
@@ -454,7 +493,17 @@ export function CodeStudioPage() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang)
-    setCode(STARTER_CODE[lang])
+    const starter = STARTER_CODE[lang] || CANONICAL_PYTHON_STARTER
+    codeRef.current = starter
+    setCode(starter)
+    if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
+      editorRef.current.setValue(starter)
+    }
+    try {
+      localStorage.setItem('codecraft_studio_saved_code', starter)
+    } catch {
+      // Storage fallback
+    }
     setLangMenuOpen(false)
     markCodeChanged()
   }
@@ -607,11 +656,16 @@ export function CodeStudioPage() {
   const handleReset = useCallback(() => {
     analyzedErrorKeyRef.current = null
     analyzedTestsKeyRef.current = null
-    const starter = STARTER_CODE[language]
+    const starter = STARTER_CODE[language] || CANONICAL_PYTHON_STARTER
     codeRef.current = starter
     setCode(starter)
-    if (editorRef.current && editorRef.current.getValue() !== starter) {
+    if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
       editorRef.current.setValue(starter)
+    }
+    try {
+      localStorage.setItem('codecraft_studio_saved_code', starter)
+    } catch {
+      // Storage fallback
     }
     decorationsCollectionRef.current?.clear()
     setDiagnosis(null)
@@ -667,7 +721,8 @@ export function CodeStudioPage() {
     monacoRef.current = m
 
     const initialVal = codeRef.current || code
-    if (ed.getValue() !== initialVal) {
+    const currentEdVal = ed.getValue()
+    if (isLegacyPythonStarter(currentEdVal) || currentEdVal !== initialVal) {
       ed.setValue(initialVal)
     }
 
@@ -1228,8 +1283,8 @@ export function CodeStudioPage() {
               onChange={(e) => setTimeoutMs(Number(e.target.value))}
             >
               <option value={5000}>5 seconds</option>
-              <option value={15000}>15 seconds (Default)</option>
-              <option value={30000}>30 seconds</option>
+              <option value={15000}>15 seconds</option>
+              <option value={30000}>30 seconds (Default)</option>
               <option value={60000}>60 seconds</option>
             </select>
           </div>

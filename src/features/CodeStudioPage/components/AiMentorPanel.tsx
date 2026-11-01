@@ -318,7 +318,7 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                     <span className={styles.explainHeaderTitle}>
                       {explanation.isSelectionOnly
                         ? `Selected Lines ${explanation.selectedRange?.startLine}–${explanation.selectedRange?.endLine}`
-                        : 'Computer Science Teacher Explanation'}
+                        : 'Explanation'}
                     </span>
                   </div>
                   <span className={styles.modelPill}>
@@ -326,26 +326,29 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                   </span>
                 </div>
 
-                {/* Section A: What does this code do? */}
-                <div className={styles.explainSection}>
-                  <div className={styles.sectionHeading}>
-                    <span className={styles.sectionIndexBadge}>A</span>
-                    <span className={styles.sectionTitle}>What Does This Code Do?</span>
-                  </div>
-                  <div className={styles.summaryBox}>
-                    {explanation.summary}
-                  </div>
-                </div>
-
-                {/* Section B: Understand the Main Idea */}
-                {explanation.mainIdeaSteps && explanation.mainIdeaSteps.length > 0 ? (
+                {/* SECTION 1 — WHAT DOES THIS CODE DO? */}
+                {explanation.summary && (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>B</span>
-                      <span className={styles.sectionTitle}>Understand the Main Idea</span>
+                      <span className={styles.sectionIndexBadge}>1</span>
+                      <span className={styles.sectionTitle}>What Does This Code Do?</span>
+                    </div>
+                    <div className={styles.summaryBox}>
+                      {explanation.summary}
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 2 — HOW DOES IT WORK? */}
+                {((explanation.howItWorks && explanation.howItWorks.length > 0) ||
+                  (explanation.mainIdeaSteps && explanation.mainIdeaSteps.length > 0)) && (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>2</span>
+                      <span className={styles.sectionTitle}>How Does It Work?</span>
                     </div>
                     <div className={styles.stepsList}>
-                      {explanation.mainIdeaSteps.map((step, idx) => {
+                      {(explanation.howItWorks || explanation.mainIdeaSteps || []).map((step, idx) => {
                         const stepMatch = step.match(/^\s*(\d+)[.)]\s*(.*)$/)
                         const stepNum = stepMatch ? stepMatch[1] : String(idx + 1)
                         const stepText = stepMatch ? stepMatch[2] : step
@@ -359,24 +362,14 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                       })}
                     </div>
                   </div>
-                ) : explanation.detailedExplanation && !explanation.isSelectionOnly ? (
-                  <div className={styles.explainSection}>
-                    <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>B</span>
-                      <span className={styles.sectionTitle}>Understand the Main Idea</span>
-                    </div>
-                    <div className={styles.detailedText}>
-                      {explanation.detailedExplanation}
-                    </div>
-                  </div>
-                ) : null}
+                )}
 
-                {/* Section C: Important Concepts */}
+                {/* SECTION 3 — IMPORTANT KEYWORDS AND CONCEPTS */}
                 {explanation.conceptDetails && explanation.conceptDetails.length > 0 ? (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>C</span>
-                      <span className={styles.sectionTitle}>Important Concepts</span>
+                      <span className={styles.sectionIndexBadge}>3</span>
+                      <span className={styles.sectionTitle}>Important Keywords and Concepts</span>
                     </div>
                     <div className={styles.conceptCardsGrid}>
                       {explanation.conceptDetails.map((concept, idx) => (
@@ -388,10 +381,10 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                             )}
                           </div>
                           <div className={styles.conceptMeaning}>
-                            <strong>Meaning:</strong> {concept.meaning}
+                            <strong className={styles.conceptFieldLabel}>Meaning:</strong> {concept.meaning}
                           </div>
                           <div className={styles.conceptUsage}>
-                            <strong>In this code:</strong> {concept.codeUsage}
+                            <strong className={styles.conceptFieldLabel}>In this code:</strong> {concept.codeUsage}
                           </div>
                         </div>
                       ))}
@@ -400,8 +393,8 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                 ) : explanation.keyConcepts && explanation.keyConcepts.length > 0 ? (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>C</span>
-                      <span className={styles.sectionTitle}>Key Concepts</span>
+                      <span className={styles.sectionIndexBadge}>3</span>
+                      <span className={styles.sectionTitle}>Important Keywords and Concepts</span>
                     </div>
                     <div className={styles.conceptTags}>
                       {explanation.keyConcepts.map((concept, idx) => (
@@ -413,7 +406,25 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                   </div>
                 ) : null}
 
-                {/* If selection-only and detailedExplanation exists */}
+                {/* SECTION 4 — WHY ARE THESE CONCEPTS USED? */}
+                {explanation.whyConceptsUsed && explanation.whyConceptsUsed.length > 0 && (
+                  <div className={styles.explainSection}>
+                    <div className={styles.sectionHeading}>
+                      <span className={styles.sectionIndexBadge}>4</span>
+                      <span className={styles.sectionTitle}>Why Are These Concepts Used?</span>
+                    </div>
+                    <div className={styles.whyList}>
+                      {explanation.whyConceptsUsed.map((item, idx) => (
+                        <div key={idx} className={styles.whyItem}>
+                          <div className={styles.whyConceptBadge}>{item.concept}</div>
+                          <div className={styles.whyBenefitText}>{item.benefit}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contextual Analysis (If selection-only and detailedExplanation exists) */}
                 {explanation.isSelectionOnly && explanation.detailedExplanation && (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
@@ -425,12 +436,12 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                   </div>
                 )}
 
-                {/* Section D: Line-by-Line Breakdown */}
+                {/* SECTION 5 — LINE-BY-LINE EXPLANATION */}
                 {explanation.lineExplanations && explanation.lineExplanations.length > 0 && (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>D</span>
-                      <span className={styles.sectionTitle}>Line-by-Line Breakdown</span>
+                      <span className={styles.sectionIndexBadge}>5</span>
+                      <span className={styles.sectionTitle}>Line-by-Line Explanation</span>
                     </div>
                     <div className={styles.lineBreakdownList}>
                       {explanation.lineExplanations
@@ -450,30 +461,64 @@ export const AiMentorPanel: React.FC<AiMentorPanelProps> = ({
                   </div>
                 )}
 
-                {/* Section E: Final Output */}
-                {explanation.expectedOutput && (
+                {/* SECTION 6 — INPUT AND OUTPUT */}
+                {(explanation.inputOutput || explanation.expectedOutput) && (
                   <div className={styles.explainSection}>
                     <div className={styles.sectionHeading}>
-                      <span className={styles.sectionIndexBadge}>E</span>
-                      <span className={styles.sectionTitle}>Final Output</span>
+                      <span className={styles.sectionIndexBadge}>6</span>
+                      <span className={styles.sectionTitle}>Input and Output</span>
                     </div>
-                    <div className={styles.outputBox}>
-                      <div className={styles.outputConsole}>
-                        <div className={styles.outputConsoleHeader}>
-                          <span className={styles.consoleDot} />
-                          <span className={styles.consoleDot} />
-                          <span className={styles.consoleDot} />
-                          <span className={styles.consoleTitle}>Program Output</span>
-                        </div>
-                        <pre className={styles.outputContent}>
-                          <code>{explanation.expectedOutput.output || '(No output produced)'}</code>
-                        </pre>
-                      </div>
-                      {explanation.expectedOutput.explanation && (
-                        <div className={styles.outputWhyText}>
-                          <strong>Why:</strong> {explanation.expectedOutput.explanation}
+                    <div className={styles.ioContainer}>
+                      {explanation.inputOutput?.input && (
+                        <div className={styles.ioRow}>
+                          <span className={styles.ioLabel}>Input:</span>
+                          <span className={styles.ioValue}>{explanation.inputOutput.input}</span>
                         </div>
                       )}
+                      {explanation.inputOutput?.processing && (
+                        <div className={styles.ioRow}>
+                          <span className={styles.ioLabel}>Processing:</span>
+                          <span className={styles.ioValue}>{explanation.inputOutput.processing}</span>
+                        </div>
+                      )}
+                      <div className={styles.outputBox}>
+                        <div className={styles.outputConsole}>
+                          <div className={styles.outputConsoleHeader}>
+                            <span className={styles.consoleDot} />
+                            <span className={styles.consoleDot} />
+                            <span className={styles.consoleDot} />
+                            <span className={styles.consoleTitle}>Program Output</span>
+                          </div>
+                          <pre className={styles.outputContent}>
+                            <code>
+                              {explanation.inputOutput?.output ||
+                                explanation.expectedOutput?.output ||
+                                '(No output produced)'}
+                            </code>
+                          </pre>
+                        </div>
+                        {(explanation.inputOutput?.explanation ||
+                          explanation.expectedOutput?.explanation) && (
+                          <div className={styles.outputWhyText}>
+                            <strong>Why:</strong>{' '}
+                            {explanation.inputOutput?.explanation ||
+                              explanation.expectedOutput?.explanation}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 7 — REMEMBER THIS */}
+                {explanation.takeaway && (
+                  <div className={styles.takeawaySection}>
+                    <div className={styles.takeawayHeading}>
+                      <span className={styles.sectionIndexBadge}>7</span>
+                      <span className={styles.takeawayTitle}>Remember This</span>
+                    </div>
+                    <div className={styles.takeawayContent}>
+                      {explanation.takeaway}
                     </div>
                   </div>
                 )}

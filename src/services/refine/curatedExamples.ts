@@ -21,6 +21,14 @@ export const REFINE_GOALS: RefineGoalOption[] = [
       'Make code cleaner, simpler and easier for beginners to understand.',
     iconName: 'Sparkles',
   },
+  {
+    id: 'shortest_code',
+    label: 'Shortest Code',
+    shortLabel: 'Shortest Code',
+    description:
+      'Simplify your code and find a shorter way to achieve the same result.',
+    iconName: 'Minimize2',
+  },
 ]
 
 export const CURATED_REFINE_EXAMPLES: RefineCuratedExample[] = [
@@ -122,6 +130,25 @@ user_a = {"is_active": True, "role": "admin", "subscription_valid": True}
 user_b = {"is_active": False, "role": "admin", "subscription_valid": True}
 print("User A:", check_user_access(user_a))
 print("User B:", check_user_access(user_b))
+`,
+  },
+  {
+    id: 'example-shortest-evens',
+    goal: 'shortest_code',
+    suggestedGoal: 'shortest_code',
+    title: 'Even Squares Total (Shortest Code)',
+    description: 'Verbose multi-line loop accumulator simplified with a concise Python expression.',
+    originalCode: `def sum_even_squares(numbers):
+    # Verbose intermediate variables and manual loop accumulation
+    total = 0
+    for n in numbers:
+        if n % 2 == 0:
+            square = n * n
+            total = total + square
+    return total
+
+sample_nums = [1, 2, 3, 4, 5, 6, 7, 8]
+print("Sum of even squares:", sum_even_squares(sample_nums))
 `,
   },
 ]

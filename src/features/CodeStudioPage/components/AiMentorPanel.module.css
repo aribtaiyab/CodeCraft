@@ -345,6 +345,11 @@
   border: 1px solid rgba(184, 137, 91, 0.25);
 }
 
+.conceptFieldLabel {
+  color: #D8B58B;
+  font-weight: 600;
+}
+
 .conceptMeaning {
   font-size: 12px;
   line-height: 1.5;
@@ -355,6 +360,36 @@
   font-size: 12px;
   line-height: 1.5;
   color: var(--text-muted, #857E71);
+}
+
+/* Section 4: Why Are These Concepts Used? */
+.whyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.whyItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 12px;
+  background: #191815;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+}
+
+.whyConceptBadge {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-bronze, #B8895B);
+  letter-spacing: -0.01em;
+}
+
+.whyBenefitText {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-primary, #F4F0E8);
 }
 
 .conceptTags {
@@ -426,7 +461,39 @@
   padding-left: 2px;
 }
 
-/* Section E: Final Output */
+/* Section 6: Input and Output */
+.ioContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ioRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 6px 10px;
+  background: #191815;
+  border: 1px solid var(--border-subtle, #2C2A25);
+  border-radius: 6px;
+}
+
+.ioLabel {
+  color: var(--color-bronze, #B8895B);
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 80px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ioValue {
+  color: var(--text-primary, #F4F0E8);
+  line-height: 1.4;
+  font-size: 12.5px;
+}
+
 .outputBox {
   display: flex;
   flex-direction: column;
@@ -479,6 +546,39 @@
   font-size: 12px;
   line-height: 1.5;
   color: var(--text-secondary, #B8B2A7);
+}
+
+/* Section 7: Remember This */
+.takeawaySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: rgba(184, 137, 91, 0.08);
+  border: 1px solid rgba(184, 137, 91, 0.35);
+  border-radius: 8px;
+}
+
+.takeawayHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.takeawayTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-bronze, #D8B58B);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.takeawayContent {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary, #F4F0E8);
+  font-weight: 500;
+  padding-left: 2px;
 }
 
 /* Q&A Conversation Section */

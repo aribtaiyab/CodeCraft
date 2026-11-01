@@ -4,6 +4,8 @@
 // ============================================================================
 
 export type RefineGoal =
+  | 'performance'
+  | 'easy_to_understand'
   | 'readability'
   | 'dry'
   | 'structure'

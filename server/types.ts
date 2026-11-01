@@ -127,6 +127,8 @@ export interface GenerateMcqsResponse {
 // 5. CodeRefine Endpoint Types
 // ----------------------------------------------------------------------------
 export type RefineGoal =
+  | 'performance'
+  | 'easy_to_understand'
   | 'readability'
   | 'dry'
   | 'structure'

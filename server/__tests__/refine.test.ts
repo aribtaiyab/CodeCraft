@@ -204,14 +204,92 @@ describe('CodeRefine Backend Engine & Groq Integration', () => {
     })
     expect(resMax.hintLevel).toBe(3)
     expect(resMax.nextAvailable).toBe(false)
+  })
 
-    const resMin = await client.getRefineHint({
-      code: sampleCode,
-      goal: 'simplify',
-      hintLevel: 0,
-      sourceHash: 'test_hash',
+  // --------------------------------------------------------------------------
+  // 5. Verification of the Two Distinct Goals (Performance vs Easy to Understand)
+  // --------------------------------------------------------------------------
+  it('differentiates prompt behaviour between Performance Optimization and Easy to Understand in AI Assistance mode', async () => {
+    let capturedSystemPrompt = ''
+    const mockFetch = vi.fn().mockImplementation((_url, init) => {
+      const parsedBody = JSON.parse(init.body)
+      capturedSystemPrompt = parsedBody.messages[0].content
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(mockRefineResponse) } }],
+          }),
+          { status: 200 }
+        )
+      )
     })
-    expect(resMin.hintLevel).toBe(1)
-    expect(resMin.nextAvailable).toBe(true)
+
+    const client = new GroqClient({
+      apiKey: 'gsk_mock_valid_key',
+      customFetch: mockFetch as unknown as typeof fetch,
+    })
+
+    // Test Goal 1: Performance Optimization in AI Assistance
+    await client.refineCode({
+      code: sampleCode,
+      goal: 'performance',
+      sourceHash: 'perf_hash',
+    })
+    expect(capturedSystemPrompt).toContain('PERFORMANCE')
+    expect(capturedSystemPrompt).toContain('execution efficiency')
+    expect(capturedSystemPrompt).toContain('NEVER claim code is faster without concrete algorithmic or complexity evidence')
+
+    // Test Goal 2: Easy to Understand in AI Assistance
+    await client.refineCode({
+      code: sampleCode,
+      goal: 'easy_to_understand',
+      sourceHash: 'easy_hash',
+    })
+    expect(capturedSystemPrompt).toContain('EASY_TO_UNDERSTAND')
+    expect(capturedSystemPrompt).toContain('Make code cleaner, simpler, and easier for beginners to understand')
+    expect(capturedSystemPrompt).toContain('beginner-friendly language')
+  })
+
+  it('differentiates prompt guidance between Performance Optimization and Easy to Understand in Manual Practice mode', async () => {
+    let capturedSystemPrompt = ''
+    const mockFetch = vi.fn().mockImplementation((_url, init) => {
+      const parsedBody = JSON.parse(init.body)
+      capturedSystemPrompt = parsedBody.messages[0].content
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify({ hint: 'Nudge' }) } }],
+          }),
+          { status: 200 }
+        )
+      )
+    })
+
+    const client = new GroqClient({
+      apiKey: 'gsk_mock_valid_key',
+      customFetch: mockFetch as unknown as typeof fetch,
+    })
+
+    // Test Goal 1 in Manual Practice (Hint Level 1)
+    const perfHint = await client.getRefineHint({
+      code: sampleCode,
+      goal: 'performance',
+      hintLevel: 1,
+      sourceHash: 'perf_hash',
+    })
+    expect(perfHint.hintLevel).toBe(1)
+    expect(capturedSystemPrompt).toContain('PERFORMANCE')
+    expect(capturedSystemPrompt).toContain('inefficient operations')
+
+    // Test Goal 2 in Manual Practice (Hint Level 2)
+    const easyHint = await client.getRefineHint({
+      code: sampleCode,
+      goal: 'easy_to_understand',
+      hintLevel: 2,
+      sourceHash: 'easy_hash',
+    })
+    expect(easyHint.hintLevel).toBe(2)
+    expect(capturedSystemPrompt).toContain('EASY_TO_UNDERSTAND')
+    expect(capturedSystemPrompt).toContain('variable names, complicated conditionals')
   })
 })

@@ -940,7 +940,6 @@ export function CodeStudioPage() {
     fontSize,
     wordWrap,
     isEditorMaximized,
-    handleRun,
     handleStop,
     handleSave,
     clearOutput,
@@ -1240,7 +1239,7 @@ export function CodeStudioPage() {
       {/* ---- CodeRefine Workspace (Mounted conditionally, keeping Studio Editor alive) ---- */}
       {isCodeRefineOpen && (
         <CodeRefineWorkspace
-          currentStudioCode={editorRef.current?.getValue() ?? codeRef.current ?? code}
+          currentStudioCode={code}
           onAcceptChanges={handleAcceptRefine}
           onUndoAccepted={handleUndoRefine}
           canUndo={!!refineUndoSnapshot}

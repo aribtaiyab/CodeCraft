@@ -75,9 +75,63 @@ describe('CodeRefine Service & Verification Suite', () => {
     await expect(
       refineService.refineCode({
         code: 'def bad(',
-        goal: 'readability',
+        goal: 'easy_to_understand',
       })
     ).rejects.toThrow('Invalid Python syntax')
+  })
+
+  it('supports the two primary goals: performance and easy_to_understand', async () => {
+    let capturedBody = ''
+    globalThis.fetch = vi.fn().mockImplementation((_url, init) => {
+      capturedBody = init.body
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ summary: 'Done', improvedCode: 'pass', changes: [] }),
+      })
+    })
+
+    // Test Performance Optimization
+    await refineService.refineCode({
+      code: 'for x in range(10): pass',
+      goal: 'performance',
+    })
+    expect(JSON.parse(capturedBody).goal).toBe('performance')
+
+    // Test Easy to Understand
+    await refineService.refineCode({
+      code: 'for x in range(10): pass',
+      goal: 'easy_to_understand',
+    })
+    expect(JSON.parse(capturedBody).goal).toBe('easy_to_understand')
+  })
+
+  it('supports hints in manual mode for performance and easy_to_understand', async () => {
+    let capturedBody = ''
+    globalThis.fetch = vi.fn().mockImplementation((_url, init) => {
+      capturedBody = init.body
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ hintLevel: 1, hint: 'Nudge', nextAvailable: true }),
+      })
+    })
+
+    // Manual Hint for Performance
+    const hint1 = await refineService.getHint({
+      code: 'for x in range(10): pass',
+      goal: 'performance',
+      hintLevel: 1,
+    })
+    expect(hint1.hint).toBe('Nudge')
+    expect(JSON.parse(capturedBody).goal).toBe('performance')
+
+    // Manual Hint for Easy to Understand
+    const hint2 = await refineService.getHint({
+      code: 'for x in range(10): pass',
+      goal: 'easy_to_understand',
+      hintLevel: 2,
+    })
+    expect(hint2.hint).toBe('Nudge')
+    expect(JSON.parse(capturedBody).goal).toBe('easy_to_understand')
   })
 
   // --------------------------------------------------------------------------

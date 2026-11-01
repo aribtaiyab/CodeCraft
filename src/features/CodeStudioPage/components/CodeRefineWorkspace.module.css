@@ -131,9 +131,92 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
+/* Source Toolbar inside Workflow Card */
+.sourceBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2B2823;
+  flex-wrap: wrap;
+}
+
+.sourceLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #B9B2A7;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sourceControlsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sourceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #141311;
+  border: 1px solid #36322B;
+  border-radius: 6px;
+  color: #B9B2A7;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sourceBtn:hover {
+  background: #25221C;
+  border-color: #B8895B;
+  color: #F4F0E8;
+}
+
+.sourceBtnActive {
+  background: rgba(184, 137, 91, 0.15);
+  border-color: #B8895B;
+  color: #F4F0E8;
+  font-weight: 600;
+}
+
+.exampleSelect {
+  min-width: 170px;
+  padding: 5px 10px;
+  background: #141311;
+  border: 1px solid #36322B;
+  border-radius: 6px;
+  color: #D5CFC5;
+  font-size: 11.5px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exampleSelect:focus, .exampleSelect:hover {
+  border-color: #B8895B;
+  color: #F4F0E8;
+}
+
+.sourceBadge {
+  font-size: 11px;
+  color: #8C8477;
+  padding: 3px 8px;
+  background: #141311;
+  border-radius: 4px;
+  border: 1px solid #2B2823;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 .workflowGrid {
   display: grid;
-  grid-template-columns: 1fr auto 1.4fr auto 1.1fr;
+  grid-template-columns: 1.8fr auto 1.1fr auto 1fr;
   align-items: stretch;
   gap: 18px;
 }
@@ -188,134 +271,101 @@
   letter-spacing: -0.01em;
 }
 
-.sourceBadge {
-  font-size: 10.5px;
-  color: #8C8477;
-  padding: 2px 7px;
-  background: #141311;
-  border-radius: 4px;
-  border: 1px solid #2B2823;
-  margin-left: auto;
-  white-space: nowrap;
+/* Step 1 Two Goals Grid */
+.twoGoalsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
 }
 
-/* Step 1 Controls */
-.sourceControlsRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+@media (max-width: 680px) {
+  .twoGoalsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.sourceBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #141311;
-  border: 1px solid #36322B;
-  border-radius: 6px;
-  color: #B9B2A7;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.sourceBtn:hover {
-  background: #25221C;
-  border-color: #B8895B;
-  color: #F4F0E8;
-}
-
-.sourceBtnActive {
-  background: rgba(184, 137, 91, 0.15);
-  border-color: #B8895B;
-  color: #F4F0E8;
-  font-weight: 600;
-}
-
-.exampleSelect {
-  flex: 1;
-  min-width: 170px;
-  padding: 6px 10px;
-  background: #141311;
-  border: 1px solid #36322B;
-  border-radius: 6px;
-  color: #D5CFC5;
-  font-size: 12px;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.exampleSelect:focus, .exampleSelect:hover {
-  border-color: #B8895B;
-  color: #F4F0E8;
-}
-
-/* Step 2 Goal Pills */
-.goalsWrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.goalPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
+.goalCard {
   background: #141311;
   border: 1px solid #302C26;
-  border-radius: 16px;
-  font-size: 11.5px;
-  color: #B9B2A7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  outline: none;
 }
 
-.goalPill:hover {
-  background: #24221E;
+.goalCard:hover {
+  background: #1C1A16;
   border-color: #B8895B;
-  color: #F4F0E8;
 }
 
-.goalPillActive {
-  background: rgba(184, 137, 91, 0.22);
-  border-color: #B8895B;
-  color: #F4F0E8;
-  font-weight: 600;
-  box-shadow: 0 0 8px rgba(184, 137, 91, 0.2);
+.goalCardActive {
+  background: rgba(184, 137, 91, 0.14);
+  border-color: #D8B58B;
+  box-shadow: 0 0 10px rgba(184, 137, 91, 0.2);
 }
 
-.customPromptRow {
+.goalCardTop {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
 }
 
-.customPromptInput {
-  flex: 1;
-  padding: 6px 12px;
-  background: #141311;
+.goalCardIconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(184, 137, 91, 0.18);
   border: 1px solid rgba(184, 137, 91, 0.35);
-  border-radius: 6px;
-  color: #F4F0E8;
+  color: #D8B58B;
+  flex-shrink: 0;
+}
+
+.goalCardIcon {
+  color: #D8B58B;
+}
+
+.goalCardTitle {
   font-size: 12px;
-  outline: none;
-  transition: border-color 0.15s ease;
+  font-weight: 600;
+  color: #F4F0E8;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.customPromptInput:focus {
-  border-color: #B8895B;
+.activeCheck {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #B8895B;
+  color: #121316;
 }
 
-/* Step 3 Mode & Action */
+.goalCardDesc {
+  font-size: 11px;
+  color: #8C8477;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.goalCardActive .goalCardDesc {
+  color: #D5CFC5;
+}
+
+/* Step 2 Mode & Action */
 .modeSegmented {
   display: inline-flex;
   background: #141311;
@@ -326,6 +376,9 @@
 }
 
 .modeSegment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 4px 10px;
   background: transparent;
   border: none;
@@ -346,6 +399,13 @@
   background: rgba(184, 137, 91, 0.2);
   color: #D8B58B;
   font-weight: 600;
+}
+
+.modeExplainer {
+  font-size: 11px;
+  color: #8C8477;
+  line-height: 1.35;
+  margin: 0;
 }
 
 .step3ActionRow {

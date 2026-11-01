@@ -217,39 +217,19 @@ async function fetchAiGeneratedQuestions(
   try {
     const starterSample = getTopicStarterCode(config.topic)
 
-    // Resilient endpoint resolution: use relative /api in browser/Vite proxy, fallback to port 3001
-    const endpoint =
-      typeof window !== 'undefined'
-        ? '/api/ai/generate-mcqs'
-        : 'http://127.0.0.1:3001/api/ai/generate-mcqs'
+    // Resilient endpoint resolution: use relative /api in browser/Vite proxy, or configurable base
+    const apiBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || ''
+    const endpoint = `${apiBase}/api/ai/generate-mcqs`
 
-    let res: Response
-    try {
-      res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: starterSample,
-          count: Math.min(config.questionCount, 5),
-        }),
-        signal: controller.signal,
-      })
-    } catch (fetchErr) {
-      // If relative URL failed (e.g. test environment), try localhost:3001 directly
-      if (endpoint.startsWith('/')) {
-        res = await fetch('http://127.0.0.1:3001/api/ai/generate-mcqs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code: starterSample,
-            count: Math.min(config.questionCount, 5),
-          }),
-          signal: controller.signal,
-        })
-      } else {
-        throw fetchErr
-      }
-    }
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: starterSample,
+        count: Math.min(config.questionCount, 5),
+      }),
+      signal: controller.signal,
+    })
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`)

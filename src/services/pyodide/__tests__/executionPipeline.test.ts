@@ -59,7 +59,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("print('Hello CodeCraft!')")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     // Worker emits STDOUT then SUCCESS
     mockWorker.onmessage?.({
@@ -85,7 +86,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("a=10; b=20; print('Addition:',a+b); print('Subtraction:',a-b)")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: { type: 'STDOUT', text: 'Addition: 30', runId },
@@ -111,7 +113,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("numbers=[10,20,30,40]; average=sum(numbers)/len(numbers); print('Average:',average)")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: { type: 'STDOUT', text: 'Average: 25.0', runId },
@@ -133,7 +136,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("def greet(name): return 'Hello '+name\nprint(greet('Student'))")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: { type: 'STDOUT', text: 'Hello Student', runId },
@@ -156,7 +160,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
     // Simulate accepted code running
     service.runCode("print('Hello from CodeRefine Accepted!')\nprint('Line 2')")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     // Suppose no STDOUT arrived prior to EXECUTION_SUCCESS, but worker passes captured stdout
     mockWorker.onmessage?.({
@@ -183,7 +188,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("x=10; y=20")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: { type: 'EXECUTION_SUCCESS', runId, durationMs: 14, stdout: "" },
@@ -204,7 +210,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
 
     service.runCode("print(10/0)")
     const runCall = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const runId = (runCall?.[0] as { runId: string }).runId
+    expect(runCall).toBeDefined()
+    const runId = (runCall![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: {
@@ -232,7 +239,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
     // Run 1
     service.runCode("print('First run')")
     const allCalls1 = mockWorker.postMessage.mock.calls.filter((c) => (c[0] as { type: string }).type === 'RUN')
-    const run1Id = (allCalls1[0]?.[0] as { runId: string }).runId
+    expect(allCalls1.length).toBeGreaterThan(0)
+    const run1Id = (allCalls1[0]![0] as { runId: string }).runId
 
     mockWorker.onmessage?.({
       data: { type: 'STDOUT', text: 'First run', runId: run1Id },
@@ -244,7 +252,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
     // Run 2 immediately follows
     service.runCode("print('Second run')")
     const allCalls2 = mockWorker.postMessage.mock.calls.filter((c) => (c[0] as { type: string }).type === 'RUN')
-    const run2Id = (allCalls2[1]?.[0] as { runId: string }).runId
+    expect(allCalls2.length).toBeGreaterThan(1)
+    const run2Id = (allCalls2[1]![0] as { runId: string }).runId
 
     // An old delayed message from Run 1 arrives
     mockWorker.onmessage?.({
@@ -275,7 +284,8 @@ describe('Phase 5 Verification: Execution Pipeline & Target Test Cases', () => {
     // Step A: Normal code runs
     service.runCode('def add(a, b):\n    return a + b\nprint(add(2, 3))')
     const call1 = mockWorker.postMessage.mock.calls.find((c) => (c[0] as { type: string }).type === 'RUN')
-    const run1Id = (call1?.[0] as { runId: string }).runId
+    expect(call1).toBeDefined()
+    const run1Id = (call1![0] as { runId: string }).runId
     mockWorker.onmessage?.({
       data: { type: 'STDOUT', text: '5', runId: run1Id },
     } as MessageEvent<WorkerToMainMessage>)

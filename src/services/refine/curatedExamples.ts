@@ -6,155 +6,74 @@ import type { RefineCuratedExample, RefineGoalOption } from './types'
 
 export const REFINE_GOALS: RefineGoalOption[] = [
   {
-    id: 'readability',
-    label: 'Improve readability',
-    shortLabel: 'Readability',
-    description: 'Make code cleaner, more idiomatic, and easier to follow at a glance.',
-    iconName: 'BookOpen',
+    id: 'performance',
+    label: 'Performance Optimization',
+    shortLabel: 'Performance Optimization',
+    description:
+      'Make the code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful.',
+    iconName: 'Zap',
   },
   {
-    id: 'dry',
-    label: 'Remove repeated code',
-    shortLabel: 'Remove Duplication',
-    description: 'Consolidate duplicate logic into reusable functions or parameters (DRY).',
-    iconName: 'Copy',
-  },
-  {
-    id: 'structure',
-    label: 'Improve function structure',
-    shortLabel: 'Function Structure',
-    description: 'Separate mixed responsibilities into focused, single-purpose functions.',
-    iconName: 'Layers',
-  },
-  {
-    id: 'naming',
-    label: 'Improve variable naming',
-    shortLabel: 'Variable Naming',
-    description: 'Replace cryptic abbreviations with descriptive, intention-revealing names.',
-    iconName: 'Type',
-  },
-  {
-    id: 'simplify',
-    label: 'Simplify complicated logic',
-    shortLabel: 'Simplify Logic',
-    description: 'Flatten deep nested if/else ladders and use clean guard clauses.',
+    id: 'easy_to_understand',
+    label: 'Easy to Understand',
+    shortLabel: 'Easy to Understand',
+    description:
+      'Make code cleaner, simpler and easier for beginners to understand.',
     iconName: 'Sparkles',
-  },
-  {
-    id: 'custom',
-    label: 'Custom improvement request',
-    shortLabel: 'Custom Goal',
-    description: 'Specify an exact improvement or pattern you would like to explore.',
-    iconName: 'Wand2',
   },
 ]
 
 export const CURATED_REFINE_EXAMPLES: RefineCuratedExample[] = [
   {
-    id: 'example-readability',
-    goal: 'readability',
-    suggestedGoal: 'readability',
-    title: 'Word Formatter (Manual Loop to Idiomatic Python)',
-    description: 'A manual string concatenation loop that can be written with cleaner Python idioms.',
-    originalCode: `def format_tags(tags):
-    # Format a list of tag strings with commas
-    result = ""
-    i = 0
-    while i < len(tags):
-        tag = tags[i]
-        if i == len(tags) - 1:
-            result = result + "#" + tag.strip()
-        else:
-            result = result + "#" + tag.strip() + ", "
-        i = i + 1
-    return result
+    id: 'example-perf-duplicates',
+    goal: 'performance',
+    suggestedGoal: 'performance',
+    title: 'Common Elements Filter (Performance Optimization)',
+    description: 'Nested linear search with O(N²) overhead improved to O(1) set lookups.',
+    originalCode: `def find_common_items(list_a, list_b):
+    # Inefficient membership check in nested loop
+    common = []
+    for item in list_a:
+        if item in list_b:
+            if item not in common:
+                common.append(item)
+    return common
 
-sample_tags = ["python", "education", "coding  ", "beginner"]
-print("Formatted:", format_tags(sample_tags))
+sample_a = [1, 2, 3, 4, 5, 2, 4]
+sample_b = [3, 4, 5, 6, 7]
+print("Common:", find_common_items(sample_a, sample_b))
 `,
   },
   {
-    id: 'example-dry',
-    goal: 'dry',
-    suggestedGoal: 'dry',
-    title: 'User Tier Discount (Repeated Validation & Math)',
-    description: 'Identical discount calculations and range checks duplicated in three branches.',
-    originalCode: `def calculate_invoice(tier, amount):
-    if tier == "bronze":
-        if amount > 100:
-            discount = amount * 0.05
-            final_price = amount - discount
-            print(f"Applied 5% discount: saved \${discount:.2f}")
-            return final_price
-        else:
-            print("No discount applicable")
-            return amount
-    elif tier == "silver":
-        if amount > 100:
-            discount = amount * 0.10
-            final_price = amount - discount
-            print(f"Applied 10% discount: saved \${discount:.2f}")
-            return final_price
-        else:
-            print("No discount applicable")
-            return amount
-    elif tier == "gold":
-        if amount > 100:
-            discount = amount * 0.20
-            final_price = amount - discount
-            print(f"Applied 20% discount: saved \${discount:.2f}")
-            return final_price
-        else:
-            print("No discount applicable")
-            return amount
-    return amount
+    id: 'example-perf-string',
+    goal: 'performance',
+    suggestedGoal: 'performance',
+    title: 'Log Processor (Performance Optimization)',
+    description: 'Repeated immutable string allocations in loop that can use list join or comprehension.',
+    originalCode: `def build_report(entries):
+    # Repeated string concatenation creates new string objects in memory
+    output = ""
+    for entry in entries:
+        if entry["status"] == "SUCCESS":
+            output = output + "[" + entry["id"] + "] " + entry["msg"].strip() + "\\n"
+    return output
 
-print("Silver $250 total:", calculate_invoice("silver", 250))
-print("Gold $50 total:", calculate_invoice("gold", 50))
+logs = [
+    {"id": "L1", "status": "SUCCESS", "msg": "Database synced"},
+    {"id": "L2", "status": "FAILED", "msg": "Timeout connecting"},
+    {"id": "L3", "status": "SUCCESS", "msg": "Worker finished"}
+]
+print(build_report(logs))
 `,
   },
   {
-    id: 'example-structure',
-    goal: 'structure',
-    suggestedGoal: 'structure',
-    title: 'Student Grade Processor (Monolith to Single Responsibility)',
-    description: 'One 30-line function doing parsing, computing averages, ranking, and report output.',
-    originalCode: `def process_student_grades(raw_records):
-    # Monolithic function doing parsing, calculating, and printing
-    cleaned_students = []
-    for record in raw_records:
-        parts = record.split(":")
-        name = parts[0].strip()
-        scores = [int(s.strip()) for s in parts[1].split(",")]
-        avg_score = sum(scores) / len(scores)
-        if avg_score >= 90:
-            letter = "A"
-        elif avg_score >= 80:
-            letter = "B"
-        elif avg_score >= 70:
-            letter = "C"
-        else:
-            letter = "F"
-        cleaned_students.append((name, round(avg_score, 1), letter))
-
-    # Print summary report directly
-    print("--- GRADE REPORT ---")
-    for s in cleaned_students:
-        print(f"Student: {s[0]} | Average: {s[1]} | Grade: {s[2]}")
-    return cleaned_students
-
-records = ["Alice: 92, 88, 95", "Bob: 74, 80, 68", "Charlie: 85, 87, 90"]
-process_student_grades(records)
-`,
-  },
-  {
-    id: 'example-naming',
-    goal: 'naming',
-    suggestedGoal: 'naming',
-    title: 'Order Checkout (Cryptic Variables to Descriptive Names)',
-    description: 'Variables named a, b, c, d, flag1, tmp hiding the business purpose of the code.',
+    id: 'example-easy-checkout',
+    goal: 'easy_to_understand',
+    suggestedGoal: 'easy_to_understand',
+    title: 'Order Checkout (Easy to Understand)',
+    description: 'Cryptic variables (a, b, c, d) and flags refactored into self-documenting code.',
     originalCode: `def proc_order(a, b, c):
-    # a: cart items, b: discount code rate, c: express shipping flag
+    # a: items, b: discount, c: express flag
     d = 0
     for x in a:
         d = d + (x["qty"] * x["price"])
@@ -175,11 +94,11 @@ print("Order summary:", result)
 `,
   },
   {
-    id: 'example-simplify',
-    goal: 'simplify',
-    suggestedGoal: 'simplify',
-    title: 'Access Control (Deep Nested Ifs to Clean Guard Clauses)',
-    description: 'Deeply nested 4-layer condition ladder with redundant comparisons.',
+    id: 'example-easy-access',
+    goal: 'easy_to_understand',
+    suggestedGoal: 'easy_to_understand',
+    title: 'Access Control (Easy to Understand)',
+    description: 'Deep 4-layer nested if/else ladder simplified with clean guard clauses.',
     originalCode: `def check_user_access(user):
     # Deeply nested conditional pyramid
     if user is not None:
@@ -206,4 +125,3 @@ print("User B:", check_user_access(user_b))
 `,
   },
 ]
-

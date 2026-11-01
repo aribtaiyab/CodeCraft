@@ -7,6 +7,7 @@ import React, { useState, useMemo, useRef } from 'react'
 import Editor from '@monaco-editor/react'
 import {
   Sparkles,
+  Zap,
   ArrowLeft,
   Play,
   RotateCcw,
@@ -23,7 +24,6 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import {
-  REFINE_GOALS,
   CURATED_REFINE_EXAMPLES,
   refineService,
   executeRefineVerification,
@@ -122,9 +122,8 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
   const [improvedCode, setImprovedCode] = useState<string>(currentStudioCode || '')
   const improvedEditorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null)
 
-  // 4. Selected Improvement Goal
-  const [selectedGoal, setSelectedGoal] = useState<RefineGoal>('readability')
-  const [customGoalPrompt, setCustomGoalPrompt] = useState<string>('')
+  // 4. Selected Improvement Goal (Performance Optimization vs Easy to Understand)
+  const [selectedGoal, setSelectedGoal] = useState<RefineGoal>('performance')
 
   // 5. Active results tab
   const [activeTab, setActiveTab] = useState<ComparisonTab>('explanation')
@@ -186,7 +185,6 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
       const res = await refineService.refineCode({
         code: originalCode,
         goal: selectedGoal,
-        customGoalPrompt: selectedGoal === 'custom' ? customGoalPrompt : undefined,
       })
 
       setAnalysis(res)
@@ -216,7 +214,6 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
           code: originalCode,
           goal: selectedGoal,
           hintLevel: nextLevel,
-          customGoalPrompt: selectedGoal === 'custom' ? customGoalPrompt : undefined,
         })
         setCurrentHint(hintRes)
         setHintLevel(nextLevel)
@@ -321,90 +318,148 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
       </header>
 
       {/* --------------------------------------------------------------------
-         2. Three-Step Workflow Card (Simple, Compact, Beginner-Friendly)
+         2. Three-Step Workflow Card (Clean, Compact, Beginner-Friendly)
          -------------------------------------------------------------------- */}
       <section className={styles.workflowCard} aria-label="Refine Setup">
+        {/* Source Selector Toolbar */}
+        <div className={styles.sourceBar}>
+          <span className={styles.sourceLabel}>Working on:</span>
+          <button
+            type="button"
+            className={`${styles.sourceBtn} ${sourceType === 'studio' ? styles.sourceBtnActive : ''}`}
+            onClick={handleUseStudioCode}
+            title="Load code currently in the Code Studio main editor"
+          >
+            <Copy size={12} />
+            Current Studio Code
+          </button>
+
+          <select
+            className={styles.exampleSelect}
+            value={sourceType === 'example' ? '' : ''}
+            onChange={(e) => {
+              if (e.target.value) {
+                handleLoadExample(e.target.value)
+              }
+            }}
+            aria-label="Load Curated Python Example"
+          >
+            <option value="" disabled>
+              Load Curated Example...
+            </option>
+            {CURATED_REFINE_EXAMPLES.map((ex) => (
+              <option key={ex.id} value={ex.id}>
+                {ex.title}
+              </option>
+            ))}
+          </select>
+
+          <span className={styles.sourceBadge} title="Active source being refined">
+            Source: {sourceType === 'studio' ? 'Current Studio Code' : sourceName}
+          </span>
+        </div>
+
+        {/* 3-Step Simplified Workflow Grid */}
         <div className={styles.workflowGrid}>
-          {/* STEP 1: CHOOSE YOUR CODE */}
+          {/* STEP 1: CHOOSE IMPROVEMENT GOAL */}
           <div className={styles.stepBlock}>
             <div className={styles.stepHeader}>
               <span className={styles.stepBadge}>1</span>
-              <span className={styles.stepTitle}>Choose your code</span>
-              <span className={styles.sourceBadge} title="Currently loaded source">
-                Source: {sourceType === 'studio' ? 'Studio Code' : sourceName}
-              </span>
+              <span className={styles.stepTitle}>Choose Improvement Goal</span>
             </div>
 
-            <div className={styles.sourceControlsRow}>
+            <div className={styles.twoGoalsGrid} role="radiogroup" aria-label="Improvement Goal">
+              {/* Option 1: Performance Optimization */}
               <button
                 type="button"
-                className={`${styles.sourceBtn} ${sourceType === 'studio' ? styles.sourceBtnActive : ''}`}
-                onClick={handleUseStudioCode}
-                title="Load code currently in the Code Studio main editor"
+                role="radio"
+                aria-checked={selectedGoal === 'performance'}
+                className={`${styles.goalCard} ${selectedGoal === 'performance' ? styles.goalCardActive : ''}`}
+                onClick={() => setSelectedGoal('performance')}
+                title="Performance Optimization: Focus on execution efficiency, identify inefficient operations, and avoid unnecessary computations."
               >
-                <Copy size={12} />
-                Use Studio Code
+                <div className={styles.goalCardTop}>
+                  <div className={styles.goalCardIconBox}>
+                    <Zap size={14} className={styles.goalCardIcon} />
+                  </div>
+                  <span className={styles.goalCardTitle}>Performance Optimization</span>
+                  {selectedGoal === 'performance' && (
+                    <span className={styles.activeCheck} aria-hidden="true">
+                      <Check size={13} strokeWidth={2.5} />
+                    </span>
+                  )}
+                </div>
+                <p className={styles.goalCardDesc}>
+                  Make code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful.
+                </p>
               </button>
 
-              <select
-                className={styles.exampleSelect}
-                value={sourceType === 'example' ? '' : ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleLoadExample(e.target.value)
-                  }
-                }}
-                aria-label="Load Curated Python Example"
+              {/* Option 2: Easy to Understand */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selectedGoal === 'easy_to_understand'}
+                className={`${styles.goalCard} ${selectedGoal === 'easy_to_understand' ? styles.goalCardActive : ''}`}
+                onClick={() => setSelectedGoal('easy_to_understand')}
+                title="Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand."
               >
-                <option value="" disabled>
-                  Load Curated Example...
-                </option>
-                {CURATED_REFINE_EXAMPLES.map((ex) => (
-                  <option key={ex.id} value={ex.id}>
-                    {ex.title}
-                  </option>
-                ))}
-              </select>
+                <div className={styles.goalCardTop}>
+                  <div className={styles.goalCardIconBox}>
+                    <Sparkles size={14} className={styles.goalCardIcon} />
+                  </div>
+                  <span className={styles.goalCardTitle}>Easy to Understand</span>
+                  {selectedGoal === 'easy_to_understand' && (
+                    <span className={styles.activeCheck} aria-hidden="true">
+                      <Check size={13} strokeWidth={2.5} />
+                    </span>
+                  )}
+                </div>
+                <p className={styles.goalCardDesc}>
+                  Make code cleaner, simpler and easier for beginners to understand with descriptive names and clean logic.
+                </p>
+              </button>
             </div>
           </div>
 
           <div className={styles.workflowDivider} aria-hidden="true" />
 
-          {/* STEP 2: CHOOSE ONE GOAL */}
+          {/* STEP 2: CHOOSE WORKING MODE */}
           <div className={styles.stepBlock}>
             <div className={styles.stepHeader}>
               <span className={styles.stepBadge}>2</span>
-              <span className={styles.stepTitle}>Choose one goal</span>
+              <span className={styles.stepTitle}>Choose Working Mode</span>
             </div>
 
-            <div className={styles.goalsWrap}>
-              {REFINE_GOALS.map((goal) => (
-                <button
-                  key={goal.id}
-                  type="button"
-                  className={`${styles.goalPill} ${
-                    selectedGoal === goal.id ? styles.goalPillActive : ''
-                  }`}
-                  onClick={() => setSelectedGoal(goal.id)}
-                  title={goal.description}
-                >
-                  {goal.shortLabel}
-                </button>
-              ))}
+            <div className={styles.modeSegmented} role="radiogroup" aria-label="Improvement mode">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === 'ai'}
+                className={`${styles.modeSegment} ${mode === 'ai' ? styles.modeSegmentActive : ''}`}
+                onClick={() => setMode('ai')}
+                title="AI Assistance: AI generates an improved version based on the selected goal and explains meaningful changes."
+              >
+                <Sparkles size={13} />
+                <span>AI Assistance</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === 'manual'}
+                className={`${styles.modeSegment} ${mode === 'manual' ? styles.modeSegmentActive : ''}`}
+                onClick={() => setMode('manual')}
+                title="Manual Practice: User improves their own code with progressive hints without immediately receiving the complete solution."
+              >
+                <Lightbulb size={13} />
+                <span>Manual Practice</span>
+              </button>
             </div>
 
-            {selectedGoal === 'custom' && (
-              <div className={styles.customPromptRow}>
-                <input
-                  type="text"
-                  className={styles.customPromptInput}
-                  placeholder="Describe your custom goal (e.g. 'Use list comprehension' or 'Add type annotations')..."
-                  value={customGoalPrompt}
-                  onChange={(e) => setCustomGoalPrompt(e.target.value)}
-                  autoFocus
-                />
-              </div>
-            )}
+            <p className={styles.modeExplainer}>
+              {mode === 'ai'
+                ? 'AI generates an improved version and explains meaningful changes.'
+                : 'Improve your own code with progressive hints without seeing the answer.'}
+            </p>
           </div>
 
           <div className={styles.workflowDivider} aria-hidden="true" />
@@ -413,25 +468,7 @@ export const CodeRefineWorkspace: React.FC<CodeRefineWorkspaceProps> = ({
           <div className={styles.stepBlock}>
             <div className={styles.stepHeader}>
               <span className={styles.stepBadge}>3</span>
-              <span className={styles.stepTitle}>Improve your code</span>
-              <div className={styles.modeSegmented} role="radiogroup" aria-label="Improvement mode">
-                <button
-                  type="button"
-                  className={`${styles.modeSegment} ${mode === 'ai' ? styles.modeSegmentActive : ''}`}
-                  onClick={() => setMode('ai')}
-                  title="Let AI generate improvements and explanations"
-                >
-                  AI Assistance
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.modeSegment} ${mode === 'manual' ? styles.modeSegmentActive : ''}`}
-                  onClick={() => setMode('manual')}
-                  title="Practice improving code manually with progressive hints"
-                >
-                  Manual Practice
-                </button>
-              </div>
+              <span className={styles.stepTitle}>Improve Code</span>
             </div>
 
             <div className={styles.step3ActionRow}>

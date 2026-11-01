@@ -772,27 +772,57 @@ Required JSON Schema:
   // 4. CodeRefine: Code Analysis & Improvement
   // --------------------------------------------------------------------------
   public async refineCode(req: RefineRequest): Promise<RefineAnalysisResponse> {
-    const goal = req.goal || 'readability'
+    const goal = req.goal || 'easy_to_understand'
     const goalDescriptions: Record<RefineGoal, string> = {
-      readability: 'Improve code clarity, readability, Pythonic idioms, and self-documenting structure without changing behaviour.',
-      dry: "Eliminate duplicate code or repeated logic (Don't Repeat Yourself) by extracting clean helper functions or parameters.",
-      structure: 'Improve overall function structure, separation of concerns, and single-responsibility organization.',
-      naming: 'Improve variable and function names to be clear, descriptive, and follow PEP 8 snake_case conventions.',
-      simplify: 'Simplify complicated logic, flatten nested if/else ladders using guard clauses, and remove redundant boolean checks.',
-      custom: req.customGoalPrompt || 'Follow the specific refinement request supplied by the student.',
+      performance:
+        'Performance Optimization: Make the code more efficient by identifying unnecessary computations and improving algorithmic efficiency where meaningful. Focus on execution efficiency, identify inefficient operations, avoid unnecessary computations, explain performance changes honestly, never claim code is faster without evidence, and preserve original behaviour.',
+      easy_to_understand:
+        'Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand. Improve variable naming, simplify complicated logic, organize functions, remove unnecessary repetition, improve readability, and explain changes in beginner-friendly language.',
+      readability:
+        'Easy to Understand: Make code cleaner, simpler, and easier for beginners to understand.',
+      dry: "Easy to Understand: Eliminate duplicate code or repeated logic (Don't Repeat Yourself).",
+      structure:
+        'Easy to Understand: Improve overall function structure, separation of concerns, and single-responsibility organization.',
+      naming:
+        'Easy to Understand: Improve variable and function names to be clear, descriptive, and follow PEP 8 conventions.',
+      simplify:
+        'Easy to Understand: Simplify complicated logic, flatten nested ladders with guard clauses, and remove redundant checks.',
+      custom:
+        req.customGoalPrompt || 'Follow the specific refinement request supplied by the student.',
     }
 
-    const goalDesc = goalDescriptions[goal] || goalDescriptions.readability
+    const goalDesc = goalDescriptions[goal] || goalDescriptions.easy_to_understand
+    const isPerformance = goal === 'performance'
 
     const systemPrompt = `You are CodeCraft's Expert Python Architect & CodeRefine Mentor.
 Tagline: "Write better. Understand why."
 Your mission: Analyze working Python code, generate an improved version aligned with the user's selected improvement goal, and explain EVERY important change in beginner-friendly language with honest trade-off analysis.
 
+Selected Improvement Goal: ${goal.toUpperCase()}
+Description: ${goalDesc}
+
+${
+  isPerformance
+    ? `Specific Requirements for Performance Optimization:
+1. Focus directly on execution efficiency and identifying inefficient operations.
+2. Avoid unnecessary computations, redundant work, duplicate loops, repeated operations, or expensive allocations inside loops.
+3. Improve algorithmic efficiency where meaningful (e.g. using sets or dicts for O(1) membership lookups instead of O(N) list scans, generator expressions, or efficient built-ins).
+4. Explain performance changes accurately and honestly. NEVER claim code is faster without concrete algorithmic or complexity evidence.
+5. Fully preserve original program behaviour and identical outputs.`
+    : `Specific Requirements for Easy to Understand:
+1. Make code cleaner, simpler, and easier for beginners to understand.
+2. Improve variable and function naming to be descriptive, intention-revealing, and PEP 8 compliant.
+3. Simplify complicated logic, remove redundant boolean comparisons, and flatten nested if/else ladders using clean guard clauses.
+4. Organize functions with clear single responsibilities and remove unnecessary repetition.
+5. Explain changes in warm, beginner-friendly language without intimidating jargon.
+6. Fully preserve original program behaviour and identical outputs.`
+}
+
 Crucial Pedagogical Rules:
-1. Preserve intended program behaviour.
-2. Focus strictly on this improvement goal: ${goal.toUpperCase()} (${goalDesc})
-3. Only make purposeful, high-value improvements. Never make pointless cosmetic changes or "code golf" one-liners that harm clarity.
-4. If the student's code is already clean, idiomatic, and well-structured for this goal, set "isAlreadyClean": true and explain honestly why it is already good, offering only small optional polish suggestions.
+1. Preserve intended program behaviour and outputs completely.
+2. Focus strictly on this improvement goal: ${goal.toUpperCase()}.
+3. Only make purposeful, high-value improvements. Never make pointless cosmetic changes or cryptic "code golf" one-liners that harm clarity.
+4. If the student's code is already clean, idiomatic, or optimal for this goal, set "isAlreadyClean": true and explain honestly why it is already good, offering only small optional polish suggestions.
 5. Never claim that shorter code is automatically faster or better. Explain honest trade-offs (e.g. readability vs debugging step-through, memory, or function call overhead).
 6. Explain each meaningful change individually:
    - What changed
@@ -923,16 +953,22 @@ Analyze this code, generate the improved version, and provide the structured exp
   // --------------------------------------------------------------------------
   public async getRefineHint(req: RefineHintRequest): Promise<RefineHintResponse> {
     const hintLevel = Math.min(Math.max(req.hintLevel || 1, 1), 3)
-    const goal = req.goal || 'readability'
+    const goal = req.goal || 'easy_to_understand'
+    const isPerformance = goal === 'performance'
 
     const levelDescriptions = {
       1: 'Level 1 (Subtle nudge): Point out where the opportunity lies without revealing the technique.',
-      2: 'Level 2 (Conceptual strategy): Explain the Python concept, standard library tool, or pattern that helps.',
+      2: 'Level 2 (Conceptual strategy): Explain the Python concept, standard library tool, data structure, or pattern that helps.',
       3: 'Level 3 (Actionable guidance): Give concrete pseudocode or pattern structure without writing out the exact entire solution.',
     }
 
+    const hintFocus = isPerformance
+      ? 'Focus on pointing out inefficient operations, redundant computations, or unnecessary loops without revealing the entire solution.'
+      : 'Focus on pointing out confusing variable names, complicated conditionals, or repeated logic that can be simplified without revealing the entire solution.'
+
     const systemPrompt = `You are CodeCraft's CodeRefine Mentor guiding a student who is improving their code manually.
-The student selected the goal: ${goal.toUpperCase()}.
+The student selected the goal: ${goal.toUpperCase()} (${isPerformance ? 'Performance Optimization' : 'Easy to Understand'}).
+Hint Goal Focus: ${hintFocus}
 Provide a hint at ${levelDescriptions[hintLevel as 1 | 2 | 3]}.
 Keep it encouraging, direct, and concise (2-3 sentences).
 Return ONLY a valid JSON object:
